@@ -25,7 +25,7 @@ void clean_screen() {
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-// lá lá láaaaaaaaa
+
 
 void init(void)
 {
