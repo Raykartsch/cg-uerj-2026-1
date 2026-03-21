@@ -25,6 +25,8 @@ void clean_screen() {
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
+// lá lá láaaaaaaaa
+
 void init(void)
 {
   // define a cor de background da janela
