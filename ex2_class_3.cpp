@@ -3,15 +3,15 @@ Tarefa 2: Pontos com o Mouse
 
 • Criar uma tela branca.
 
-• Detectar cliques com o botão esquerdo e desenhar um ponto preto no local que foi clicado de tamanho 50 na tela.
+• Detectar cliques com o botao esquerdo e desenhar um ponto preto no local que foi clicado de tamanho 50 na tela.
 
-• Ao pressionar o botão direito, limpa a tela.
+• Ao pressionar o botao direito, limpa a tela.
 
 */
 
-// comandos para executar via terminal do Windows
-// 1. g++ ex2.cpp -o ex1 -lfreeglut -lglu32 -lopengl32
-// 2. .\main
+// comandos para executar o codigo via terminal do Windows
+// 1. g++ ex2_class_3.cpp -o ex2_class_3 -lfreeglut -lglu32 -lopengl32
+// 2. .\ex2_class_3
 
 #include <GL/glut.h>
 
