@@ -9,8 +9,8 @@ Tarefa 1: Desenhar Casa
 */
 
 // comandos para executar o codigo via terminal do Windows
-// 1. g++ ex1_class_3.cpp -o ex1_class_3 -lfreeglut -lglu32 -lopengl32
-// 2. .\ex1_class_3
+// 1. g++ tarefa1_q1.cpp -o tarefa1_q1 -lfreeglut -lglu32 -lopengl32
+// 2. .\tarefa1_q1
 
 #include <GL/glut.h>
 
@@ -39,7 +39,7 @@ void init(void)
 
   //O glOrtho é uma janela de projeção que renderiza objetos que estão dentro de um determinado limite
   //Parametros: glOrtho(X (left), X (right), Y (bottom), Y (top), Z (near), Z (far))
-  glOrtho(0.0, 500.0, 0, 500.0, 0.0, 1.0); // Tendo bugs de render, mexer nessa função aqui
+  glOrtho(0.0, 500.0, 0, 500.0, 0.0, 1.0); // Estou tendo bugs de render, mexer nessa função aqui
 
   //Limpar a tela colocando-a em branco
   clean_screen();
