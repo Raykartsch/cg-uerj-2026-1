@@ -9,8 +9,8 @@ Tarefa 1: Desenhar Casa
 */
 
 // comandos para executar o codigo via terminal do Windows
-// 1. g++ tarefa1_q1.cpp -o tarefa1_q1 -lfreeglut -lglu32 -lopengl32
-// 2. .\tarefa1_q1
+// 1. g++ task1_q1.cpp -o task1_q1 -lfreeglut -lglu32 -lopengl32
+// 2. .\task1_q1
 
 #include <GL/glut.h>
 

@@ -10,8 +10,8 @@ Tarefa 2: Pontos com o Mouse
 */
 
 // comandos para executar o codigo via terminal do Windows
-// 1. g++ ex2_class_3.cpp -o ex2_class_3 -lfreeglut -lglu32 -lopengl32
-// 2. .\ex2_class_3
+// 1. g++ task1_q2.cpp -o task1_q2 -lfreeglut -lglu32 -lopengl32
+// 2. .\task1_q2
 
 #include <GL/glut.h>
 
