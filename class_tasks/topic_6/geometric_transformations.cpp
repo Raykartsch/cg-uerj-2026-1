@@ -1,7 +1,9 @@
 // Made By Italo Ventura for CG course (30/07/2026)
 // Run these commands in terminal to run this code:
-// 1. g++ -o trabalho-aula-04-08-2026 trabalho-aula-04-08-2026.cpp -lglut -lGLU -lGL -lm
-// 2. ./trabalho-aula-04-08-2026
+
+// 1. g++ geometric_transformations.cpp -o geometric_transformations -lfreeglut -lglu32 -lopengl32
+// 2. .\geometric_transformations
+
 
 #include <GL/glut.h>
 #include <cmath>
