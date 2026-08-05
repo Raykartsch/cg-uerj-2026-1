@@ -126,10 +126,12 @@ void drawBuilding(
 
     glColor3f(red_n, green_n, blue_n);
 
+
     glPushMatrix();
-        glScalef(1.0f, 2.5f, 0);
-        square();
-    glPopMatrix();
+		glTranslatef(0, 0.7f, 0);
+		glScalef(0.8f, 3.0f, 1);
+		square();
+	glPopMatrix();
 
 
 }
@@ -164,8 +166,11 @@ void display() {
     glPopMatrix();
 
     glPushMatrix();
-        drawBuilding(128, 128, 128);
+        drawBuilding(0.4f, 0.4f, 0.4f);
     glPopMatrix();
+
+
+
     // Libera o buffer de comando de desenho para fazer o desenho acontecer o mais rápido possível.
     glFlush();
 }
