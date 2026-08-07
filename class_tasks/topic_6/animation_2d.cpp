@@ -21,6 +21,8 @@ int FrameNumber = 0;
 
 int speed = 50; //The higher this variable is, the lower is the animation
 int msecs = 24;
+int windmill_blade_speed = 2;
+
 
 void init(void);
 void display(void);
@@ -35,6 +37,15 @@ void init(void)
   glLoadIdentity();
   glOrtho (-8, 8, -8, 8, -8, 8);
 }
+
+
+void anim (int valor) {
+    FrameNumber++;
+    glutPostRedisplay();
+    glutTimerFunc(msecs, anim, valor);
+}
+
+
 
 void square()
 {
@@ -152,10 +163,86 @@ void drawCart(
 
 }
 
-void anim (int valor) {
-    FrameNumber++;
-    glutPostRedisplay();
-    glutTimerFunc(msecs, anim, valor);
+
+void drawWindmillBlade(){
+	glColor3f(1, 0, 0);
+	glPushMatrix();
+		glBegin(GL_POLYGON);
+			glVertex3f(0, 0, 0);
+			glVertex3f(0.2, 1, 0);
+			glVertex3f(0, 3.5, 0);
+			glVertex3f(-0.2, 1, 0);
+		glEnd();
+		//square();
+	glPopMatrix();
+
+}
+
+void drawWindmill(){
+
+	glColor3f(0.75f, 0.75f, 0.75f);
+	glPushMatrix();
+		glScalef(0.1f, 3.0f, 1);
+		square();
+	glPopMatrix();
+
+
+
+	glPushMatrix();
+		//glRotatef(, 0, 0, 1);
+		glTranslatef(0, 3, 0);
+		glRotatef((float(-FrameNumber)/windmill_blade_speed), 0, 0, 1);
+		drawWindmillBlade();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0, 3, 0);
+		glRotatef(((float(-FrameNumber)/windmill_blade_speed) + 90), 0, 0, 1);
+		drawWindmillBlade();
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslatef(0, 3, 0);
+		glRotatef(((float(-FrameNumber)/windmill_blade_speed) + 180), 0, 0, 1);
+		drawWindmillBlade();
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslatef(0, 3, 0);
+		glRotatef(((float(-FrameNumber)/windmill_blade_speed) + 270), 0, 0, 1);
+		drawWindmillBlade();
+	glPopMatrix();
+
+
+
+/*
+		glRotatef(180, 0, 0, 1);
+		drawWindmillBlade();
+
+		glRotatef(270, 0, 0, 1);
+		drawWindmillBlade();
+
+		glRotatef(360, 0, 0, 1);
+		drawWindmillBlade();*/
+
+
+
+	/*glLineWidth(10.0);
+	glPushMatrix();
+		glTranslatef(0, 3, 0);
+		//glScalef(0.2f, 3.0f, 1);
+		glRotatef(float(-FrameNumber*5), 0, 0, 1);
+	    glBegin(GL_LINES);
+	    for (int i=0; i < 4; i++) {
+	        glVertex2f(0, 0);
+	        glVertex2d(cos(i*2*PI/4), sin(i*2*PI/4));
+
+	    }
+	    glEnd();
+
+	glPopMatrix();*/
 }
 
 
@@ -171,7 +258,10 @@ void drawBuilding(
 		glTranslatef(0, 0.7f, 0);
 		glScalef(0.8f, 3.0f, 1);
 		square();
-	glPopMatrix();
+
+
+glPopMatrix();
+
 
 }
 
@@ -183,30 +273,65 @@ void display() {
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
 
+    // Asfalto
+    glPushMatrix();
+		glTranslatef(0, -6, 0);
+		glScalef(8.0f, 2.0f, 1);
+		glColor3f(0.2f, 0.2f, 0.2f);
+		square();
+	glPopMatrix();
 
+	// Linha asfalto
+	glPushMatrix();
+		glTranslatef(0, -6, 0);
+		glScalef(8.0f, 0.1f, 1);
+		glColor3f(0.7f, 0.7f, 0.7f);
+		square();
+	glPopMatrix();
+
+
+	//glColor3f(0.0f, 0.0f, 0.0f); // O glPopMatrix / glPushMatrix nao tem efeito nesta funcao
+
+    // Desenhar o Sol
     glPushMatrix();
         glTranslatef(-6, 6, 0);
         drawSun();
     glPopMatrix();
 
-    // Carro Vermelho
-    glPushMatrix();
-        glTranslatef(float(FrameNumber)/speed, -6, 1);
-        glScalef(0.7, 0.7, 1);
-        drawCart(1, 0, 0);
-    glPopMatrix();
 
 
-    // Carro verde
-    glPushMatrix();
-        glTranslatef(-float(FrameNumber)/speed, -4, 1);
-        glScalef(0.9, 0.9, 1);
-        drawCart(0, 1, 0);
-    glPopMatrix();
+	// Carro verde
+	glPushMatrix();
+		glTranslatef(-float(FrameNumber)/speed, -5, 1);
+		glScalef(0.7f, 0.7f, 1);
+		drawCart(0, 1, 0);
+	glPopMatrix();
 
-    glPushMatrix();
+	// Carro Vermelho
+	glPushMatrix();
+		glTranslatef(float(FrameNumber)/speed, -7, 1);
+		glScalef(0.83f, 0.83f, 1);
+		drawCart(1, 0, 0);
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslatef(4, 3, 1);
+		glScalef(0.5f, 0.5f, 1);
+		drawWindmill();
+	glPopMatrix();
+
+
+	glPushMatrix();
+		//glTranslatef(4, 3, 1);
+		glScalef(0.8f, 0.8f, 1);
+		drawWindmill();
+	glPopMatrix();
+
+
+    /*glPushMatrix();
         drawBuilding(0.4f, 0.4f, 0.4f);
-    glPopMatrix();
+    glPopMatrix();*/
 
     glutSwapBuffers();
     // Libera o buffer de comando de desenho para fazer o desenho acontecer o mais rápido possível.
@@ -231,7 +356,7 @@ int main(int argc, char** argv)
   glutInitWindowPosition (200, 200);
 
   // Cria uma janela e define seu título
-  glutCreateWindow ("Animation 2Dd");
+  glutCreateWindow ("Animation 2D");
 
   //Nesta função é definido o estado inicial do OpenGL. Ajustes podem ser feitos para o usuário nessa função.
   init();
