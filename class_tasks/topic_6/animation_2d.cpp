@@ -1,8 +1,8 @@
 // Made By Italo Ventura for CG course (30/07/2026)
 // Run these commands in terminal to run this code in Linux:
 
-// 1. g++ -o aula-06-08-2026 aula-06-08-2026.cpp -lglut -lGLU -lGL -lm
-// 2. ./aula-06-08-2026
+// 1. g++ -o animation_2d animation_2d.cpp -lglut -lGLU -lGL -lm
+// 2. ./animation_2d
 
 
 // Run these commands in terminal to run this code in Windows:
@@ -23,6 +23,10 @@ int speed = 50; //The higher this variable is, the lower is the animation
 int msecs = 24;
 int windmill_blade_speed = 2;
 
+float carPosX = 0.0f;   // posição horizontal do carro
+float carSpeed = 0.1f;  // quanto ele anda a cada tecla
+float wheel_default_angle = 0.0f;
+float wheel_speed = 1.5f;
 
 void init(void);
 void display(void);
@@ -103,7 +107,8 @@ void drawWheel(){
     glColor3f(0, 0, 0);
     drawDisk(0.2);
     //Controla a rotacao do carro
-    glRotatef(float(-FrameNumber*speed), 0, 0, 1);
+    glRotatef(wheel_default_angle, 0, 0, 1);
+    //glRotatef(float(-FrameNumber*speed), 0, 0, 1);
     glBegin(GL_LINES);
     for (i=0; i < 15; i++) {
         glVertex2f(0, 0);
@@ -265,6 +270,21 @@ glPopMatrix();
 
 }
 
+
+void specialKeys(int key, int x, int y) {
+    if (key == GLUT_KEY_LEFT) {
+        carPosX -= carSpeed;
+        wheel_default_angle -= wheel_speed;
+    }
+    if (key == GLUT_KEY_RIGHT) {
+        carPosX += carSpeed;
+        wheel_default_angle += wheel_speed;
+    }
+    glutPostRedisplay(); // força redesenhar a tela com a nova posição
+}
+
+
+
 void display() {
 
     // Limpa a janela, colocando na tela a cor definida pela função glClearColor
@@ -302,7 +322,9 @@ void display() {
 
 	// Carro verde
 	glPushMatrix();
-		glTranslatef(-float(FrameNumber)/speed, -5, 1);
+
+		glTranslatef(carPosX, -5, 1);
+		//glTranslatef(-float(FrameNumber)/speed, -5, 1);
 		glScalef(0.7f, 0.7f, 1);
 		drawCart(0, 1, 0);
 	glPopMatrix();
@@ -339,6 +361,10 @@ void display() {
 }
 
 
+
+
+
+
 int main(int argc, char** argv)
 {
 
@@ -370,6 +396,9 @@ int main(int argc, char** argv)
     glutTimerFunc(msecs, anim, 0);
 
 
+    glutSpecialFunc(specialKeys);
+
+    //glutKeyboardFunc(keyboard_callback);
   //Inicia o loop de processamento de desenhos com GLUT.
   // Esta rotina deve ser chamada pelo menos uma vez em um programa que utilize a biblioteca GLUT.
   glutMainLoop();
