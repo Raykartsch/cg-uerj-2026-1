@@ -1,13 +1,16 @@
 // Run these commands in terminal to execute this code in Linux:
-
 // 1. g++ -o code code.cpp -lglut -lGLU -lGL -lm
 // 2. ./code
 
 
 // Run these commands in terminal to execute this code in Windows:
-
 // 1. g++ code.cpp -o code -lfreeglut -lglu32 -lopengl32
 // 2. .\code
+
+
+// 1. Fazer um fundo que se move.
+// 2. Fazer um objeto se movendo independente do quadrado que tenho aqui.
+// 3. Criar um modulo pro objeto não sai da tela no eixo x. (OK)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +107,53 @@ void drawWheel(){
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha um sol
+void drawSun(){
+    int i;
+    glColor3f(0.9,0.9,0);
+    glLineWidth(3);
+    glRotatef(float(-FrameNumber), 0, 0, 1);
+    glBegin(GL_LINES);
+    for (i=0; i<15; i++){
+    	glVertex2f(0, 0);
+    	glVertex2d(cos(i*2*PI/15), sin(i*2*PI/15));
+
+    }
+    glEnd();
+    drawDisk(0.5);
+    glColor3f(0, 0, 0);
+
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha nuvem
+
+void drawCloud(){
+
+
+	glColor3f(1, 1, 1);
+
+	glPushMatrix();
+		glTranslatef(-0.6f, -0.2f, 1);
+		drawDisk(0.5f);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0, -0.1f, 1);
+		drawDisk(0.7f);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0.6f, -0.2f, 1);
+		drawDisk(0.5f);
+	glPopMatrix();
+
+
+}
 
 
 
@@ -116,7 +166,6 @@ float shoulderTarget = 90.0f;
 float elbowTarget = 90.0f;
 
 float animSpeed = 3.0f;
-
 
 // Desenha o braco mecanico que roda
 void drawArm(){
@@ -169,8 +218,7 @@ void drawArm(){
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-
-
+// Quadrado controlado pelo usuario
 
 // Controla o pulo do quadrado andante
 float jump_maximum_height = 3.0f;
@@ -190,7 +238,7 @@ int squareAngle = 0;
 int squareAngleSpeed = 5.0;
 
 
-// booleanos que controlam se a setinha do teclado está pressionada.
+// booleanos que controlam se a setinha do teclado está pressionada (neste caso, estas teclas sao especiais)
 bool rightArrowPressed = false;
 bool leftArrowPressed = false;
 bool upArrowPressed = false;
@@ -267,9 +315,39 @@ void keyboard_up_callback(unsigned char key, GLint x, GLint y) {
 // Função que controla a animacao
 void anim (int valor) {
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// Comandos utilizados para animar o braco
+
+	// inputs inseridos para rodar com a setinha esquerda do teclado
+	if (leftArrowPressed) {
+	  // segurando esquerda -> desflexiona (até 0)
+	  if (shoulderAngle > 0) {
+		  shoulderAngle -= animSpeed;
+	  }
+
+	  if (elbowAngle > 0) {
+		  elbowAngle -= animSpeed;
+	  }
+
+
+
+	  ///////////////////////////////////
+	  // Permite o quadrado a andar pra esquerda pela cena
+	  if (squarePos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
+		  squarePos -= 0;
+	  } else {
+		  squarePos -= squareSpeed;
+	  }
+
+	  ///////////////////////////////////
+	  // Rotaciona o quadrado qdo anda pra esquerda
+	  squareAngle += squareAngleSpeed;
+	}
+
+
+	// inputs inseridos para rodar com a setinha direita do teclado
     if (rightArrowPressed) {
+
+			//////////////////////////////////////////////////////////////////////////////////////
+			// Comandos utilizados para animar o braco
           // segurando direita -> flexiona (até o limite)
           if (shoulderAngle < shoulderTarget) {
         	  shoulderAngle += animSpeed;
@@ -278,23 +356,24 @@ void anim (int valor) {
         	  elbowAngle += animSpeed;
           }
 
-          // Quadrado caminhante
-          squarePos += squareSpeed;
-      }
 
-      if (leftArrowPressed) {
-          // segurando esquerda -> desflexiona (até 0)
-          if (shoulderAngle > 0) {
-        	  shoulderAngle -= animSpeed;
-          }
+          ///////////////////////////////////
+          // Permite o quadrado a andar pra direita pela cena
+			if (squarePos > 8.0f) { // esse if não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
+				squarePos += 0;
+			} else {
+				squarePos += squareSpeed;
+			}
 
-          if (elbowAngle > 0) {
-        	  elbowAngle -= animSpeed;
-          }
+          //squarePos += squareSpeed;
 
-          // Quadrado caminhante andar pra esquerda
-          squarePos -= squareSpeed;
-      }
+          ///////////////////////////////////
+          // Rotaciona o quadrado qdo anda pra esquerda
+          squareAngle -= squareAngleSpeed;
+
+      	  }
+
+
 
 
       //////////////////////////////////////////////////////////////////////////////////////
@@ -316,6 +395,8 @@ void anim (int valor) {
       }
 
 
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Controla a animação de giro do quadrado ao andar
      if (r_key_pressed){
     	 squareAngle += squareAngleSpeed;
      }
@@ -331,35 +412,77 @@ void anim (int valor) {
 	glutTimerFunc(msecs, anim, valor);
 }
 
+void drawBackground1(){
 
+
+	// Desenhar o ceu
+	glColor3f(0.53, 0.81, 0.98);
+	glPushMatrix();
+		glScalef(50, 50, 1);
+		drawSquare();
+	glPopMatrix();
+
+	// Desenhar a grama
+	glColor3f(0.486f, 0.988f, 0.0f);
+	glPushMatrix();
+		glTranslatef(0.0f, -4.0f, 1.0f);
+		glScalef(50.0f, 4.0f, 1);
+		drawSquare();
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslatef(7.0f, 7.0f, 1);
+		drawSun();
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslatef(0, 4.0, 1);
+		drawCloud();
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslatef(5, 6.0, 1);
+		drawCloud();
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslatef(-6, 5.0, 1);
+		drawCloud();
+	glPopMatrix();
+
+}
 
 void display() {
 
+	//glClearColor(1.0, 1.0, 0.0, 1.0);
 	// Limpa a janela, colocando na tela a cor definida pela função glClearColor
 	glClear(GL_COLOR_BUFFER_BIT);
-
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
-
-
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Alterar a display daqui pra baixo
 
 
 
+	//Funcao pra criar um bkg personalizado
+	drawBackground1();
+
+
+	// Criando quadrado com input do usuario na tela
 	glColor3f(0, 0, 0);
-
 	glPushMatrix();
-
 		glTranslatef(squarePos, jump_height, 1);
 		glRotatef(float(squareAngle), 0, 0, 1);
 		drawSquare();
 	glPopMatrix();
+
+
 	//drawArm();
-
-
-
 
 	// Alterar a display daqui pra cima
 	//////////////////////////////////////////////////////////////////////////////////////////////
