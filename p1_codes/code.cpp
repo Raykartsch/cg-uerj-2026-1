@@ -8,9 +8,10 @@
 // 2. .\code
 
 
-// 1. Fazer um fundo que se move.
-// 2. Fazer um objeto se movendo independente do quadrado que tenho aqui.
+// 1. Fazer um fundo que se move. (OK)
+// 2. Fazer um objeto se movendo independente do quadrado que tenho aqui. (OK)
 // 3. Criar um modulo pro objeto não sai da tela no eixo x. (OK)
+// 4. Criar um quadrado que anda em 4 direcoes e que atira um projetil!
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,8 +28,6 @@ double PI = 3.14;
 int FrameNumber = 0;
 int speed = 50; //The higher this variable is, the lower is the animation
 int msecs = 24;
-
-
 
 
 void init(void);
@@ -48,9 +47,8 @@ void init(void)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// Forma basica
-void drawSquare()
-{
+// Cria um quadrado
+void drawSquare(){
       glBegin(GL_POLYGON);
         glVertex3f(-1, -1, 0);
         glVertex3f(1, -1, 0);
@@ -60,6 +58,7 @@ void drawSquare()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+// Cria um triangulo
 void drawTriangle() {
     //glBegin(GL_LINE_LOOP);
 	glBegin(GL_POLYGON);
@@ -71,7 +70,7 @@ void drawTriangle() {
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-
+// Cria um disco
 void drawDisk(double radius){
     int d;
     glBegin(GL_POLYGON);
@@ -84,28 +83,83 @@ void drawDisk(double radius){
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha uma roda
 
-// Desenha um pneu
-void drawWheel(){
-    int i;
-    glColor3f(0, 0, 0);
-    drawDisk(1);
-    glColor3f(0.75f, 0.75f, 0.75f);
-    drawDisk(0.8);
-    glColor3f(0, 0, 0);
-    drawDisk(0.2);
-    //Controla a rotacao do carro
-    //glRotatef(wheel_default_angle, 0, 0, 1);
-    //glRotatef(float(-FrameNumber*speed), 0, 0, 1);
-    glBegin(GL_LINES);
-    for (i=0; i < 15; i++) {
-        glVertex2f(0, 0);
-        glVertex2d(cos(i*2*PI/15), sin(i*2*PI/15));
+	// As variaveis abaixos são usadas para caso o carro seja controlado pelo usuario
+	float wheel_default_angle = 0.0f;
+	float wheel_speed = 1.5f;
 
-    }
-    glEnd();
+	void drawWheel(bool is_controlled){
+		int i;
+		glColor3f(0, 0, 0);
+		drawDisk(1);
+		glColor3f(0.75f, 0.75f, 0.75f);
+		drawDisk(0.8);
+		glColor3f(0, 0, 0);
+		drawDisk(0.2);
+		//Controla a rotacao da roda, se a var is_controlled está ativo, a roda irá girar de acordo com o input do usuario
+		if (is_controlled) {
+			glRotatef(wheel_default_angle, 0, 0, 1);
+		} else {
+			glRotatef(float(-FrameNumber*speed), 0, 0, 1);
+
+		}
+
+		glBegin(GL_LINES);
+		for (i=0; i < 15; i++) {
+			glVertex2f(0, 0);
+			glVertex2d(cos(i*2*PI/15), sin(i*2*PI/15));
+
+		}
+		glEnd();
+
+	}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha um carro
+void drawCart(GLfloat red_n, GLfloat green_n, GLfloat blue_n, bool is_controlled) {
+
+	// Criando lataria do carro
+		// Definindo cor da lataria do carro
+		glColor3f(red_n, green_n, blue_n);
+
+		glPushMatrix();
+			glTranslatef(0, 0.7f, 0);
+			glScalef(3, 0.8f, 1);
+			drawSquare();
+		glPopMatrix();
+
+
+		glPushMatrix();
+			glTranslatef(-0.5f, 2.0, 0);
+			glScalef(1.5, 0.8, 1);
+			drawSquare();
+		glPopMatrix();
+
+
+    // Criando rodas do carro
+		// Definindo a cor para preto
+	    glColor3f(0, 0, 0);
+
+		// Roda esquerda
+		glPushMatrix();
+			glTranslatef(-1.5f, -0.1f, 0);
+			glScalef(0.8f, 0.8f, 1);
+			drawWheel(is_controlled);
+		glPopMatrix();
+
+
+		// Roda direita
+		glPushMatrix();
+			glTranslatef(1.5f, -0.1f, 0);
+			glScalef(0.8f, 0.8f, 1);
+			drawWheel(is_controlled);
+		glPopMatrix();
 
 }
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha um sol
@@ -130,7 +184,7 @@ void drawSun(){
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// Desenha nuvem
+// Desenha uma nuvem
 
 void drawCloud(){
 
@@ -156,8 +210,9 @@ void drawCloud(){
 }
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha o braco mecanico que roda com input do usuario
+
 // Variaveis usadas para animar o braco
 float shoulderAngle = 0.0f;
 float elbowAngle = 0.0f;
@@ -167,7 +222,7 @@ float elbowTarget = 90.0f;
 
 float animSpeed = 3.0f;
 
-// Desenha o braco mecanico que roda
+// Funcao que cria o braco propriamente dito
 void drawArm(){
 
     glPushMatrix();
@@ -216,6 +271,66 @@ void drawArm(){
 
 
 
+float bgSpeed = 0.1f;      // velocidade do fundo (independente do carro)
+float bgWidth = 20.0f;     // largura de uma "tile" do fundo (2 * 50 do glScalef)
+float bgPos = 0.0f;         // posição atual do fundo
+
+
+void drawBackgroundContent(){
+
+	// Desenhar o ceu
+	glColor3f(0.53, 0.81, 0.98);
+	glPushMatrix();
+		glScalef(10, 10, 1);
+		drawSquare();
+	glPopMatrix();
+
+	// Desenhar a grama
+	glColor3f(0.486f, 0.988f, 0.0f);
+	glPushMatrix();
+		glTranslatef(0.0f, -4.0f, 1.0f);
+		glScalef(10.0f, 4.0f, 1);
+		drawSquare();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(7.0f, 7.0f, 1);
+		drawSun();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0, 4.0, 1);
+		drawCloud();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(5, 6.0, 1);
+		drawCloud();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(-6, 5.0, 1);
+		drawCloud();
+	glPopMatrix();
+
+}
+
+
+void drawBackground1(){
+
+	// Tile 1: normal, na posição de origem
+	glPushMatrix();
+		drawBackgroundContent();
+	glPopMatrix();
+
+	// Tile 2: espelhado, colado logo ao lado do primeiro
+	glPushMatrix();
+		glTranslatef(bgWidth, 0, 0); // anda pra a borda do tile 1
+		glScalef(-1, 1, 1);              // inverte o eixo X -> espelha o conteúdo
+		drawBackgroundContent();
+	glPopMatrix();
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Quadrado controlado pelo usuario
@@ -318,43 +433,44 @@ void anim (int valor) {
 
 	// inputs inseridos para rodar com a setinha esquerda do teclado
 	if (leftArrowPressed) {
-	  // segurando esquerda -> desflexiona (até 0)
-	  if (shoulderAngle > 0) {
-		  shoulderAngle -= animSpeed;
-	  }
+		// segurando esquerda -> desflexiona (até 0)
+		  if (shoulderAngle > 0) {
+			  shoulderAngle -= animSpeed;
+		  }
 
-	  if (elbowAngle > 0) {
-		  elbowAngle -= animSpeed;
-	  }
+		  if (elbowAngle > 0) {
+			  elbowAngle -= animSpeed;
+		  }
 
 
 
-	  ///////////////////////////////////
-	  // Permite o quadrado a andar pra esquerda pela cena
-	  if (squarePos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
-		  squarePos -= 0;
-	  } else {
-		  squarePos -= squareSpeed;
-	  }
+		  ///////////////////////////////////
+		  // Permite o quadrado a andar pra esquerda pela cena
+		  if (squarePos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
+			  squarePos -= 0;
+		  } else {
+			  squarePos -= squareSpeed;
+		  }
 
-	  ///////////////////////////////////
-	  // Rotaciona o quadrado qdo anda pra esquerda
-	  squareAngle += squareAngleSpeed;
+		  ///////////////////////////////////
+		  // Rotaciona o quadrado qdo anda pra esquerda
+		  squareAngle += squareAngleSpeed;
+		  wheel_default_angle += wheel_speed;
 	}
 
 
 	// inputs inseridos para rodar com a setinha direita do teclado
     if (rightArrowPressed) {
 
-			//////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////
 			// Comandos utilizados para animar o braco
-          // segurando direita -> flexiona (até o limite)
-          if (shoulderAngle < shoulderTarget) {
-        	  shoulderAngle += animSpeed;
-          }
-          if (elbowAngle < elbowTarget) {
-        	  elbowAngle += animSpeed;
-          }
+			// segurando direita -> flexiona (até o limite)
+			if (shoulderAngle < shoulderTarget) {
+				shoulderAngle += animSpeed;
+			}
+			if (elbowAngle < elbowTarget) {
+				elbowAngle += animSpeed;
+			}
 
 
           ///////////////////////////////////
@@ -370,10 +486,9 @@ void anim (int valor) {
           ///////////////////////////////////
           // Rotaciona o quadrado qdo anda pra esquerda
           squareAngle -= squareAngleSpeed;
+          wheel_default_angle -= wheel_speed;
 
-      	  }
-
-
+     }
 
 
       //////////////////////////////////////////////////////////////////////////////////////
@@ -405,84 +520,61 @@ void anim (int valor) {
 		 squareAngle -= squareAngleSpeed;
      }
 
-	//=========================================
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Controla o background de fundo
+     bgPos -= bgSpeed;
+     bgPos = fmod(bgPos, bgWidth); // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
+
+	//======================================================================================================================================================================================================================================================
 	// Comandos padrao da funcao anim
 	FrameNumber++;
 	glutPostRedisplay();
 	glutTimerFunc(msecs, anim, valor);
 }
 
-void drawBackground1(){
-
-
-	// Desenhar o ceu
-	glColor3f(0.53, 0.81, 0.98);
-	glPushMatrix();
-		glScalef(50, 50, 1);
-		drawSquare();
-	glPopMatrix();
-
-	// Desenhar a grama
-	glColor3f(0.486f, 0.988f, 0.0f);
-	glPushMatrix();
-		glTranslatef(0.0f, -4.0f, 1.0f);
-		glScalef(50.0f, 4.0f, 1);
-		drawSquare();
-	glPopMatrix();
-
-
-	glPushMatrix();
-		glTranslatef(7.0f, 7.0f, 1);
-		drawSun();
-	glPopMatrix();
-
-
-	glPushMatrix();
-		glTranslatef(0, 4.0, 1);
-		drawCloud();
-	glPopMatrix();
-
-
-	glPushMatrix();
-		glTranslatef(5, 6.0, 1);
-		drawCloud();
-	glPopMatrix();
-
-
-	glPushMatrix();
-		glTranslatef(-6, 5.0, 1);
-		drawCloud();
-	glPopMatrix();
-
-}
 
 void display() {
 
 	//glClearColor(1.0, 1.0, 0.0, 1.0);
 	// Limpa a janela, colocando na tela a cor definida pela função glClearColor
-	glClear(GL_COLOR_BUFFER_BIT);
-	glMatrixMode (GL_MODELVIEW);
-	glLoadIdentity();
+		glClear(GL_COLOR_BUFFER_BIT);
+		glMatrixMode (GL_MODELVIEW);
+		glLoadIdentity();
+
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	// Alterar a display daqui pra baixo
 
-
-
-	//Funcao pra criar um bkg personalizado
-	drawBackground1();
+	//Exemplo de background que se move infinitamente em OpenGL
+		/*glPushMatrix();
+			glTranslatef(bgPos, 0, 1);
+			drawBackground1();
+		glPopMatrix();*/
 
 
 	// Criando quadrado com input do usuario na tela
-	glColor3f(0, 0, 0);
-	glPushMatrix();
-		glTranslatef(squarePos, jump_height, 1);
-		glRotatef(float(squareAngle), 0, 0, 1);
-		drawSquare();
-	glPopMatrix();
+		glColor3f(0, 0, 0);
+		glPushMatrix();
+			glTranslatef(squarePos, jump_height, 1);
+			glRotatef(float(squareAngle), 0, 0, 1);
+			drawSquare();
+		glPopMatrix();
 
 
-	//drawArm();
+
+	// Instancia um carro azul que pode ser controlado pelo usuario
+		/*glPushMatrix();
+			glTranslatef(squarePos, -5, 1);
+			//glTranslatef(-float(FrameNumber)/speed, -5, 1); // ativar isso aqui se for pro carro andar sozinho
+			glScalef(0.7f, 0.7f, 1);
+			drawCart(0.0f, 0.0f, 1.0f, true);
+		glPopMatrix();*/
+
+
+
+	// Instancia um braco, questao pronta da P1
+		//drawArm();
+
 
 	// Alterar a display daqui pra cima
 	//////////////////////////////////////////////////////////////////////////////////////////////
