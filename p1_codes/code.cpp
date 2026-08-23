@@ -11,7 +11,7 @@
 // 1. Fazer um fundo que se move. (OK)
 // 2. Fazer um objeto se movendo independente do quadrado que tenho aqui. (OK)
 // 3. Criar um modulo pro objeto não sai da tela no eixo x. (OK)
-// 4. Criar um quadrado que anda em 4 direcoes e que atira um projetil!
+// 4. Criar um quadrado que anda em 4 direcoes e que atira um projetil! (Esta dentro do script movimento_e_projetil)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
