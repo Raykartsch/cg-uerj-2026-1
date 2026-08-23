@@ -12,7 +12,8 @@
 // 2. Fazer um objeto se movendo independente do quadrado que tenho aqui. (OK)
 // 3. Criar um modulo pro objeto não sai da tela no eixo x. (OK)
 // 4. Criar um quadrado que anda em 4 direcoes e que atira um projetil! (Esta dentro do script movimento_e_projetil)
-
+// 5. Fazer um circulo que se move como um "8" deitado
+// 6. Fazer a animacao de uma perna se movendo
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Importacao de bibliotecas
@@ -272,6 +273,14 @@ void drawArm(){
 
 
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha o background "infinito"
+
+
+
+
+
 float bgSpeed = 0.1f;      // velocidade do fundo (independente do carro)
 float bgWidth = 20.0f;     // largura de uma "tile" do fundo (2 * 50 do glScalef)
 float bgPos = 0.0f;         // posição atual do fundo
@@ -333,7 +342,7 @@ void drawBackground1(){
 
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quadrado controlado pelo usuario
 
 // Controla o pulo do quadrado andante
@@ -399,11 +408,11 @@ void arrowKeysUp(int key, int x, int y) {
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-
+// Indicam para outras funcoes se as teclas abaixo estao sendo pressionadas no teclado
 bool r_key_pressed = false;
 bool e_key_pressed = false;
 
+// Funcao de captura de pressionamento de teclas no teclado.
 void keyboard_callback(unsigned char key, GLint x, GLint y) {
 
 	if (key == 101){ //letra e
@@ -415,6 +424,7 @@ void keyboard_callback(unsigned char key, GLint x, GLint y) {
 	}
 
 }
+
 
 void keyboard_up_callback(unsigned char key, GLint x, GLint y) {
     if (key == 101) { //letra e
@@ -552,7 +562,6 @@ void display() {
 			drawBackground1();
 		glPopMatrix();*/
 
-
 	// Criando quadrado com input do usuario na tela
 		glColor3f(0, 0, 0);
 		glPushMatrix();
@@ -560,8 +569,6 @@ void display() {
 			glRotatef(float(squareAngle), 0, 0, 1);
 			drawSquare();
 		glPopMatrix();
-
-
 
 	// Instancia um carro azul que pode ser controlado pelo usuario
 		/*glPushMatrix();
@@ -572,9 +579,15 @@ void display() {
 		glPopMatrix();*/
 
 
-
 	// Instancia um braco, questao pronta da P1
 		//drawArm();
+
+
+	//
+
+
+
+
 
 
 	// Alterar a display daqui pra cima

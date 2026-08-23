@@ -1,10 +1,10 @@
 // Run these commands in terminal to execute this code in Linux:
-// 1. g++ -o mapa_com_camera mapa_com_camera.cpp -lglut -lGLU -lGL -lm
-// 2. ./mapa_com_camera
+// 1. g++ -o movimento_e_projetil movimento_e_projetil.cpp -lglut -lGLU -lGL -lm
+// 2. ./movimento_e_projetil
 
 // Run these commands in terminal to execute this code in Windows:
-// 1. g++ mapa_com_camera.cpp -o mapa_com_camera -lfreeglut -lglu32 -lopengl32
-// 2. .\mapa_com_camera
+// 1. g++ movimento_e_projetil.cpp -o movimento_e_projetil -lfreeglut -lglu32 -lopengl32
+// 2. .\movimento_e_projetil
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,7 +232,7 @@ void shootProjectile() {
 }
 
 void mouse_callback(int button, int state, int x, int y) {
-    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         shootProjectile();
     }
 }
@@ -242,30 +242,33 @@ void mouse_callback(int button, int state, int x, int y) {
 // Função que controla a animação
 void anim(int valor) {
 
-    // Movimento do personagem no MUNDO + atualização da direção que ele "olha"
-    if (rightArrowPressed) {
-        squareX += squareSpeed;
-        facingX = 1.0f;
-        facingY = 0.0f;
-    }
+    // Calcula a direção combinada de movimento (permite diagonais corretas)
+    float moveX = 0.0f;
+    float moveY = 0.0f;
 
-    if (leftArrowPressed) {
-        squareX -= squareSpeed;
-        facingX = -1.0f;
-        facingY = 0.0f;
-    }
+    if (rightArrowPressed) { moveX += 1.0f; }
+    if (leftArrowPressed)  { moveX -= 1.0f; }
+    if (upArrowPressed)    { moveY += 1.0f; }
+    if (downArrowPressed)  { moveY -= 1.0f; }
 
-    if (upArrowPressed) {
-        squareY += squareSpeed;
-        facingX = 0.0f;
-        facingY = 1.0f;
-    }
+    if (moveX != 0.0f || moveY != 0.0f) {
+        // normaliza o vetor (comprimento 1), senão andar na diagonal fica mais
+        // rápido que andar reto (soma bruta de dx e dy sem normalizar)
+        float len = sqrt(moveX * moveX + moveY * moveY);
+        moveX /= len;
+        moveY /= len;
 
-    if (downArrowPressed) {
-        squareY -= squareSpeed;
-        facingX = 0.0f;
-        facingY = -1.0f;
+        // atualiza a posição do personagem no MUNDO
+        squareX += moveX * squareSpeed;
+        squareY += moveY * squareSpeed;
+
+        // atualiza a direção que o personagem está "olhando" com o vetor combinado
+        // (em vez de cada seta sobrescrever facingX/facingY isoladamente)
+        facingX = moveX;
+        facingY = moveY;
     }
+    // se nenhuma seta estiver pressionada, facingX/facingY mantêm o último valor
+    // válido -> o personagem continua "olhando" pra última direção andada.
 
     // Não há limite de borda aqui de propósito: o mundo é "infinito",
     // quem se move na tela é a câmera/background, não o personagem.
