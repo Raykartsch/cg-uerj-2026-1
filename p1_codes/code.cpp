@@ -557,10 +557,11 @@ void display() {
 	// Alterar a display daqui pra baixo
 
 	//Exemplo de background que se move infinitamente em OpenGL
-		/*glPushMatrix();
+		glPushMatrix();
 			glTranslatef(bgPos, 0, 1);
+			//glTranslatef(0, bgPos, 1);
 			drawBackground1();
-		glPopMatrix();*/
+		glPopMatrix();
 
 	// Criando quadrado com input do usuario na tela
 		glColor3f(0, 0, 0);
