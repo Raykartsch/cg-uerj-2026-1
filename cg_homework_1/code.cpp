@@ -121,7 +121,7 @@ void drawDiskLine(double radius){
 // Desenha um sol
 void drawSun(){
     int i;
-    glColor3f(0.9,0.9,0);
+    glColor3f(1.0f, 0.823f, 0.298f);
     glLineWidth(3);
     glRotatef(float(-FrameNumber), 0, 0, 1);
     glBegin(GL_LINES);
@@ -131,7 +131,7 @@ void drawSun(){
 
     }
     glEnd();
-    drawDisk(0.5);
+    drawDisk(0.65);
     glColor3f(0, 0, 0);
 
 }
@@ -171,14 +171,14 @@ void drawFence() {
 	glColor3f(0.662f, 0.443f, 0.247f);
 
 	glPushMatrix();
-		glTranslatef(-1.4f, 0.2f, 0.0f);
+		glTranslatef(-1.2f, 0.2f, 0.0f);
 		glScalef(0.15f, 1.0f, 1.0f);
 		drawSquare();
 	glPopMatrix();
 
 
 	glPushMatrix();
-		glTranslatef(1.4f, 0.2f, 0.0f);
+		glTranslatef(1.2f, 0.2f, 0.0f);
 		glScalef(0.15f, 1.0f, 1.0f);
 		drawSquare();
 	glPopMatrix();
@@ -202,7 +202,7 @@ void drawFence() {
 
 
 	glPushMatrix();
-		glTranslatef(0.0f, 1.0f, 0.0f);
+		glTranslatef(0.0f, 0.8f, 0.0f);
 		glScalef(1.5f, 0.15f, 1.0f);
 		drawSquare();
 	glPopMatrix();
@@ -381,7 +381,7 @@ void drawBackgroundContent(){
 
 	// Fazer o background com 50 pixels de largura
 	// Desenhar o ceu
-		glColor3f(0.53, 0.81, 0.98);
+		glColor3f(0.68f, 0.81f, 0.98f);
 		glPushMatrix();
 			// X = 24
 			glScalef(bgWidth + (bgWidth / 2), 10, 1);
@@ -389,7 +389,7 @@ void drawBackgroundContent(){
 		glPopMatrix();
 
 	// Desenhar a grama
-		glColor3f(0.486f, 0.988f, 0.0f);
+		glColor3f(0.549f, 0.776f, 0.247f);
 		glPushMatrix();
 			glTranslatef(0.0f, -4.0f, 1.0f);
 			// X = 24
@@ -477,7 +477,7 @@ void drawBackgroundContent(){
 
 			glColor3f(0.243f, 0.556f, 0.180f);
 			glPushMatrix();
-				glTranslatef(23.2f, -0.1f, 1.0f);
+				glTranslatef(23.2f, 0.5f, 1.0f);
 				glScalef(0.5f, 1.3f, 1.0f);
 				glRotatef(180, 0, 0, 1);
 				drawTriangle();
@@ -581,8 +581,8 @@ void drawBackground1(){
 // Quadrado controlado pelo usuario
 
 // Controla o pulo do quadrado andante
-float jump_maximum_height = 3.0f;
-float speed_jump = 0.2f;
+float jump_maximum_height = 3.5f;
+float speed_jump = 0.15f;
 float jump_height = 0.5f;
 bool isJumping = false;
 bool goingUp = true; // controla se está na fase de subida ou descida do pulo
@@ -590,7 +590,7 @@ bool goingUp = true; // controla se está na fase de subida ou descida do pulo
 
 // Controlam o movimento no eixo x do quadrado andante
 float squarePos = 0.0f;
-float squareSpeed = 0.2f;
+float squareSpeed = 0.15f;
 
 
 // Controlam o angulo de rotacao do quadrado andante
@@ -712,12 +712,7 @@ void anim (int valor) {
 				squarePos += squareSpeed;
 			}
 
-          //squarePos += squareSpeed;
-
           ///////////////////////////////////
-          // Rotaciona o quadrado qdo anda pra esquerda
-          //squareAngle -= squareAngleSpeed;
-
 
      }
 
@@ -739,17 +734,6 @@ void anim (int valor) {
               }
           }
       }
-
-
-     //////////////////////////////////////////////////////////////////////////////////////
-     // Controla a animação de giro do quadrado ao andar
-     if (r_key_pressed){
-    	 squareAngle += squareAngleSpeed;
-     }
-
-     if (e_key_pressed){
-		 squareAngle -= squareAngleSpeed;
-     }
 
 
      //////////////////////////////////////////////////////////////////////////////////////
@@ -800,7 +784,7 @@ void display() {
 
 
 		glPushMatrix();
-			glTranslatef(7.0f, 7.0f, 1);
+			glTranslatef(6.5f, 6.8f, 1);
 			drawSun();
 		glPopMatrix();
 
@@ -812,26 +796,6 @@ void display() {
 			glScalef(0.6f, 0.6f, 1.0f);
 			drawRabbit();
 		glPopMatrix();
-
-
-
-
-
-	// Instancia um carro azul que pode ser controlado pelo usuario
-		/*glPushMatrix();
-			glTranslatef(squarePos, -5, 1);
-			//glTranslatef(-float(FrameNumber)/speed, -5, 1); // ativar isso aqui se for pro carro andar sozinho
-			glScalef(0.7f, 0.7f, 1);
-			drawCart(0.0f, 0.0f, 1.0f, true);
-		glPopMatrix();*/
-
-
-	// Instancia um braco, questao pronta da P1
-		//drawArm();
-
-
-	//
-
 
 
 
@@ -863,7 +827,7 @@ int main(int argc, char** argv)
 	glutInitWindowPosition (200, 200);
 
 	// Cria uma janela e define seu título
-	glutCreateWindow("Animation 2D");
+	glutCreateWindow("Trabalho 1");
 
 	//Nesta função é definido o estado inicial do OpenGL. Ajustes podem ser feitos para o usuário nessa função.
 	init();
