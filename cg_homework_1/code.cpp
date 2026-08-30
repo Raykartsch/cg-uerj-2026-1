@@ -325,29 +325,69 @@ void drawCarrot(){
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha uma alface: algumas "bolhas" verdes sobrepostas, como uma nuvem verde
-void drawLettuce(){
+void drawLettuce() {
+    // 1. Camada Base (Folhas externas, maiores e mais escuras)
+    glColor3f(0.25f, 0.55f, 0.15f);
 
-	glColor3f(0.56f, 0.80f, 0.24f);
-	glPushMatrix();
-		glTranslatef(-0.18f, 0.0f, 0.0f);
-		drawDisk(0.24f);
-	glPopMatrix();
+    glPushMatrix();
+        glTranslatef(-0.15f, 0.15f, 1.0f);
+        drawDisk(0.29f);
+    glPopMatrix();
 
-	glPushMatrix();
-		glTranslatef(0.16f, 0.08f, 0.0f);
-		drawDisk(0.26f);
-	glPopMatrix();
+    glPushMatrix();
+        glTranslatef(0.18f, 0.08f, 1.0f);
+        drawDisk(0.26f);
+    glPopMatrix();
 
-	glPushMatrix();
-		glTranslatef(0.02f, -0.14f, 0.0f);
-		drawDisk(0.22f);
-	glPopMatrix();
+    glPushMatrix();
+        glTranslatef(0.02f, -0.18f, 1.0f);
+        drawDisk(0.26f);
+    glPopMatrix();
 
-	glColor3f(0.35f, 0.55f, 0.15f);
-	glPushMatrix();
-		drawDiskLine(0.30f);
-	glPopMatrix();
+    // 2. Camada Intermediária (Verde médio, dando volume)
+    glColor3f(0.40f, 0.70f, 0.20f);
 
+    glPushMatrix();
+        glTranslatef(-0.08f, -0.10f, 1.0f);
+        drawDisk(0.28f);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(0.10f, -0.05f, 1.0f);
+        drawDisk(0.26f);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(-0.05f, 0.10f, 1.0f);
+        drawDisk(0.25f);
+    glPopMatrix();
+
+    // Adiciona algumas linhas para simular as nervuras/textura crespa
+    glColor3f(0.30f, 0.55f, 0.15f);
+    glPushMatrix();
+        glTranslatef(-0.08f, -0.10f, 1.0f);
+        drawDiskLine(0.28f);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(0.10f, -0.05f, 1.0f);
+        drawDiskLine(0.26f);
+    glPopMatrix();
+
+    // 3. Miolo da Alface (Mais claro, menor e centralizado)
+    glColor3f(0.60f, 0.85f, 0.25f);
+
+    glPushMatrix();
+        glTranslatef(0.0f, 0.0f, 1.0f);
+        drawDisk(0.20f);
+    glPopMatrix();
+
+    // Contorno final do miolo
+    glColor3f(0.45f, 0.75f, 0.20f);
+    glPushMatrix();
+        glTranslatef(0.0f, 0.0f, 1.0f);
+        drawDiskLine(0.20f);
+    glPopMatrix();
 }
 
 
@@ -1165,7 +1205,7 @@ void display() {
 
 		glPushMatrix();
 			glTranslatef(3.0f, 5.0f, 1);
-			drawRadish();
+			drawLettuce();
 		glPopMatrix();
 
 
