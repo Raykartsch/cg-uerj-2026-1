@@ -51,24 +51,45 @@ void init(void)
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Cria um quadrado
 void drawSquare(){
-      glBegin(GL_POLYGON);
-        glVertex3f(-1, -1, 0);
-        glVertex3f(1, -1, 0);
-        glVertex3f(1, 1, 0);
-        glVertex3f(-1, 1, 0);
-      glEnd();
+	glBegin(GL_POLYGON);
+		glVertex3f(-1, -1, 0);
+		glVertex3f(1, -1, 0);
+		glVertex3f(1, 1, 0);
+		glVertex3f(-1, 1, 0);
+	glEnd();
 }
+
+void drawSquareLine(){
+	glLineWidth(2.0f);
+	glBegin(GL_LINE_LOOP);
+		glVertex3f(-1, -1, 0);
+		glVertex3f(1, -1, 0);
+		glVertex3f(1, 1, 0);
+		glVertex3f(-1, 1, 0);
+	glEnd();
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Cria um triangulo
 void drawTriangle() {
-    //glBegin(GL_LINE_LOOP);
 	glBegin(GL_POLYGON);
       glVertex3f(-1, 0, 0);
       glVertex3f(0, 1, 0);
       glVertex3f(1, 0, 0);
     glEnd();
 }
+
+void drawTriangleLine() {
+	glLineWidth(2.0f);
+	glBegin(GL_LINE_LOOP);
+      glVertex3f(-1, 0, 0);
+      glVertex3f(0, 1, 0);
+      glVertex3f(1, 0, 0);
+    glEnd();
+}
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +104,17 @@ void drawDisk(double radius){
     glEnd();
 }
 
+
+void drawDiskLine(double radius){
+    int d;
+    glLineWidth(2.0f);
+    glBegin(GL_LINE_LOOP);
+    for (d = 0; d < 32; d++){
+        double angle = (2*PI/32) * d;
+        glVertex3f(radius*cos(angle), radius*sin(angle), 0);
+    }
+    glEnd();
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,10 +233,104 @@ void drawFruit(float red, float green, float blue){
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha o coelho
 void drawRabbit(){
 
+	// Orelha Esquerda
+	glPushMatrix();
+		glTranslatef(2.0f, 1.0f, 1.0f);
+		glScalef(0.125f, 0.4f, 1.0f);
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawTriangle();
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawTriangleLine();
+	glPopMatrix();
 
 
+	// Orelha Direita
+	glPushMatrix();
+		glTranslatef(2.0f, 1.5f, 1.0f);
+		glScalef(0.125f, 0.4f, 1.0f);
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawTriangle();
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawTriangleLine();
+	glPopMatrix();
+
+
+	// Perna Esquerda
+	glPushMatrix();
+		glTranslatef(-0.4f, -1.0f, 1.0f);
+		glScalef(0.125f, 0.4f, 1.0f);
+		glColor3f(0.90f, 0.85f, 0.79f);
+		drawSquare();
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawSquareLine();
+	glPopMatrix();
+
+	// Perna Direita
+	glPushMatrix();
+		glTranslatef(0.4f, -1.0f, 1.0f);
+		glScalef(0.125f, 0.4f, 1.0f);
+		glColor3f(0.90f, 0.85f, 0.79f);
+		drawSquare();
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawSquareLine();
+	glPopMatrix();
+
+	// Rabo
+	glPushMatrix();
+		glTranslatef(-0.8f, -0.4f, 1.0f);
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawDisk(0.25);
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawDiskLine(0.25);
+	glPopMatrix();
+
+	// Corpo
+	glPushMatrix();
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawDisk(1);
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawDiskLine(1);
+	glPopMatrix();
+
+	// Cabeça
+	glPushMatrix();
+		glTranslatef(1.2, 0.7, 1.0f);
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawDisk(0.6);
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawDiskLine(0.6);
+	glPopMatrix();
+
+
+	// Olho
+	glPushMatrix();
+		glTranslatef(1.4f, 0.8f, 1.0f);
+		glColor3f(0.0f, 0.0f, 0.0f);
+		drawDisk(0.065);
+	glPopMatrix();
+
+	// Focinho
+	glPushMatrix();
+		glTranslatef(1.8f, 0.5f, 1.0f);
+		glColor3f(1.0f, 1.0f, 1.0f);
+		drawDisk(0.2);
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawDiskLine(0.2);
+	glPopMatrix();
+
+
+	// Nariz
+	glPushMatrix();
+		glTranslatef(1.96f, 0.5f, 1.0f);
+		glScalef(0.15f, 0.07f, 1.0f);
+		glRotatef(-90, 0, 0, 1);
+		glColor3f(0.90f, 0.42f, 0.54f);
+		drawTriangle();
+	glPopMatrix();
 }
 
 
@@ -637,7 +763,7 @@ void display() {
 		glPushMatrix();
 			glTranslatef(squarePos, jump_height, 1);
 			glRotatef(float(squareAngle), 0, 0, 1);
-			drawSquare();
+			drawRabbit();
 		glPopMatrix();
 
 
