@@ -21,6 +21,10 @@
 #include <math.h>
 #include <cmath>
 #include <numbers>
+#include <cstdlib>   // Para sortear posicoes e tipos de vegetais aleatoriamente (rand)
+#include <ctime>     // Para "semear" o sorteio com o horario atual (srand)
+#include <cstdio>    // Para montar o texto do HUD (snprintf)
+#include <vector>    // Para guardar a lista de vegetais que estao na tela
 
 
 // Usado para calcular o disco
@@ -167,31 +171,31 @@ void drawCloud(){
 
 void drawFence() {
 
+	// Desenha os pes da cerca
+		glColor3f(0.662f, 0.443f, 0.247f);
 
-	glColor3f(0.662f, 0.443f, 0.247f);
-
-	glPushMatrix();
-		glTranslatef(-1.2f, 0.2f, 0.0f);
-		glScalef(0.15f, 1.0f, 1.0f);
-		drawSquare();
-	glPopMatrix();
-
-
-	glPushMatrix();
-		glTranslatef(1.2f, 0.2f, 0.0f);
-		glScalef(0.15f, 1.0f, 1.0f);
-		drawSquare();
-	glPopMatrix();
+		glPushMatrix();
+			glTranslatef(-1.2f, 0.2f, 0.0f);
+			glScalef(0.15f, 1.0f, 1.0f);
+			drawSquare();
+		glPopMatrix();
 
 
-	glPushMatrix();
-		glTranslatef(0.0f, 0.2f, 0.0f);
-		glScalef(0.15f, 1.0f, 1.0f);
-		drawSquare();
-	glPopMatrix();
+		glPushMatrix();
+			glTranslatef(1.2f, 0.2f, 0.0f);
+			glScalef(0.15f, 1.0f, 1.0f);
+			drawSquare();
+		glPopMatrix();
 
 
+		glPushMatrix();
+			glTranslatef(0.0f, 0.2f, 0.0f);
+			glScalef(0.15f, 1.0f, 1.0f);
+			drawSquare();
+		glPopMatrix();
 
+
+	// Desenha os pedacos que ficam "deitados" da cerca
 	glColor3f(0.752f, 0.541f, 0.321f);
 
 	glPushMatrix();
@@ -230,6 +234,248 @@ void drawFruit(float red, float green, float blue){
 	glPopMatrix();
 
 
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ENREDO DO JOGO: o coelho esta fugindo de uma raposa e precisa atravessar a
+// fazenda o mais rapido possivel. Pelo caminho, ele encontra vegetais que o
+// ajudam na fuga:
+//   - Cenoura  -> da um "turbo" de velocidade, para se distanciar da raposa
+//   - Rabanete -> fortalece as pernas do coelho, permitindo pulos mais altos
+//                 para desviar de obstaculos maiores
+//   - Alface   -> e tao nutritiva que da uma vida extra ao coelho
+//
+// Sistema de vegetais de bonificacao
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Os 3 tipos de vegetais que podem aparecer no jogo
+enum TipoVegetal { CENOURA, ALFACE, RABANETE };
+
+// Cada vegetal na tela e representado por esta estrutura: o tipo dele,
+// onde ele esta (x, y) e se ele ainda esta "vivo" (ativo) na cena.
+// Quando o coelho pega um vegetal, ou quando ele sai da tela, ativo vira false.
+struct Vegetal {
+	TipoVegetal tipo;
+	float x;
+	float y;
+	bool ativo;
+};
+
+// Lista com todos os vegetais que ja foram criados no jogo. Vegetais inativos
+// (ja capturados ou que sairam da tela) sao reaproveitados para o proximo
+// vegetal que precisar aparecer, em vez de ficarmos criando itens novos pra sempre.
+std::vector<Vegetal> vegetais;
+const int MAX_VEGETAIS = 15; // quantidade maxima de vegetais guardados na lista
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha uma cenoura: raiz laranja apontando pra baixo + folhas verdes no topo
+void drawCarrot(){
+
+
+
+	// Folhas da cenoura
+		glColor3f(0.243f, 0.556f, 0.180f);
+
+
+		glPushMatrix();
+			glTranslatef(0.0f, 0.25f, 0.0f);
+			glScalef(0.1f, 0.8f, 1.0f);
+			glRotatef(180, 0, 0, 1);
+			drawTriangle();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(0.0f, 0.2f, 0.0f);
+			glScalef(0.25f, 0.5f, 1.0f);
+			glRotatef(18, 0, 0, 1);
+			drawTriangle();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(0.0f, 0.2f, 0.0f);
+			glScalef(0.22f, 0.5f, 1.0f);
+			glRotatef(-18, 0, 0, 1);
+			drawTriangle();
+		glPopMatrix();
+
+
+	//Base da cenoura
+		glColor3f(0.95f, 0.52f, 0.13f);
+		glPushMatrix();
+			glScalef(0.15f, 1.1f, 1.0f);
+			glRotatef(180, 0, 0, 1);
+			drawTriangle();
+		glPopMatrix();
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha uma alface: algumas "bolhas" verdes sobrepostas, como uma nuvem verde
+void drawLettuce(){
+
+	glColor3f(0.56f, 0.80f, 0.24f);
+	glPushMatrix();
+		glTranslatef(-0.18f, 0.0f, 0.0f);
+		drawDisk(0.24f);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0.16f, 0.08f, 0.0f);
+		drawDisk(0.26f);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0.02f, -0.14f, 0.0f);
+		drawDisk(0.22f);
+	glPopMatrix();
+
+	glColor3f(0.35f, 0.55f, 0.15f);
+	glPushMatrix();
+		drawDiskLine(0.30f);
+	glPopMatrix();
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha um rabanete: corpo rosa/vermelho com pontinha branca e folhas no topo
+void drawRadish(){
+
+	glColor3f(0.243f, 0.556f, 0.180f);
+	glPushMatrix();
+		glTranslatef(0.0f, 0.3f, 0.0f);
+		glScalef(0.13f, 0.26f, 1.0f);
+		glRotatef(180, 0, 0, 1);
+		drawTriangle();
+	glPopMatrix();
+
+	glColor3f(0.86f, 0.24f, 0.35f);
+	glPushMatrix();
+		drawDisk(0.22f);
+	glPopMatrix();
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glPushMatrix();
+		glTranslatef(0.0f, -0.22f, 0.0f);
+		drawDisk(0.08f);
+	glPopMatrix();
+
+}
+
+
+// Escolhe qual funcao de desenho usar de acordo com o tipo do vegetal
+void drawVegetable(TipoVegetal tipo){
+	switch (tipo) {
+		case CENOURA:
+			drawCarrot();
+			break;
+		case ALFACE:
+			drawLettuce();
+			break;
+		case RABANETE:
+			drawRadish();
+			break;
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Controla quando um novo vegetal deve aparecer na tela
+int framesAteProximoVegetal = 60; // contagem regressiva (em frames) ate o proximo vegetal surgir
+
+
+// Cria um vegetal novo (ou reaproveita um que ja saiu da tela), num tipo e
+// posicao aleatorios, sempre entrando pela borda direita da tela, um pouco
+// a frente de onde o coelho consegue ver.
+void spawnVegetal(){
+
+	TipoVegetal tipoSorteado = static_cast<TipoVegetal>(rand() % 3);
+
+	// 70% de chance do vegetal aparecer rente ao chao (facil de pegar correndo)
+	// 30% de chance de aparecer mais alto no ar (o coelho precisa pular para pegar)
+	float y;
+	if (rand() % 100 < 70) {
+		y = 0.2f + (rand() % 60) / 100.0f;   // entre 0.2 e 0.8 (perto do chao)
+	} else {
+		y = 1.8f + (rand() % 120) / 100.0f;  // entre 1.8 e 3.0 (precisa pular)
+	}
+
+	// Comeca um pouco fora da tela, a direita, para "entrar" suavemente na cena
+	float x = 9.0f + (rand() % 300) / 100.0f; // entre 9.0 e 12.0
+
+	// Primeiro tenta reaproveitar um vegetal que ja esteja inativo
+	for (Vegetal &veg : vegetais) {
+		if (!veg.ativo) {
+			veg.tipo = tipoSorteado;
+			veg.x = x;
+			veg.y = y;
+			veg.ativo = true;
+			return;
+		}
+	}
+
+	// Se nao sobrou nenhum vegetal livre, cria um novo (respeitando o limite maximo)
+	if ((int)vegetais.size() < MAX_VEGETAIS) {
+		Vegetal novoVegetal = { tipoSorteado, x, y, true };
+		vegetais.push_back(novoVegetal);
+	}
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Vidas e bonus que o coelho pode ganhar ao capturar vegetais
+
+int rabbitLives = 3; // vidas iniciais do coelho, aumentam ao comer alface
+const int MAX_VIDAS = 3;
+
+// Velocidade normal do coelho e velocidade durante o "turbo" dado pela cenoura
+const float VELOCIDADE_NORMAL = 0.15f;
+const float VELOCIDADE_TURBO = 0.30f;
+int framesDeTurboRestantes = 0;              // enquanto > 0, o turbo esta ativo
+const int DURACAO_TURBO_EM_FRAMES = 150;     // ~3,6 segundos de turbo
+
+// Altura de pulo normal e altura durante o bonus dado pelo rabanete
+const float PULO_NORMAL = 3.5f;
+const float PULO_REFORCADO = 5.5f;
+int framesDePuloReforcadoRestantes = 0;          // enquanto > 0, o pulo alto esta ativo
+const int DURACAO_PULO_REFORCADO_EM_FRAMES = 300; // ~7,2 segundos de pulo reforcado
+
+
+// Aplica o efeito correspondente ao vegetal que o coelho acabou de capturar
+void aplicarBonusDoVegetal(TipoVegetal tipo){
+	switch (tipo) {
+
+		case CENOURA:
+			// Da um impulso extra de velocidade, para o coelho se distanciar da raposa
+			framesDeTurboRestantes = DURACAO_TURBO_EM_FRAMES;
+			break;
+
+		case RABANETE:
+			// Permite pular mais alto por um tempo, para desviar de obstaculos maiores
+			framesDePuloReforcadoRestantes = DURACAO_PULO_REFORCADO_EM_FRAMES;
+			break;
+
+		case ALFACE:
+			// Concede uma vida extra ao coelho
+			if (rabbitLives < MAX_VIDAS) {
+				rabbitLives++;
+			}
+			break;
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Pequena funcao auxiliar para desenhar texto na tela (usada no HUD de vidas/bonus)
+void drawText(float x, float y, const char *texto){
+	glRasterPos3f(x, y, 1.0f);
+	for (const char *c = texto; *c != '\0'; c++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+	}
 }
 
 
@@ -671,6 +917,83 @@ void keyboard_up_callback(unsigned char key, GLint x, GLint y) {
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Movimenta os vegetais junto com o cenario e remove da tela os que ja
+// passaram do coelho (eles ficam "inativos" e podem ser reaproveitados depois)
+void moverVegetais(){
+	for (Vegetal &veg : vegetais) {
+		if (!veg.ativo) continue;
+
+		veg.x -= bgSpeed; // anda junto com o cenario, na mesma velocidade do fundo
+
+		if (veg.x < -10.0f) { // saiu da tela pela esquerda
+			veg.ativo = false;
+		}
+	}
+}
+
+
+// Verifica se o coelho encostou em algum vegetal ativo. Usamos uma checagem
+// simples de distancia (como se o coelho fosse um circulo) em vez de comparar
+// os formatos exatos dos desenhos, o que deixa a colisao facil de entender.
+void verificarColisaoComVegetais(){
+
+	// Centro aproximado do coelho na tela (o corpo dele fica um pouco a
+	// frente da posicao "squarePos", por causa da cabeca e das orelhas)
+	float centroCoelhoX = squarePos + 0.3f;
+	float centroCoelhoY = jump_height + 0.3f;
+	float raioDeCaptura = 1.1f; // "alcance" do coelho para pegar um vegetal
+
+	for (Vegetal &veg : vegetais) {
+		if (!veg.ativo) continue;
+
+		float dx = veg.x - centroCoelhoX;
+		float dy = veg.y - centroCoelhoY;
+		float distancia = sqrt(dx * dx + dy * dy);
+
+		if (distancia < raioDeCaptura) {
+			veg.ativo = false;                   // o vegetal desaparece da tela
+			aplicarBonusDoVegetal(veg.tipo);      // e concede o bonus correspondente
+		}
+	}
+}
+
+
+// Controla o "relogio" que decide quando o proximo vegetal vai aparecer,
+// para que eles surjam aos poucos, um de cada vez, e nao todos juntos.
+void controlarSurgimentoDeVegetais(){
+
+	framesAteProximoVegetal--;
+
+	if (framesAteProximoVegetal <= 0) {
+		spawnVegetal();
+		// Sorteia quantos frames faltam ate o proximo vegetal (entre ~1,4s e ~3,4s)
+		framesAteProximoVegetal = 60 + (rand() % 80);
+	}
+}
+
+
+// Conta o tempo restante dos bonus de turbo (cenoura) e pulo alto (rabanete),
+// e devolve o coelho ao normal assim que o tempo acaba.
+void atualizarBonusAtivos(){
+
+	if (framesDeTurboRestantes > 0) {
+		framesDeTurboRestantes--;
+		squareSpeed = VELOCIDADE_TURBO;
+		if (framesDeTurboRestantes == 0) {
+			squareSpeed = VELOCIDADE_NORMAL;
+		}
+	}
+
+	if (framesDePuloReforcadoRestantes > 0) {
+		framesDePuloReforcadoRestantes--;
+		jump_maximum_height = PULO_REFORCADO;
+		if (framesDePuloReforcadoRestantes == 0) {
+			jump_maximum_height = PULO_NORMAL;
+		}
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Função que controla a animacao
@@ -752,6 +1075,16 @@ void anim (int valor) {
      bgPos -= bgSpeed;
      bgPos = fmod(bgPos, bgWidth); // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
 
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Controla os vegetais de bonificacao: faz eles surgirem aos poucos,
+     // andarem pela tela junto com o cenario, sumirem quando capturados
+     // pelo coelho, e atualiza os bonus (turbo/pulo alto) que estiverem ativos
+     controlarSurgimentoDeVegetais();
+     moverVegetais();
+     verificarColisaoComVegetais();
+     atualizarBonusAtivos();
+
 	//======================================================================================================================================================================================================================================================
 	// Comandos padrao da funcao anim
 	FrameNumber++;
@@ -788,6 +1121,24 @@ void display() {
 			drawSun();
 		glPopMatrix();
 
+
+		glPushMatrix();
+			glTranslatef(3.0f, 5.0f, 1);
+			drawCarrot();
+		glPopMatrix();
+
+
+
+	// Desenha cada vegetal de bonificacao que estiver ativo na cena
+		for (const Vegetal &veg : vegetais) {
+			if (!veg.ativo) continue;
+
+			glPushMatrix();
+				glTranslatef(veg.x, veg.y, 1.0f);
+				drawVegetable(veg.tipo);
+			glPopMatrix();
+		}
+
 	// Criando quadrado com input do usuario na tela
 		glColor3f(0, 0, 0);
 		glPushMatrix();
@@ -798,7 +1149,18 @@ void display() {
 		glPopMatrix();
 
 
+	// HUD: mostra as vidas do coelho e, quando ativos, os bonus de turbo e pulo alto
+		glColor3f(0.0f, 0.0f, 0.0f);
+		char textoVidas[32];
+		snprintf(textoVidas, sizeof(textoVidas), "Vidas: %d", rabbitLives);
+		drawText(-7.7f, 7.2f, textoVidas);
 
+		if (framesDeTurboRestantes > 0) {
+			drawText(-7.7f, 6.6f, "Turbo de velocidade!");
+		}
+		if (framesDePuloReforcadoRestantes > 0) {
+			drawText(-7.7f, 6.0f, "Pulo reforcado!");
+		}
 
 
 	// Alterar a display daqui pra cima
@@ -812,6 +1174,10 @@ void display() {
 
 int main(int argc, char** argv)
 {
+
+	// "Semeia" o gerador de numeros aleatorios com o horario atual, para que
+	// os vegetais sorteados (tipo e posicao) sejam diferentes a cada execucao
+	srand(static_cast<unsigned int>(time(NULL)));
 
 	//Inicializa a biblioteca GLUT e negocia uma seção com o gerenciador de janelas.
 	//É possível passar argumentos para a função glutInit provenientes da linha de execução, tais como informações sobre a geometria da tela
@@ -827,7 +1193,7 @@ int main(int argc, char** argv)
 	glutInitWindowPosition (200, 200);
 
 	// Cria uma janela e define seu título
-	glutCreateWindow("Trabalho 1");
+	glutCreateWindow("Trabalho 1 - Computacao Grafica");
 
 	//Nesta função é definido o estado inicial do OpenGL. Ajustes podem ser feitos para o usuário nessa função.
 	init();
@@ -855,4 +1221,3 @@ int main(int argc, char** argv)
 	return 0;
 
 }
-
