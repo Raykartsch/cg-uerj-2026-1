@@ -442,7 +442,7 @@ const int DURACAO_TURBO_EM_FRAMES = 150;     // ~3,6 segundos de turbo
 
 // Altura de pulo normal e altura durante o bonus dado pelo rabanete
 const float PULO_NORMAL = 3.5f;
-const float PULO_REFORCADO = 5.5f;
+const float PULO_REFORCADO = 5.0f;
 int framesDePuloReforcadoRestantes = 0;          // enquanto > 0, o pulo alto esta ativo
 const int DURACAO_PULO_REFORCADO_EM_FRAMES = 300; // ~7,2 segundos de pulo reforcado
 
@@ -491,7 +491,7 @@ float walkPhase = 0.0f;       // fase atual da animacao (em radianos)
 float walkPhaseSpeed = 0.15f; // velocidade com que a fase avanca a cada frame
 float legLiftAmount = 0.2f;  // o quanto a pata sobe no eixo Y
 float earSwingAmount = 6.0f; // o quanto a orelha "balanca" (em graus)
-
+float direcaoCoelho = 1.0f;
 
 
 
@@ -1005,7 +1005,7 @@ void anim (int valor) {
 	// inputs inseridos para rodar com a setinha esquerda do teclado
 	if (leftArrowPressed) {
 
-
+		  direcaoCoelho = -1.0f; // vira pra esquerda
 		  ///////////////////////////////////
 		  // Permite o quadrado a andar pra esquerda pela cena
 		  if (squarePos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
@@ -1024,11 +1024,7 @@ void anim (int valor) {
 	// inputs inseridos para rodar com a setinha direita do teclado
     if (rightArrowPressed) {
 
-		//////////////////////////////////////////////////////////////////////////////////////
-			// Comandos utilizados para animar o braco
-			// segurando direita -> flexiona (até o limite)
-
-
+    	  direcaoCoelho = 1.0f; // vira pra direita
           ///////////////////////////////////
           // Permite o quadrado a andar pra direita pela cena
 			if (squarePos > 8.0f) { // esse if não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
@@ -1146,7 +1142,7 @@ void display() {
 		glPushMatrix();
 			glTranslatef(squarePos, jump_height, 1.0f);
 			glRotatef(float(squareAngle), 0, 0, 1);
-			glScalef(0.6f, 0.6f, 1.0f);
+			glScalef(0.6f * direcaoCoelho, 0.6f, 1.0f);
 			drawRabbit();
 		glPopMatrix();
 
