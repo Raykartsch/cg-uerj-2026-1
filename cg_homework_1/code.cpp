@@ -138,27 +138,44 @@ void drawSun(){
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha uma nuvem
 
+// Variaveis para controlar a animacao da nuvem (ela fica sempre se mexendo
+// bem devagar, dando a sensacao de estar "flutuando" no ceu)
+float cloudPhase = 0.0f;        // fase atual da animacao (em radianos)
+float cloudPhaseSpeed = 0.02f;  // velocidade com que a fase avanca a cada frame (bem lenta)
+float cloudSideSwingAmount = 0.15f; // o quanto as esferas das pontas se movem no eixo X
+float cloudMiddleBobAmount = 0.1f;  // o quanto a esfera do meio se move no eixo Y
+
 void drawCloud(){
+
+	// Usamos uma unica onda senoidal para gerar os dois movimentos: as
+	// esferas das pontas deslizam um pouco para os lados (eixo X), enquanto
+	// a esfera do meio sobe e desce (eixo Y), tudo no mesmo ritmo.
+	float cloudSin = sin(cloudPhase);
+
+	float sideOffsetX   = cloudSin * cloudSideSwingAmount;
+	float middleOffsetY = cloudSin * cloudMiddleBobAmount;
 
 	glColor3f(1, 1, 1);
 
 	glPushMatrix();
-		glTranslatef(-0.6f, -0.2f, 1);
+		glTranslatef(-0.6f + sideOffsetX, -0.2f, 1);
 		drawDisk(0.5f);
 	glPopMatrix();
 
 	glPushMatrix();
-		glTranslatef(0, -0.1f, 1);
+		glTranslatef(0, -0.1f + middleOffsetY, 1);
 		drawDisk(0.7f);
 	glPopMatrix();
 
 	glPushMatrix();
-		glTranslatef(0.6f, -0.2f, 1);
+		glTranslatef(0.6f + sideOffsetX, -0.2f, 1);
 		drawDisk(0.5f);
 	glPopMatrix();
 
 
 }
+
+
 
 
 
@@ -386,7 +403,7 @@ int framesAteProximoVegetal = 60; // contagem regressiva (em frames) ate o proxi
 // Cria um vegetal novo (ou reaproveita um que ja saiu da tela), num tipo e
 // posicao aleatorios, sempre entrando pela borda direita da tela, um pouco
 // a frente de onde o coelho consegue ver.
-void spawnVegetal(){
+void spawnVegetable(){
 
 	TipoVegetal tipoSorteado = static_cast<TipoVegetal>(rand() % 3);
 
@@ -508,103 +525,128 @@ void drawRabbit(){
 	float legRightLift = (phaseSin < 0.0f)  ? -phaseSin * legLiftAmount : 0.0f; // sobe junto com a orelha esquerda
 
 
-	// Perna Esquerda
-	glPushMatrix();
-		glTranslatef(-0.4f, -1.0f + legLeftLift, 1.0f);
-		glScalef(0.125f, 0.4f, 1.0f);
-		glColor3f(0.90f, 0.85f, 0.79f);
-		drawSquare();
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawSquareLine();
-	glPopMatrix();
+	//////////////////////////////////////////////////////////////////////////////////////////////
+	// CORPO -> nó PAI (raiz) da hierarquia do coelho.
+	// Ele é modelado em seu próprio sistema de coordenadas, centrado na origem
+	// (um disco de raio 1 desenhado em (0,0)). Todas as outras partes do coelho
+	// (patas, rabo, orelhas e cabeça) são desenhadas DENTRO deste glPushMatrix/
+	// glPopMatrix, ou seja, são "filhas" do corpo: qualquer transformação
+	// aplicada aqui (translação, rotação, escala) seria automaticamente
+	// herdada por todas elas.
+	glPushMatrix(); // abre o sistema de coordenadas do CORPO (nó pai)
 
-
-	// Perna Direita
-	glPushMatrix();
-		glTranslatef(0.4f, -1.0f + legRightLift, 1.0f);
-		glScalef(0.125f, 0.4f, 1.0f);
-		glColor3f(0.90f, 0.85f, 0.79f);
-		drawSquare();
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawSquareLine();
-	glPopMatrix();
-
-	// Rabo
-	glPushMatrix();
-		glTranslatef(-0.85f, -0.4f + (legRightLift / 3), 1.0f);
-		glColor3f(0.96f, 0.93f, 0.89f);
-		drawDisk(0.25);
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawDiskLine(0.25);
-	glPopMatrix();
-
-	// Corpo
-	glPushMatrix();
 		glColor3f(0.96f, 0.93f, 0.89f);
 		drawDisk(1);
 		glColor3f(0.705f, 0.64f, 0.58f);
 		drawDiskLine(1);
-	glPopMatrix();
-
-	// Cabeça
-	glPushMatrix();
-		glTranslatef(1.2, 0.7, 1.0f);
-		glColor3f(0.96f, 0.93f, 0.89f);
-		drawDisk(0.6);
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawDiskLine(0.6);
-	glPopMatrix();
 
 
-	// Olho
-	glPushMatrix();
-		glTranslatef(1.5f, 0.8f, 1.0f);
-		glColor3f(0.0f, 0.0f, 0.0f);
-		drawDisk(0.065);
-	glPopMatrix();
-
-	// Focinho
-	glPushMatrix();
-		glTranslatef(1.8f, 0.5f, 1.0f);
-		glColor3f(1.0f, 1.0f, 1.0f);
-		drawDisk(0.2);
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawDiskLine(0.2);
-	glPopMatrix();
+		// -------- Pata esquerda (filha do corpo) --------
+		// Modelada em seu proprio sistema de coordenadas (um quadrado
+		// centrado na origem) e depois posicionada/escalada em relacao ao corpo.
+		glPushMatrix();
+			glTranslatef(-0.4f, -1.0f + legLeftLift, 1.0f);
+			glScalef(0.125f, 0.4f, 1.0f);
+			glColor3f(0.90f, 0.85f, 0.79f);
+			drawSquare();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawSquareLine();
+		glPopMatrix();
 
 
-	// Nariz
-	glPushMatrix();
-		glTranslatef(1.96f, 0.5f, 1.0f);
-		glScalef(0.15f, 0.07f, 1.0f);
-		glRotatef(-90, 0, 0, 1);
-		glColor3f(0.90f, 0.42f, 0.54f);
-		drawTriangle();
-	glPopMatrix();
+		// -------- Pata direita (filha do corpo) --------
+		glPushMatrix();
+			glTranslatef(0.4f, -1.0f + legRightLift, 1.0f);
+			glScalef(0.125f, 0.4f, 1.0f);
+			glColor3f(0.90f, 0.85f, 0.79f);
+			drawSquare();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawSquareLine();
+		glPopMatrix();
 
 
-	// Orelha Esquerda
-	glPushMatrix();
-		glTranslatef(1.2f, 1.2f, 1.0f);
-		glRotatef(10 - earLeftSwing, 0, 0, 1);
-		glScalef(0.125f, 1.2f, 1.0f);
-		glColor3f(0.96f, 0.93f, 0.89f);
-		drawTriangle();
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawTriangleLine();
-	glPopMatrix();
+		// -------- Rabo (filho do corpo) --------
+		// Modelado como um disco centrado na origem, depois posicionado
+		// na traseira do corpo.
+		glPushMatrix();
+			glTranslatef(-0.85f, -0.4f + (legRightLift / 3), 1.0f);
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawDisk(0.25);
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawDiskLine(0.25);
+		glPopMatrix();
 
 
-	// Orelha Direita
-	glPushMatrix();
-		glTranslatef(1.6f, 1.2f, 1.0f);
-		glRotatef(-10 - earRightSwing, 0, 0, 1);
-		glScalef(0.125f, 1.2f, 1.0f);
-		glColor3f(0.96f, 0.93f, 0.89f);
-		drawTriangle();
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawTriangleLine();
-	glPopMatrix();
+		// -------- Cabeça (filha do corpo, e também PAI de olho/focinho/nariz) --------
+		// A cabeça abre seu próprio glPushMatrix e, dentro dele, desenha suas
+		// partes (olho, focinho, nariz) usando coordenadas relativas ao
+		// CENTRO DA PRÓPRIA CABEÇA (e não mais coordenadas absolutas da tela),
+		// formando um segundo nível da hierarquia: corpo -> cabeça -> olho/focinho/nariz.
+		glPushMatrix();
+			glTranslatef(1.2f, 0.7f, 1.0f);
+
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawDisk(0.6);
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawDiskLine(0.6);
+
+
+			// Olho (filho da cabeça)
+			glPushMatrix();
+				glTranslatef(0.3f, 0.1f, 0.0f); // deslocamento a partir do centro da cabeça
+				glColor3f(0.0f, 0.0f, 0.0f);
+				drawDisk(0.065);
+			glPopMatrix();
+
+
+			// Focinho (filho da cabeça)
+			glPushMatrix();
+				glTranslatef(0.6f, -0.2f, 0.0f);
+				glColor3f(1.0f, 1.0f, 1.0f);
+				drawDisk(0.2);
+				glColor3f(0.705f, 0.64f, 0.58f);
+				drawDiskLine(0.2);
+			glPopMatrix();
+
+
+			// Nariz (filho da cabeça)
+			glPushMatrix();
+				glTranslatef(0.76f, -0.2f, 0.0f);
+				glScalef(0.15f, 0.07f, 1.0f);
+				glRotatef(-90, 0, 0, 1);
+				glColor3f(0.90f, 0.42f, 0.54f);
+				drawTriangle();
+			glPopMatrix();
+
+		glPopMatrix(); // fecha o sistema de coordenadas da CABEÇA
+
+
+		// -------- Orelha esquerda (filha do corpo) --------
+		// Modelada como um triângulo centrado na origem, depois rotacionada
+		// (efeito do "swing" da corrida) e posicionada no topo do corpo.
+		glPushMatrix();
+			glTranslatef(1.2f, 1.2f, 1.0f);
+			glRotatef(10 - earLeftSwing, 0, 0, 1);
+			glScalef(0.125f, 1.2f, 1.0f);
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawTriangle();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawTriangleLine();
+		glPopMatrix();
+
+
+		// -------- Orelha direita (filha do corpo) --------
+		glPushMatrix();
+			glTranslatef(1.6f, 1.2f, 1.0f);
+			glRotatef(-10 - earRightSwing, 0, 0, 1);
+			glScalef(0.125f, 1.2f, 1.0f);
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawTriangle();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawTriangleLine();
+		glPopMatrix();
+
+	glPopMatrix(); // fecha o sistema de coordenadas do CORPO (nó pai)
 
 
 }
@@ -957,7 +999,7 @@ void controlarSurgimentoDeVegetais(){
 	framesAteProximoVegetal--;
 
 	if (framesAteProximoVegetal <= 0) {
-		spawnVegetal();
+		spawnVegetable();
 		// Sorteia quantos frames faltam ate o proximo vegetal (entre ~1,4s e ~3,4s)
 		framesAteProximoVegetal = 60 + (rand() % 80);
 	}
@@ -1058,6 +1100,15 @@ void anim (int valor) {
 
 
      //////////////////////////////////////////////////////////////////////////////////////
+     // Controla a animacao de "flutuar" das nuvens
+     cloudPhase += cloudPhaseSpeed;
+     if (cloudPhase > 2 * PI) {
+    	 cloudPhase -= 2 * PI; // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
+     }
+
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
      // Controla o background de fundo
      bgPos -= bgSpeed;
      bgPos = fmod(bgPos, bgWidth); // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
@@ -1071,6 +1122,9 @@ void anim (int valor) {
      moverVegetais();
      verificarColisaoComVegetais();
      atualizarBonusAtivos();
+
+
+
 
 	//======================================================================================================================================================================================================================================================
 	// Comandos padrao da funcao anim
@@ -1126,12 +1180,12 @@ void display() {
 			glPopMatrix();
 		}
 
-	// Criando quadrado com input do usuario na tela
+	// Criando coelho com input do usuario na tela
 		glColor3f(0, 0, 0);
 		glPushMatrix();
 			glTranslatef(squarePos, jump_height, 1.0f);
-			glRotatef(float(squareAngle), 0, 0, 1);
-			glScalef(0.6f * direcaoCoelho, 0.6f, 1.0f);
+			//glRotatef(float(squareAngle), 0, 0, 1);
+			glScalef(0.5f * direcaoCoelho, 0.5f, 1.0f);
 			drawRabbit();
 		glPopMatrix();
 
