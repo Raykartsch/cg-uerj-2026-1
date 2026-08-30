@@ -60,7 +60,7 @@ void drawSquare(){
 }
 
 void drawSquareLine(){
-	glLineWidth(2.0f);
+	glLineWidth(1.5f);
 	glBegin(GL_LINE_LOOP);
 		glVertex3f(-1, -1, 0);
 		glVertex3f(1, -1, 0);
@@ -82,7 +82,7 @@ void drawTriangle() {
 }
 
 void drawTriangleLine() {
-	glLineWidth(2.0f);
+	glLineWidth(1.5f);
 	glBegin(GL_LINE_LOOP);
       glVertex3f(-1, 0, 0);
       glVertex3f(0, 1, 0);
@@ -107,7 +107,7 @@ void drawDisk(double radius){
 
 void drawDiskLine(double radius){
     int d;
-    glLineWidth(2.0f);
+    glLineWidth(1.5f);
     glBegin(GL_LINE_LOOP);
     for (d = 0; d < 32; d++){
         double angle = (2*PI/32) * d;
@@ -235,13 +235,40 @@ void drawFruit(float red, float green, float blue){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha o coelho
+
+
+// Variaveis para controlar a animacao de "correr" do coelho (patas e orelhas)
+// O coelho fica sempre animado, independente de estar andando ou parado
+float walkPhase = 0.0f;       // fase atual da animacao (em radianos)
+float walkPhaseSpeed = 0.15f; // velocidade com que a fase avanca a cada frame
+float legLiftAmount = 0.2f;  // o quanto a pata sobe no eixo Y
+float earSwingAmount = 6.0f; // o quanto a orelha "balanca" (em graus)
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha o coelho
 void drawRabbit(){
 
+
+	// Calcula, a partir da fase atual da animacao, o quanto cada pata deve
+	// subir no eixo Y e o quanto cada orelha deve balancar para frente.
+	// A logica liga as duas: quando a orelha direita esta indo para frente
+	// (senoide positiva), a perna ESQUERDA sobe; quando a orelha esquerda
+	// esta indo para frente (senoide negativa), a perna DIREITA sobe.
+	float phaseSin = sin(walkPhase);
+
+	float earRightSwing = (phaseSin > 0.0f) ?  phaseSin * earSwingAmount : 0.0f;   // orelha direita "pra frente" quando > 0
+	float earLeftSwing  = (phaseSin < 0.0f) ? -phaseSin * earSwingAmount : 0.0f;  // orelha esquerda "pra frente" quando > 0 (fase oposta)
+
+	float legLeftLift  = (phaseSin > 0.0f)  ?  phaseSin * legLiftAmount : 0.0f; // sobe junto com a orelha direita
+	float legRightLift = (phaseSin < 0.0f)  ? -phaseSin * legLiftAmount : 0.0f; // sobe junto com a orelha esquerda
 
 
 	// Perna Esquerda
 	glPushMatrix();
-		glTranslatef(-0.4f, -1.0f, 1.0f);
+		glTranslatef(-0.4f, -1.0f + legLeftLift, 1.0f);
 		glScalef(0.125f, 0.4f, 1.0f);
 		glColor3f(0.90f, 0.85f, 0.79f);
 		drawSquare();
@@ -252,7 +279,7 @@ void drawRabbit(){
 
 	// Perna Direita
 	glPushMatrix();
-		glTranslatef(0.4f, -1.0f, 1.0f);
+		glTranslatef(0.4f, -1.0f + legRightLift, 1.0f);
 		glScalef(0.125f, 0.4f, 1.0f);
 		glColor3f(0.90f, 0.85f, 0.79f);
 		drawSquare();
@@ -262,7 +289,7 @@ void drawRabbit(){
 
 	// Rabo
 	glPushMatrix();
-		glTranslatef(-0.8f, -0.4f, 1.0f);
+		glTranslatef(-0.85f, -0.4f + (legRightLift / 3), 1.0f);
 		glColor3f(0.96f, 0.93f, 0.89f);
 		drawDisk(0.25);
 		glColor3f(0.705f, 0.64f, 0.58f);
@@ -317,7 +344,7 @@ void drawRabbit(){
 	// Orelha Esquerda
 	glPushMatrix();
 		glTranslatef(1.2f, 1.2f, 1.0f);
-		glRotatef(10, 0, 0, 1);
+		glRotatef(10 - earLeftSwing, 0, 0, 1);
 		glScalef(0.125f, 1.2f, 1.0f);
 		glColor3f(0.96f, 0.93f, 0.89f);
 		drawTriangle();
@@ -329,7 +356,7 @@ void drawRabbit(){
 	// Orelha Direita
 	glPushMatrix();
 		glTranslatef(1.6f, 1.2f, 1.0f);
-		glRotatef(-10, 0, 0, 1);
+		glRotatef(-10 - earRightSwing, 0, 0, 1);
 		glScalef(0.125f, 1.2f, 1.0f);
 		glColor3f(0.96f, 0.93f, 0.89f);
 		drawTriangle();
@@ -664,7 +691,7 @@ void anim (int valor) {
 
 		  ///////////////////////////////////
 		  // Rotaciona o quadrado qdo anda pra esquerda
-		  squareAngle += squareAngleSpeed;
+		  //squareAngle += squareAngleSpeed;
 
 	}
 
@@ -689,7 +716,7 @@ void anim (int valor) {
 
           ///////////////////////////////////
           // Rotaciona o quadrado qdo anda pra esquerda
-          squareAngle -= squareAngleSpeed;
+          //squareAngle -= squareAngleSpeed;
 
 
      }
@@ -723,6 +750,18 @@ void anim (int valor) {
      if (e_key_pressed){
 		 squareAngle -= squareAngleSpeed;
      }
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Controla a animacao de corrida do coelho (patas e orelhas)
+     // Avanca sempre, independente de o coelho estar se movendo pela cena ou nao,
+     // para que ele fique "sempre" animado.
+     walkPhase += walkPhaseSpeed;
+     if (walkPhase > 2 * PI) {
+    	 walkPhase -= 2 * PI; // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
+     }
+
+
 
      //////////////////////////////////////////////////////////////////////////////////////
      // Controla o background de fundo
@@ -768,8 +807,9 @@ void display() {
 	// Criando quadrado com input do usuario na tela
 		glColor3f(0, 0, 0);
 		glPushMatrix();
-			glTranslatef(squarePos, jump_height, 1);
+			glTranslatef(squarePos, jump_height, 1.0f);
 			glRotatef(float(squareAngle), 0, 0, 1);
+			glScalef(0.6f, 0.6f, 1.0f);
 			drawRabbit();
 		glPopMatrix();
 
