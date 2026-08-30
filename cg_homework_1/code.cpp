@@ -435,7 +435,7 @@ int rabbitLives = 3; // vidas iniciais do coelho, aumentam ao comer alface
 const int MAX_VIDAS = 3;
 
 // Velocidade normal do coelho e velocidade durante o "turbo" dado pela cenoura
-const float VELOCIDADE_NORMAL = 0.15f;
+const float VELOCIDADE_NORMAL = 0.1f;
 const float VELOCIDADE_TURBO = 0.30f;
 int framesDeTurboRestantes = 0;              // enquanto > 0, o turbo esta ativo
 const int DURACAO_TURBO_EM_FRAMES = 150;     // ~3,6 segundos de turbo
@@ -838,12 +838,7 @@ bool goingUp = true; // controla se está na fase de subida ou descida do pulo
 
 // Controlam o movimento no eixo x do quadrado andante
 float squarePos = 0.0f;
-float squareSpeed = 0.15f;
-
-
-// Controlam o angulo de rotacao do quadrado andante
-int squareAngle = 0;
-int squareAngleSpeed = 5.0;
+float squareSpeed = 0.1f;
 
 
 // booleanos que controlam se a setinha do teclado está pressionada (neste caso, estas teclas sao especiais)
