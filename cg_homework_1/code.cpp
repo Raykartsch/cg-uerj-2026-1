@@ -237,26 +237,6 @@ void drawFruit(float red, float green, float blue){
 // Desenha o coelho
 void drawRabbit(){
 
-	// Orelha Esquerda
-	glPushMatrix();
-		glTranslatef(2.0f, 1.0f, 1.0f);
-		glScalef(0.125f, 0.4f, 1.0f);
-		glColor3f(0.96f, 0.93f, 0.89f);
-		drawTriangle();
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawTriangleLine();
-	glPopMatrix();
-
-
-	// Orelha Direita
-	glPushMatrix();
-		glTranslatef(2.0f, 1.5f, 1.0f);
-		glScalef(0.125f, 0.4f, 1.0f);
-		glColor3f(0.96f, 0.93f, 0.89f);
-		drawTriangle();
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawTriangleLine();
-	glPopMatrix();
 
 
 	// Perna Esquerda
@@ -268,6 +248,7 @@ void drawRabbit(){
 		glColor3f(0.705f, 0.64f, 0.58f);
 		drawSquareLine();
 	glPopMatrix();
+
 
 	// Perna Direita
 	glPushMatrix();
@@ -308,7 +289,7 @@ void drawRabbit(){
 
 	// Olho
 	glPushMatrix();
-		glTranslatef(1.4f, 0.8f, 1.0f);
+		glTranslatef(1.5f, 0.8f, 1.0f);
 		glColor3f(0.0f, 0.0f, 0.0f);
 		drawDisk(0.065);
 	glPopMatrix();
@@ -331,6 +312,32 @@ void drawRabbit(){
 		glColor3f(0.90f, 0.42f, 0.54f);
 		drawTriangle();
 	glPopMatrix();
+
+
+	// Orelha Esquerda
+	glPushMatrix();
+		glTranslatef(1.2f, 1.2f, 1.0f);
+		glRotatef(10, 0, 0, 1);
+		glScalef(0.125f, 1.2f, 1.0f);
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawTriangle();
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawTriangleLine();
+	glPopMatrix();
+
+
+	// Orelha Direita
+	glPushMatrix();
+		glTranslatef(1.6f, 1.2f, 1.0f);
+		glRotatef(-10, 0, 0, 1);
+		glScalef(0.125f, 1.2f, 1.0f);
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawTriangle();
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawTriangleLine();
+	glPopMatrix();
+
+
 }
 
 
