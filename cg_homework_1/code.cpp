@@ -344,24 +344,26 @@ void drawLettuce(){
 // Desenha um rabanete: corpo rosa/vermelho com pontinha branca e folhas no topo
 void drawRadish(){
 
-	glColor3f(0.243f, 0.556f, 0.180f);
-	glPushMatrix();
-		glTranslatef(0.0f, 0.3f, 0.0f);
-		glScalef(0.13f, 0.26f, 1.0f);
-		glRotatef(180, 0, 0, 1);
-		drawTriangle();
-	glPopMatrix();
+	// Folha do rabanete
+		glColor3f(0.243f, 0.556f, 0.180f);
+		glPushMatrix();
+			glTranslatef(0.0f, 0.4f, 0.0f);
+			glScalef(0.15f, 0.39f, 1.0f);
+			glRotatef(180, 0, 0, 1);
+			drawTriangle();
+		glPopMatrix();
 
-	glColor3f(0.86f, 0.24f, 0.35f);
-	glPushMatrix();
-		drawDisk(0.22f);
-	glPopMatrix();
+	// Corpo do rabanete
+		glColor3f(0.86f, 0.24f, 0.35f);
+		glPushMatrix();
+			drawDisk(0.22f);
+		glPopMatrix();
 
-	glColor3f(1.0f, 1.0f, 1.0f);
-	glPushMatrix();
-		glTranslatef(0.0f, -0.22f, 0.0f);
-		drawDisk(0.08f);
-	glPopMatrix();
+		glColor3f(1.0f, 1.0f, 1.0f);
+		glPushMatrix();
+			glTranslatef(0.0f, -0.22f, 0.0f);
+			drawDisk(0.1f);
+		glPopMatrix();
 
 }
 
@@ -1124,7 +1126,7 @@ void display() {
 
 		glPushMatrix();
 			glTranslatef(3.0f, 5.0f, 1);
-			drawCarrot();
+			drawRadish();
 		glPopMatrix();
 
 
