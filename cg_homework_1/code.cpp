@@ -690,7 +690,40 @@ void drawRabbit(){
 
 
 }
+
+
+float foxWalkPhase = 0.0f;
+float foxWalkPhaseSpeed = 0.22f;  // um pouco mais rápida que a do coelho
+float foxLegLiftAmount = 0.15f;
+float foxEarSwingAmount = 8.0f;
+
+float foxTailPhase = 0.0f;
+float foxTailPhaseSpeed = 0.10f;     // balanço lento da base
+float foxTailSwingAmount = 6.0f;
+
+float foxTailTipPhase = 0.0f;
+float foxTailTipPhaseSpeed = 0.17f;  // a ponta se move num ritmo diferente
+float foxTailTipSwingAmount = 12.0f;
+
+
 void drawFox(){
+
+	// A mesma ideia usada no coelho: a partir de uma unica onda senoidal,
+	// decidimos quais patas sobem e quais orelhas balancam pra frente.
+	float foxPhaseSin = sin(foxWalkPhase);
+
+	// Orelhas: enquanto uma balanca pra frente, a outra fica parada (igual ao coelho)
+	float earRightSwing = (foxPhaseSin > 0.0f) ?  foxPhaseSin * foxEarSwingAmount : 0.0f;
+	float earLeftSwing  = (foxPhaseSin < 0.0f) ? -foxPhaseSin * foxEarSwingAmount : 0.0f;
+
+	// Patas: os dois pares diagonais se revezam subindo, igual a um trote de raposa de verdade
+	float legGroupALift = (foxPhaseSin > 0.0f)  ?  foxPhaseSin * foxLegLiftAmount : 0.0f; // traseira-esq (fundo) + dianteira-dir (frente)
+	float legGroupBLift = (foxPhaseSin < 0.0f)  ? -foxPhaseSin * foxLegLiftAmount : 0.0f; // dianteira-esq (fundo) + traseira-dir (frente)
+
+	// Cauda: a base e a ponta usam fases diferentes, entao balancam de forma independente
+	float tailSwing    = sin(foxTailPhase)    * foxTailSwingAmount;
+	float tailTipSwing = sin(foxTailTipPhase) * foxTailTipSwingAmount;
+
     // Cores base
     float orangeR = 0.95f, orangeG = 0.45f, orangeB = 0.10f;
     float orangeDarkR = 0.80f, orangeDarkG = 0.35f, orangeDarkB = 0.08f; // Tom mais escuro para as patas do fundo
@@ -701,30 +734,33 @@ void drawFox(){
     glPushMatrix();
 
         // 1. PATAS DO FUNDO (Desenhadas antes do corpo para ficarem atrás)
-        // Pata Traseira Esquerda (Fundo)
+        // Pata Traseira Esquerda (Fundo) -> pertence ao Grupo A
         glPushMatrix();
-            glTranslatef(-0.8f, -0.6f, -0.1f);
+            glTranslatef(-0.8f, -0.6f + legGroupALift, -0.1f);
             glScalef(0.12f, 0.4f, 1.0f);
             glColor3f(orangeDarkR, orangeDarkG, orangeDarkB);
             drawSquare();
         glPopMatrix();
 
-        // Pata Dianteira Esquerda (Fundo)
+        // Pata Dianteira Esquerda (Fundo) -> pertence ao Grupo B
         glPushMatrix();
-            glTranslatef(0.6f, -0.6f, -0.1f);
+            glTranslatef(0.6f, -0.6f + legGroupBLift, -0.1f);
             glScalef(0.12f, 0.4f, 1.0f);
             glColor3f(orangeDarkR, orangeDarkG, orangeDarkB);
             drawSquare();
         glPopMatrix();
 
         // 2. RABO ALONGADO (QUADRADO NA BASE + TRIÂNGULO NA PONTA COM DETALHE BRANCO)
+        // A base (glPushMatrix externo) e a ponta (glPushMatrix interno) tem
+        // cada uma o seu proprio angulo de balanco (tailSwing / tailTipSwing),
+        // por isso se movem de forma independente uma da outra.
         glPushMatrix();
             glTranslatef(-1.1f, 0.0f, 0.5f);
-            glRotatef(30.0f, 0, 0, 1);
+            glRotatef(30.0f + tailSwing, 0, 0, 1);
 
             // Base retangular/quadrada do rabo (Laranja)
             glPushMatrix();
-                glTranslatef(-0.20f, -0.02f, 0.0f);
+                glTranslatef(-0.20f, -0.09f, 0.0f);
                 glScalef(0.65f, 0.25f, 1.0f);
                 glColor3f(orangeR, orangeG, orangeB);
                 drawSquare();
@@ -735,7 +771,7 @@ void drawFox(){
             // Extensão / Ponta Triangular do rabo (Laranja + Ponta Branca)
             glPushMatrix();
                 glTranslatef(-0.80f, -0.05f, 0.0f);
-                glRotatef(80.0f, 0, 0, 1);
+                glRotatef(80.0f + tailTipSwing, 0, 0, 1);
                 glScalef(0.28f, 1.05f, 1.0f);
 
                 // Base triangular laranja
@@ -783,9 +819,9 @@ void drawFox(){
         glPopMatrix();
 
         // 4. PATAS DA FRENTE (Primeiro plano)
-        // Pata Traseira Direita (Frente)
+        // Pata Traseira Direita (Frente) -> pertence ao Grupo B
         glPushMatrix();
-            glTranslatef(-0.6f, -0.65f, 1.0f);
+            glTranslatef(-0.6f, -0.65f + legGroupBLift, 1.0f);
             glScalef(0.13f, 0.42f, 1.0f);
             glColor3f(orangeR, orangeG, orangeB);
             drawSquare();
@@ -793,9 +829,9 @@ void drawFox(){
             drawSquareLine();
         glPopMatrix();
 
-        // Pata Dianteira Direita (Frente)
+        // Pata Dianteira Direita (Frente) -> pertence ao Grupo A
         glPushMatrix();
-            glTranslatef(0.8f, -0.65f, 1.0f);
+            glTranslatef(0.8f, -0.65f + legGroupALift, 1.0f);
             glScalef(0.13f, 0.42f, 1.0f);
             glColor3f(orangeR, orangeG, orangeB);
             drawSquare();
@@ -847,10 +883,10 @@ void drawFox(){
                 drawDisk(0.06);
             glPopMatrix();
 
-            // Orelha Esquerda (Traseira)
+            // Orelha Esquerda (Traseira) -> balanca com earLeftSwing
             glPushMatrix();
                 glTranslatef(-0.2f, 0.35f, 0.0f);
-                glRotatef(15.0f, 0, 0, 1);
+                glRotatef(15.0f - earLeftSwing, 0, 0, 1);
                 glScalef(0.2f, 0.6f, 1.0f);
                 glColor3f(orangeR, orangeG, orangeB);
                 drawTriangle();
@@ -863,10 +899,10 @@ void drawFox(){
                 drawTriangle();
             glPopMatrix();
 
-            // Orelha Direita (Frontal)
+            // Orelha Direita (Frontal) -> balanca com earRightSwing
             glPushMatrix();
                 glTranslatef(0.35f, 0.3f, 0.0f);
-                glRotatef(-35.0f, 0, 0, 1);
+                glRotatef(-35.0f - earRightSwing, 0, 0, 1);
                 glScalef(0.18f, 0.5f, 1.0f);
                 glColor3f(orangeR, orangeG, orangeB);
                 drawTriangle();
@@ -883,6 +919,9 @@ void drawFox(){
 
     glPopMatrix(); // Fim do Corpo
 }
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha o background "infinito"
 
@@ -1325,6 +1364,29 @@ void anim (int valor) {
      walkPhase += walkPhaseSpeed;
      if (walkPhase > 2 * PI) {
     	 walkPhase -= 2 * PI; // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
+     }
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Controla a animacao de corrida da raposa (patas e orelhas), do mesmo
+     // jeito que a animacao do coelho: sempre avancando, pra ficar sempre animada.
+     foxWalkPhase += foxWalkPhaseSpeed;
+     if (foxWalkPhase > 2 * PI) {
+    	 foxWalkPhase -= 2 * PI; // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
+     }
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Controla a animacao da cauda da raposa: a base e a ponta avancam em
+     // velocidades diferentes, entao seus balancos nunca ficam sincronizados
+     foxTailPhase += foxTailPhaseSpeed;
+     if (foxTailPhase > 2 * PI) {
+    	 foxTailPhase -= 2 * PI;
+     }
+
+     foxTailTipPhase += foxTailTipPhaseSpeed;
+     if (foxTailTipPhase > 2 * PI) {
+    	 foxTailTipPhase -= 2 * PI;
      }
 
 
