@@ -131,8 +131,6 @@ void drawCloud(){
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Desenha o background "infinito"
 
 
 void drawFence() {
@@ -202,6 +200,18 @@ void drawFruit(float red, float green, float blue){
 
 }
 
+
+void drawRabbit(){
+
+
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha o background "infinito"
+
 float bgSpeed = 0.1f;      // velocidade do fundo (independente do carro)
 float bgWidth = 40.0f;     // largura de uma "tile" do fundo (2 * 50 do glScalef)
 float bgPos = 0.0f;         // posição atual do fundo
@@ -211,94 +221,157 @@ void drawBackgroundContent(){
 
 	// Fazer o background com 50 pixels de largura
 	// Desenhar o ceu
-
-
-	glColor3f(0.53, 0.81, 0.98);
-	glPushMatrix();
-		// X = 24
-		glScalef(bgWidth + (bgWidth / 2), 10, 1);
-		drawSquare();
-	glPopMatrix();
+		glColor3f(0.53, 0.81, 0.98);
+		glPushMatrix();
+			// X = 24
+			glScalef(bgWidth + (bgWidth / 2), 10, 1);
+			drawSquare();
+		glPopMatrix();
 
 	// Desenhar a grama
-	glColor3f(0.486f, 0.988f, 0.0f);
-	glPushMatrix();
-		glTranslatef(0.0f, -4.0f, 1.0f);
-		// X = 24
-		glScalef(bgWidth + (bgWidth / 2), 4.0f, 1);
-		drawSquare();
-	glPopMatrix();
-
-
-	// Desenha cerca
-	glPushMatrix();
-		glTranslatef(16.0f, 0.5f, 1.0f);
-		glScalef(1.5f, 1.0f, 1.0f);
-		drawFence();
-	glPopMatrix();
-
-
-
-
-
-	// Desenha as nuvens
-	glPushMatrix();
-		glTranslatef(14.0f, 5.0f, 1.0f);
-		drawCloud();
-	glPopMatrix();
-
-
-	glPushMatrix();
-		glTranslatef(21.0f, 4.0f, 1.0f);
-		drawCloud();
-	glPopMatrix();
-
-
-	glPushMatrix();
-		glTranslatef(29.0f, 5.5f, 1.0f);
-		drawCloud();
-	glPopMatrix();
-
-
-
-	// Desenhar canteiro 1
-
-		//Desenha terra
-		glColor3f(0.478f, 0.290f, 0.168f);
-
+		glColor3f(0.486f, 0.988f, 0.0f);
 		glPushMatrix();
-			glTranslatef(24.0f, -1.5f, 1.0f);
-			glScalef(2.5f, 1.0f, 1.0f);
+			glTranslatef(0.0f, -4.0f, 1.0f);
+			// X = 24
+			glScalef(bgWidth + (bgWidth / 2), 4.0f, 1);
 			drawSquare();
 		glPopMatrix();
 
 
-		// Desenha laranjas
-		//glColor3f(0.909f, 0.447f, 0.172f);
+	// Desenha cerca
 		glPushMatrix();
-			glTranslatef(22.0f, -1.5f, 1.0f);
-			glScalef(1.2f, 1.2f, 1.0f);
-			drawFruit(0.909f, 0.447f, 0.172f);
+			glTranslatef(16.0f, 0.5f, 1.0f);
+			glScalef(1.5f, 1.0f, 1.0f);
+			drawFence();
 		glPopMatrix();
 
-		glPushMatrix();
-			glTranslatef(23.4f, -1.8f, 1.0f);
-			glScalef(1.5f, 1.5f, 1.0f);
-			drawFruit(0.909f, 0.447f, 0.172f);
-		glPopMatrix();
 
+
+	// Desenha as nuvens
 		glPushMatrix();
-			glTranslatef(24.3f, -1.3f, 1.0f);
-			drawFruit(0.909f, 0.447f, 0.172f);
+			glTranslatef(14.0f, 5.0f, 1.0f);
+			drawCloud();
 		glPopMatrix();
 
 
 		glPushMatrix();
-			glTranslatef(25.7f, -2.1f, 1.0f);
-			drawFruit(0.909f, 0.447f, 0.172f);
+			glTranslatef(21.0f, 4.0f, 1.0f);
+			drawCloud();
 		glPopMatrix();
 
 
+		glPushMatrix();
+			glTranslatef(29.0f, 5.5f, 1.0f);
+			drawCloud();
+		glPopMatrix();
+
+
+
+	// Desenhar canteiro 1
+		glPushMatrix();
+			//Desenha terra
+			glColor3f(0.478f, 0.290f, 0.168f);
+
+			glPushMatrix();
+				glTranslatef(24.0f, -1.5f, 1.0f);
+				glScalef(2.5f, 1.0f, 1.0f);
+				drawSquare();
+			glPopMatrix();
+
+
+			// Desenha laranjas
+			//glColor3f(0.909f, 0.447f, 0.172f);
+			glPushMatrix();
+				glTranslatef(22.0f, -1.5f, 1.0f);
+				glScalef(1.2f, 1.2f, 1.0f);
+				drawFruit(0.909f, 0.447f, 0.172f);
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(23.4f, -1.8f, 1.0f);
+				glScalef(1.5f, 1.5f, 1.0f);
+				drawFruit(0.909f, 0.447f, 0.172f);
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(24.3f, -1.3f, 1.0f);
+				drawFruit(0.909f, 0.447f, 0.172f);
+			glPopMatrix();
+
+
+			glPushMatrix();
+				glTranslatef(25.7f, -2.1f, 1.0f);
+				drawFruit(0.909f, 0.447f, 0.172f);
+			glPopMatrix();
+
+
+			// Folhagens
+			glColor3f(0.243f, 0.556f, 0.180f);
+			glPushMatrix();
+				glTranslatef(24.9f, 0.5f, 1.0f);
+				glScalef(0.8f, 1.1f, 1.0f);
+				glRotatef(180, 0, 0, 1);
+				drawTriangle();
+			glPopMatrix();
+
+
+			glColor3f(0.243f, 0.556f, 0.180f);
+			glPushMatrix();
+				glTranslatef(23.2f, -0.1f, 1.0f);
+				glScalef(0.5f, 1.3f, 1.0f);
+				glRotatef(180, 0, 0, 1);
+				drawTriangle();
+			glPopMatrix();
+
+		glPopMatrix();
+
+
+
+
+	// Desenhar canteiro 2
+		glPushMatrix();
+			//Desenha terra
+			glColor3f(0.478f, 0.290f, 0.168f);
+
+			glPushMatrix();
+				glTranslatef(29.0f, -1.5f, 1.0f);
+				glScalef(2.0f, 1.0f, 1.0f);
+				drawSquare();
+			glPopMatrix();
+
+
+			// Desenha laranjas
+			//glColor3f(0.909f, 0.447f, 0.172f);
+			glPushMatrix();
+				glTranslatef(29.2f, -1.5f, 1.0f);
+				glScalef(1.2f, 1.2f, 1.0f);
+				drawFruit(0.839f, 0.270f, 0.313f);
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(30.1f, -1.8f, 1.0f);
+				glScalef(1.5f, 1.5f, 1.0f);
+				drawFruit(0.839f, 0.270f, 0.313f);
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(30.8f, -1.3f, 1.0f);
+				drawFruit(0.839f, 0.270f, 0.313f);
+			glPopMatrix();
+
+
+
+			// Folhagens
+			glColor3f(0.243f, 0.556f, 0.180f);
+			glPushMatrix();
+				glTranslatef(29.6f, 0.5f, 1.0f);
+				glScalef(0.9f, 1.5f, 1.0f);
+				glRotatef(180, 0, 0, 1);
+				drawTriangle();
+			glPopMatrix();
+
+
+		glPopMatrix();
 
 
 
@@ -307,9 +380,7 @@ void drawBackgroundContent(){
 	 * para dar a impressão de cenario infinito ao jogador
 	*/
 
-
 	// Objetos recorrentes
-
 
 	glPushMatrix();
 		glTranslatef(4.0f, 5.0f, 1.0f);
@@ -332,7 +403,6 @@ void drawBackgroundContent(){
 		glTranslatef(44.0f, 0.5f, 1.0f);
 		drawFence();
 	glPopMatrix();
-
 
 
 }
