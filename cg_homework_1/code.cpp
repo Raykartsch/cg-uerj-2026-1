@@ -690,15 +690,198 @@ void drawRabbit(){
 
 
 }
-
-
-
 void drawFox(){
+    // Cores base
+    float orangeR = 0.95f, orangeG = 0.45f, orangeB = 0.10f;
+    float orangeDarkR = 0.80f, orangeDarkG = 0.35f, orangeDarkB = 0.08f; // Tom mais escuro para as patas do fundo
+    float whiteR  = 1.00f, whiteG  = 1.00f, whiteB  = 1.00f;
+    float darkLineR = 0.65f, darkLineG = 0.25f, darkLineB = 0.05f;
 
-	glColor3f(1.0f, 0.5f, 0.0f);
-	glPushMatrix();
-		drawSquare();
-	glPopMatrix();
+    // Sistema de coordenadas do CORPO (nó pai)
+    glPushMatrix();
+
+        // 1. PATAS DO FUNDO (Desenhadas antes do corpo para ficarem atrás)
+        // Pata Traseira Esquerda (Fundo)
+        glPushMatrix();
+            glTranslatef(-0.8f, -0.6f, -0.1f);
+            glScalef(0.12f, 0.4f, 1.0f);
+            glColor3f(orangeDarkR, orangeDarkG, orangeDarkB);
+            drawSquare();
+        glPopMatrix();
+
+        // Pata Dianteira Esquerda (Fundo)
+        glPushMatrix();
+            glTranslatef(0.6f, -0.6f, -0.1f);
+            glScalef(0.12f, 0.4f, 1.0f);
+            glColor3f(orangeDarkR, orangeDarkG, orangeDarkB);
+            drawSquare();
+        glPopMatrix();
+
+        // 2. RABO ALONGADO (QUADRADO NA BASE + TRIÂNGULO NA PONTA COM DETALHE BRANCO)
+        glPushMatrix();
+            glTranslatef(-1.1f, 0.0f, 0.5f);
+            glRotatef(30.0f, 0, 0, 1);
+
+            // Base retangular/quadrada do rabo (Laranja)
+            glPushMatrix();
+                glTranslatef(-0.20f, -0.02f, 0.0f);
+                glScalef(0.65f, 0.25f, 1.0f);
+                glColor3f(orangeR, orangeG, orangeB);
+                drawSquare();
+                glColor3f(darkLineR, darkLineG, darkLineB);
+                drawSquareLine();
+            glPopMatrix();
+
+            // Extensão / Ponta Triangular do rabo (Laranja + Ponta Branca)
+            glPushMatrix();
+                glTranslatef(-0.80f, -0.05f, 0.0f);
+                glRotatef(80.0f, 0, 0, 1);
+                glScalef(0.28f, 1.05f, 1.0f);
+
+                // Base triangular laranja
+                glColor3f(orangeR, orangeG, orangeB);
+                drawTriangle();
+                glColor3f(darkLineR, darkLineG, darkLineB);
+                drawTriangleLine();
+
+                // Ponta triangular branca
+                glColor3f(whiteR, whiteG, whiteB);
+                glPushMatrix();
+                    glTranslatef(0.0f, 0.5f, 0.0f);
+                    glScalef(0.5f, 0.5f, 1.0f);
+                    drawTriangle();
+                glPopMatrix();
+            glPopMatrix();
+        glPopMatrix();
+
+        // 3. CORPO PRINCIPAL
+        glPushMatrix();
+            glScalef(1.0f, 0.40f, 1.0f);
+            glColor3f(orangeR, orangeG, orangeB);
+            drawSquare();
+            glColor3f(darkLineR, darkLineG, darkLineB);
+            drawSquareLine();
+        glPopMatrix();
+
+        // Peito / Barriga branca
+        glColor3f(whiteR, whiteG, whiteB);
+        glPushMatrix();
+            glScalef(1.0f, 0.1f, 1.0f);
+            glTranslatef(0.0f, -3.0f, 1.0f);
+            drawSquare();
+        glPopMatrix();
+
+        // Pescoço
+        glPushMatrix();
+            glTranslatef(1.0f, 0.4f, 1.0f);
+            glScalef(0.15f, 0.6f, 1.0f);
+            glRotatef(-50, 0, 0, 1);
+            glColor3f(orangeR, orangeG, orangeB);
+            drawSquare();
+            glColor3f(darkLineR, darkLineG, darkLineB);
+            drawSquareLine();
+        glPopMatrix();
+
+        // 4. PATAS DA FRENTE (Primeiro plano)
+        // Pata Traseira Direita (Frente)
+        glPushMatrix();
+            glTranslatef(-0.6f, -0.65f, 1.0f);
+            glScalef(0.13f, 0.42f, 1.0f);
+            glColor3f(orangeR, orangeG, orangeB);
+            drawSquare();
+            glColor3f(darkLineR, darkLineG, darkLineB);
+            drawSquareLine();
+        glPopMatrix();
+
+        // Pata Dianteira Direita (Frente)
+        glPushMatrix();
+            glTranslatef(0.8f, -0.65f, 1.0f);
+            glScalef(0.13f, 0.42f, 1.0f);
+            glColor3f(orangeR, orangeG, orangeB);
+            drawSquare();
+            glColor3f(darkLineR, darkLineG, darkLineB);
+            drawSquareLine();
+        glPopMatrix();
+
+        // 5. CABEÇA (Filha do corpo e pai de olho, focinho e orelhas)
+        glPushMatrix();
+            glTranslatef(1.35f, 0.7f, 1.0f);
+
+            // Base da Cabeça
+            glColor3f(orangeR, orangeG, orangeB);
+            drawDisk(0.45);
+            glColor3f(darkLineR, darkLineG, darkLineB);
+            drawDiskLine(0.45);
+
+            // Focinho Pontudo (Laranja + Detalhe Branco + Nariz Preto)
+            glPushMatrix();
+                glTranslatef(0.25f, -0.15f, 0.0f);
+                glRotatef(-115.0f, 0, 0, 1);
+                glScalef(0.35f, 0.7f, 1.0f);
+
+                // Base Laranja do Focinho
+                glColor3f(orangeR, orangeG, orangeB);
+                drawTriangle();
+
+                // Detalhe Branco na parte inferior/bochecha do focinho
+                glColor3f(whiteR, whiteG, whiteB);
+                glPushMatrix();
+                    glTranslatef(0.3f, 0.2f, 0.0f);
+                    glRotatef(40.0f, 0, 0, 1);
+                    glScalef(0.4f, 0.8f, 1.0f);
+                    drawSquare();
+                glPopMatrix();
+
+                // Trufa do Nariz
+                glColor3f(0.05f, 0.05f, 0.05f);
+                glPushMatrix();
+                    glTranslatef(0.0f, 0.95f, 0.0f);
+                    drawDisk(0.18);
+                glPopMatrix();
+            glPopMatrix();
+
+            // Olho
+            glColor3f(0.0f, 0.0f, 0.0f);
+            glPushMatrix();
+                glTranslatef(0.25f, 0.09f, 0.1f);
+                drawDisk(0.06);
+            glPopMatrix();
+
+            // Orelha Esquerda (Traseira)
+            glPushMatrix();
+                glTranslatef(-0.2f, 0.35f, 0.0f);
+                glRotatef(15.0f, 0, 0, 1);
+                glScalef(0.2f, 0.6f, 1.0f);
+                glColor3f(orangeR, orangeG, orangeB);
+                drawTriangle();
+                glColor3f(darkLineR, darkLineG, darkLineB);
+                drawTriangleLine();
+
+                // Interior Branco da Orelha
+                glColor3f(whiteR, whiteG, whiteB);
+                glScalef(0.5f, 0.6f, 1.0f);
+                drawTriangle();
+            glPopMatrix();
+
+            // Orelha Direita (Frontal)
+            glPushMatrix();
+                glTranslatef(0.35f, 0.3f, 0.0f);
+                glRotatef(-35.0f, 0, 0, 1);
+                glScalef(0.18f, 0.5f, 1.0f);
+                glColor3f(orangeR, orangeG, orangeB);
+                drawTriangle();
+                glColor3f(darkLineR, darkLineG, darkLineB);
+                drawTriangleLine();
+
+                // Interior Branco da Orelha
+                glColor3f(whiteR, whiteG, whiteB);
+                glScalef(0.5f, 0.6f, 1.0f);
+                drawTriangle();
+            glPopMatrix();
+
+        glPopMatrix(); // Fim da Cabeça
+
+    glPopMatrix(); // Fim do Corpo
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha o background "infinito"
