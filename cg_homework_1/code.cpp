@@ -115,6 +115,196 @@ void drawDiskLine(double radius){
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Coelho controlado pelo usuario
+
+
+// Controlam o movimento no eixo x do quadrado andante
+float characterPos = 0.0f;
+float squareSpeed = 0.05f;
+
+
+// Velocidade normal do coelho e velocidade durante o "turbo" dado pela cenoura
+const float VELOCIDADE_NORMAL = 0.05f;
+const float VELOCIDADE_TURBO = 0.20f;
+int framesDeTurboRestantes = 0;              // enquanto > 0, o turbo esta ativo
+const int DURACAO_TURBO_EM_FRAMES = 150;     // ~3,6 segundos de turbo
+
+// Controla o pulo do coelho
+float jump_maximum_height = 2.5f;
+float speed_jump = 0.1f;
+float jump_height = 0.5f;
+bool isJumping = false;
+bool goingUp = true; // controla se está na fase de subida ou descida do pulo
+
+
+// Altura de pulo normal e altura durante o bonus dado pelo rabanete
+const float PULO_NORMAL = 2.5f;
+const float PULO_REFORCADO = 3.5f;
+int framesDePuloReforcadoRestantes = 0;          // enquanto > 0, o pulo alto esta ativo
+const int DURACAO_PULO_REFORCADO_EM_FRAMES = 300; // ~7,2 segundos de pulo reforcado
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha o coelho
+
+
+// Variaveis para controlar a animacao de "correr" do coelho (patas e orelhas)
+// O coelho fica sempre animado, independente de estar andando ou parado
+float walkPhase = 0.0f;       // fase atual da animacao (em radianos)
+float walkPhaseSpeed = 0.15f; // velocidade com que a fase avanca a cada frame
+float legLiftAmount = 0.2f;  // o quanto a pata sobe no eixo Y
+float earSwingAmount = 6.0f; // o quanto a orelha "balanca" (em graus)
+float direcaoCoelho = 1.0f;
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Desenha o coelho
+void drawRabbit(){
+
+	// Calcula, a partir da fase atual da animacao, o quanto cada pata deve
+	// subir no eixo Y e o quanto cada orelha deve balancar para frente.
+	// A logica liga as duas: quando a orelha direita esta indo para frente
+	// (senoide positiva), a perna ESQUERDA sobe; quando a orelha esquerda
+	// esta indo para frente (senoide negativa), a perna DIREITA sobe.
+	float phaseSin = sin(walkPhase);
+
+	float earRightSwing = (phaseSin > 0.0f) ?  phaseSin * earSwingAmount : 0.0f;   // orelha direita "pra frente" quando > 0
+	float earLeftSwing  = (phaseSin < 0.0f) ? -phaseSin * earSwingAmount : 0.0f;  // orelha esquerda "pra frente" quando > 0 (fase oposta)
+
+	float legLeftLift  = (phaseSin > 0.0f)  ?  phaseSin * legLiftAmount : 0.0f; // sobe junto com a orelha direita
+	float legRightLift = (phaseSin < 0.0f)  ? -phaseSin * legLiftAmount : 0.0f; // sobe junto com a orelha esquerda
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////
+	// CORPO -> nó PAI (raiz) da hierarquia do coelho.
+	// Ele é modelado em seu próprio sistema de coordenadas, centrado na origem
+	// (um disco de raio 1 desenhado em (0,0)). Todas as outras partes do coelho
+	// (patas, rabo, orelhas e cabeça) são desenhadas DENTRO deste glPushMatrix/
+	// glPopMatrix, ou seja, são "filhas" do corpo: qualquer transformação
+	// aplicada aqui (translação, rotação, escala) seria automaticamente
+	// herdada por todas elas.
+	glPushMatrix(); // abre o sistema de coordenadas do CORPO (nó pai)
+
+		glColor3f(0.96f, 0.93f, 0.89f);
+		drawDisk(1);
+		glColor3f(0.705f, 0.64f, 0.58f);
+		drawDiskLine(1);
+
+
+		// -------- Pata esquerda (filha do corpo) --------
+		// Modelada em seu proprio sistema de coordenadas (um quadrado
+		// centrado na origem) e depois posicionada/escalada em relacao ao corpo.
+		glPushMatrix();
+			glTranslatef(-0.4f, -1.0f + legLeftLift, 1.0f);
+			glScalef(0.125f, 0.4f, 1.0f);
+			glColor3f(0.90f, 0.85f, 0.79f);
+			drawSquare();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawSquareLine();
+		glPopMatrix();
+
+
+		// -------- Pata direita (filha do corpo) --------
+		glPushMatrix();
+			glTranslatef(0.4f, -1.0f + legRightLift, 1.0f);
+			glScalef(0.125f, 0.4f, 1.0f);
+			glColor3f(0.90f, 0.85f, 0.79f);
+			drawSquare();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawSquareLine();
+		glPopMatrix();
+
+
+		// -------- Rabo (filho do corpo) --------
+		// Modelado como um disco centrado na origem, depois posicionado
+		// na traseira do corpo.
+		glPushMatrix();
+			glTranslatef(-0.85f, -0.4f + (legRightLift / 3), 1.0f);
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawDisk(0.25);
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawDiskLine(0.25);
+		glPopMatrix();
+
+
+		// -------- Cabeça (filha do corpo, e também PAI de olho/focinho/nariz) --------
+		// A cabeça abre seu próprio glPushMatrix e, dentro dele, desenha suas
+		// partes (olho, focinho, nariz) usando coordenadas relativas ao
+		// CENTRO DA PRÓPRIA CABEÇA (e não mais coordenadas absolutas da tela),
+		// formando um segundo nível da hierarquia: corpo -> cabeça -> olho/focinho/nariz.
+		glPushMatrix();
+			glTranslatef(1.2f, 0.7f, 1.0f);
+
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawDisk(0.6);
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawDiskLine(0.6);
+
+
+			// Olho (filho da cabeça)
+			glPushMatrix();
+				glTranslatef(0.3f, 0.1f, 0.0f); // deslocamento a partir do centro da cabeça
+				glColor3f(0.0f, 0.0f, 0.0f);
+				drawDisk(0.065);
+			glPopMatrix();
+
+
+			// Focinho (filho da cabeça)
+			glPushMatrix();
+				glTranslatef(0.6f, -0.2f, 0.0f);
+				glColor3f(1.0f, 1.0f, 1.0f);
+				drawDisk(0.2);
+				glColor3f(0.705f, 0.64f, 0.58f);
+				drawDiskLine(0.2);
+			glPopMatrix();
+
+
+			// Nariz (filho da cabeça)
+			glPushMatrix();
+				glTranslatef(0.76f, -0.2f, 0.0f);
+				glScalef(0.15f, 0.07f, 1.0f);
+				glRotatef(-90, 0, 0, 1);
+				glColor3f(0.90f, 0.42f, 0.54f);
+				drawTriangle();
+			glPopMatrix();
+
+		glPopMatrix(); // fecha o sistema de coordenadas da CABEÇA
+
+
+		// -------- Orelha esquerda (filha do corpo) --------
+		// Modelada como um triângulo centrado na origem, depois rotacionada
+		// (efeito do "swing" da corrida) e posicionada no topo do corpo.
+		glPushMatrix();
+			glTranslatef(1.2f, 1.2f, 1.0f);
+			glRotatef(10 - earLeftSwing, 0, 0, 1);
+			glScalef(0.125f, 1.2f, 1.0f);
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawTriangle();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawTriangleLine();
+		glPopMatrix();
+
+
+		// -------- Orelha direita (filha do corpo) --------
+		glPushMatrix();
+			glTranslatef(1.6f, 1.2f, 1.0f);
+			glRotatef(-10 - earRightSwing, 0, 0, 1);
+			glScalef(0.125f, 1.2f, 1.0f);
+			glColor3f(0.96f, 0.93f, 0.89f);
+			drawTriangle();
+			glColor3f(0.705f, 0.64f, 0.58f);
+			drawTriangleLine();
+		glPopMatrix();
+
+	glPopMatrix(); // fecha o sistema de coordenadas do CORPO (nó pai)
+
+
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha um sol
 void drawSun(){
@@ -491,18 +681,6 @@ void spawnVegetable(){
 int rabbitLives = 3; // vidas iniciais do coelho, aumentam ao comer alface
 const int MAX_VIDAS = 3;
 
-// Velocidade normal do coelho e velocidade durante o "turbo" dado pela cenoura
-const float VELOCIDADE_NORMAL = 0.05f;
-const float VELOCIDADE_TURBO = 0.20f;
-int framesDeTurboRestantes = 0;              // enquanto > 0, o turbo esta ativo
-const int DURACAO_TURBO_EM_FRAMES = 150;     // ~3,6 segundos de turbo
-
-// Altura de pulo normal e altura durante o bonus dado pelo rabanete
-const float PULO_NORMAL = 2.0f;
-const float PULO_REFORCADO = 3.0f;
-int framesDePuloReforcadoRestantes = 0;          // enquanto > 0, o pulo alto esta ativo
-const int DURACAO_PULO_REFORCADO_EM_FRAMES = 300; // ~7,2 segundos de pulo reforcado
-
 
 // Aplica o efeito correspondente ao vegetal que o coelho acabou de capturar
 void aplicarBonusDoVegetal(TipoVegetal tipo){
@@ -538,164 +716,6 @@ void drawText(float x, float y, const char *texto){
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Desenha o coelho
-
-
-// Variaveis para controlar a animacao de "correr" do coelho (patas e orelhas)
-// O coelho fica sempre animado, independente de estar andando ou parado
-float walkPhase = 0.0f;       // fase atual da animacao (em radianos)
-float walkPhaseSpeed = 0.15f; // velocidade com que a fase avanca a cada frame
-float legLiftAmount = 0.2f;  // o quanto a pata sobe no eixo Y
-float earSwingAmount = 6.0f; // o quanto a orelha "balanca" (em graus)
-float direcaoCoelho = 1.0f;
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Desenha o coelho
-void drawRabbit(){
-
-
-	// Calcula, a partir da fase atual da animacao, o quanto cada pata deve
-	// subir no eixo Y e o quanto cada orelha deve balancar para frente.
-	// A logica liga as duas: quando a orelha direita esta indo para frente
-	// (senoide positiva), a perna ESQUERDA sobe; quando a orelha esquerda
-	// esta indo para frente (senoide negativa), a perna DIREITA sobe.
-	float phaseSin = sin(walkPhase);
-
-	float earRightSwing = (phaseSin > 0.0f) ?  phaseSin * earSwingAmount : 0.0f;   // orelha direita "pra frente" quando > 0
-	float earLeftSwing  = (phaseSin < 0.0f) ? -phaseSin * earSwingAmount : 0.0f;  // orelha esquerda "pra frente" quando > 0 (fase oposta)
-
-	float legLeftLift  = (phaseSin > 0.0f)  ?  phaseSin * legLiftAmount : 0.0f; // sobe junto com a orelha direita
-	float legRightLift = (phaseSin < 0.0f)  ? -phaseSin * legLiftAmount : 0.0f; // sobe junto com a orelha esquerda
-
-
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	// CORPO -> nó PAI (raiz) da hierarquia do coelho.
-	// Ele é modelado em seu próprio sistema de coordenadas, centrado na origem
-	// (um disco de raio 1 desenhado em (0,0)). Todas as outras partes do coelho
-	// (patas, rabo, orelhas e cabeça) são desenhadas DENTRO deste glPushMatrix/
-	// glPopMatrix, ou seja, são "filhas" do corpo: qualquer transformação
-	// aplicada aqui (translação, rotação, escala) seria automaticamente
-	// herdada por todas elas.
-	glPushMatrix(); // abre o sistema de coordenadas do CORPO (nó pai)
-
-		glColor3f(0.96f, 0.93f, 0.89f);
-		drawDisk(1);
-		glColor3f(0.705f, 0.64f, 0.58f);
-		drawDiskLine(1);
-
-
-		// -------- Pata esquerda (filha do corpo) --------
-		// Modelada em seu proprio sistema de coordenadas (um quadrado
-		// centrado na origem) e depois posicionada/escalada em relacao ao corpo.
-		glPushMatrix();
-			glTranslatef(-0.4f, -1.0f + legLeftLift, 1.0f);
-			glScalef(0.125f, 0.4f, 1.0f);
-			glColor3f(0.90f, 0.85f, 0.79f);
-			drawSquare();
-			glColor3f(0.705f, 0.64f, 0.58f);
-			drawSquareLine();
-		glPopMatrix();
-
-
-		// -------- Pata direita (filha do corpo) --------
-		glPushMatrix();
-			glTranslatef(0.4f, -1.0f + legRightLift, 1.0f);
-			glScalef(0.125f, 0.4f, 1.0f);
-			glColor3f(0.90f, 0.85f, 0.79f);
-			drawSquare();
-			glColor3f(0.705f, 0.64f, 0.58f);
-			drawSquareLine();
-		glPopMatrix();
-
-
-		// -------- Rabo (filho do corpo) --------
-		// Modelado como um disco centrado na origem, depois posicionado
-		// na traseira do corpo.
-		glPushMatrix();
-			glTranslatef(-0.85f, -0.4f + (legRightLift / 3), 1.0f);
-			glColor3f(0.96f, 0.93f, 0.89f);
-			drawDisk(0.25);
-			glColor3f(0.705f, 0.64f, 0.58f);
-			drawDiskLine(0.25);
-		glPopMatrix();
-
-
-		// -------- Cabeça (filha do corpo, e também PAI de olho/focinho/nariz) --------
-		// A cabeça abre seu próprio glPushMatrix e, dentro dele, desenha suas
-		// partes (olho, focinho, nariz) usando coordenadas relativas ao
-		// CENTRO DA PRÓPRIA CABEÇA (e não mais coordenadas absolutas da tela),
-		// formando um segundo nível da hierarquia: corpo -> cabeça -> olho/focinho/nariz.
-		glPushMatrix();
-			glTranslatef(1.2f, 0.7f, 1.0f);
-
-			glColor3f(0.96f, 0.93f, 0.89f);
-			drawDisk(0.6);
-			glColor3f(0.705f, 0.64f, 0.58f);
-			drawDiskLine(0.6);
-
-
-			// Olho (filho da cabeça)
-			glPushMatrix();
-				glTranslatef(0.3f, 0.1f, 0.0f); // deslocamento a partir do centro da cabeça
-				glColor3f(0.0f, 0.0f, 0.0f);
-				drawDisk(0.065);
-			glPopMatrix();
-
-
-			// Focinho (filho da cabeça)
-			glPushMatrix();
-				glTranslatef(0.6f, -0.2f, 0.0f);
-				glColor3f(1.0f, 1.0f, 1.0f);
-				drawDisk(0.2);
-				glColor3f(0.705f, 0.64f, 0.58f);
-				drawDiskLine(0.2);
-			glPopMatrix();
-
-
-			// Nariz (filho da cabeça)
-			glPushMatrix();
-				glTranslatef(0.76f, -0.2f, 0.0f);
-				glScalef(0.15f, 0.07f, 1.0f);
-				glRotatef(-90, 0, 0, 1);
-				glColor3f(0.90f, 0.42f, 0.54f);
-				drawTriangle();
-			glPopMatrix();
-
-		glPopMatrix(); // fecha o sistema de coordenadas da CABEÇA
-
-
-		// -------- Orelha esquerda (filha do corpo) --------
-		// Modelada como um triângulo centrado na origem, depois rotacionada
-		// (efeito do "swing" da corrida) e posicionada no topo do corpo.
-		glPushMatrix();
-			glTranslatef(1.2f, 1.2f, 1.0f);
-			glRotatef(10 - earLeftSwing, 0, 0, 1);
-			glScalef(0.125f, 1.2f, 1.0f);
-			glColor3f(0.96f, 0.93f, 0.89f);
-			drawTriangle();
-			glColor3f(0.705f, 0.64f, 0.58f);
-			drawTriangleLine();
-		glPopMatrix();
-
-
-		// -------- Orelha direita (filha do corpo) --------
-		glPushMatrix();
-			glTranslatef(1.6f, 1.2f, 1.0f);
-			glRotatef(-10 - earRightSwing, 0, 0, 1);
-			glScalef(0.125f, 1.2f, 1.0f);
-			glColor3f(0.96f, 0.93f, 0.89f);
-			drawTriangle();
-			glColor3f(0.705f, 0.64f, 0.58f);
-			drawTriangleLine();
-		glPopMatrix();
-
-	glPopMatrix(); // fecha o sistema de coordenadas do CORPO (nó pai)
-
-
-}
 
 
 float foxWalkPhase = 0.0f;
@@ -746,7 +766,6 @@ const int FRAMES_POR_SEGUNDO = 1000 / msecs;
 // verdade. Da segunda aparicao em diante, o tempo passa a ser sorteado
 // normalmente entre 15 e 45 segundos (veja controlarSurgimentoDaRaposa).
 int framesAteProximaRaposa = 20 * FRAMES_POR_SEGUNDO;
-
 
 void drawFox(){
 
@@ -1172,20 +1191,6 @@ void drawBackground1(){
 
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Quadrado controlado pelo usuario
-
-// Controla o pulo do quadrado andante
-float jump_maximum_height = 2.0f;
-float speed_jump = 0.15f;
-float jump_height = 0.5f;
-bool isJumping = false;
-bool goingUp = true; // controla se está na fase de subida ou descida do pulo
-
-
-// Controlam o movimento no eixo x do quadrado andante
-float squarePos = 0.0f;
-float squareSpeed = 0.05f;
 
 
 // booleanos que controlam se a setinha do teclado está pressionada (neste caso, estas teclas sao especiais)
@@ -1283,8 +1288,8 @@ void moverVegetais(){
 void verificarColisaoComVegetais(){
 
 	// Centro aproximado do coelho na tela (o corpo dele fica um pouco a
-	// frente da posicao "squarePos", por causa da cabeca e das orelhas)
-	float centroCoelhoX = squarePos + 0.3f;
+	// frente da posicao "characterPos", por causa da cabeca e das orelhas)
+	float centroCoelhoX = characterPos + 0.3f;
 	float centroCoelhoY = jump_height + 0.3f;
 	float raioDeCaptura = 1.1f; // "alcance" do coelho para pegar um vegetal
 
@@ -1395,7 +1400,7 @@ void verificarColisaoComRaposa(){
 
 	if (!foxActive) return;
 
-	float dx = foxX - squarePos;
+	float dx = foxX - characterPos;
 	float dy = foxY - jump_height;
 	float distancia = sqrt(dx * dx + dy * dy);
 
@@ -1427,10 +1432,10 @@ void anim (int valor) {
 		  direcaoCoelho = -1.0f; // vira pra esquerda
 		  ///////////////////////////////////
 		  // Permite o quadrado a andar pra esquerda pela cena
-		  if (squarePos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
-			  squarePos -= 0;
+		  if (characterPos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
+			  characterPos -= 0;
 		  } else {
-			  squarePos -= squareSpeed;
+			  characterPos -= squareSpeed;
 		  }
 
 		  ///////////////////////////////////
@@ -1446,10 +1451,10 @@ void anim (int valor) {
     	  direcaoCoelho = 1.0f; // vira pra direita
           ///////////////////////////////////
           // Permite o quadrado a andar pra direita pela cena
-			if (squarePos > 8.0f) { // esse if não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
-				squarePos += 0;
+			if (characterPos > 8.0f) { // esse if não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
+				characterPos += 0;
 			} else {
-				squarePos += squareSpeed;
+				characterPos += squareSpeed;
 			}
 
           ///////////////////////////////////
@@ -1606,7 +1611,7 @@ void display() {
 	// Criando coelho com input do usuario na tela
 		glColor3f(0, 0, 0);
 		glPushMatrix();
-			glTranslatef(squarePos, jump_height, 1.0f);
+			glTranslatef(characterPos, jump_height, 1.0f);
 			//glRotatef(float(squareAngle), 0, 0, 1);
 			glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
 			drawRabbit();
