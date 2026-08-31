@@ -289,35 +289,41 @@ void drawCarrot(){
 	// Folhas da cenoura
 		glColor3f(0.243f, 0.556f, 0.180f);
 
-
 		glPushMatrix();
-			glTranslatef(0.0f, 0.25f, 0.0f);
-			glScalef(0.1f, 0.8f, 1.0f);
-			glRotatef(180, 0, 0, 1);
-			drawTriangle();
-		glPopMatrix();
 
-		glPushMatrix();
-			glTranslatef(0.0f, 0.2f, 0.0f);
-			glScalef(0.25f, 0.5f, 1.0f);
-			glRotatef(18, 0, 0, 1);
-			drawTriangle();
-		glPopMatrix();
+		glRotatef(-45, 0, 0, 1);
+		//Folhas da cenoura
+			glPushMatrix();
+				glTranslatef(0.0f, 0.25f, 0.0f);
+				glScalef(0.1f, 0.8f, 1.0f);
+				glRotatef(180, 0, 0, 1);
+				drawTriangle();
+			glPopMatrix();
 
-		glPushMatrix();
-			glTranslatef(0.0f, 0.2f, 0.0f);
-			glScalef(0.22f, 0.5f, 1.0f);
-			glRotatef(-18, 0, 0, 1);
-			drawTriangle();
-		glPopMatrix();
+			glPushMatrix();
+				glTranslatef(0.0f, 0.2f, 0.0f);
+				glScalef(0.25f, 0.5f, 1.0f);
+				glRotatef(18, 0, 0, 1);
+				drawTriangle();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(0.0f, 0.2f, 0.0f);
+				glScalef(0.22f, 0.5f, 1.0f);
+				glRotatef(-18, 0, 0, 1);
+				drawTriangle();
+			glPopMatrix();
 
 
-	//Base da cenoura
-		glColor3f(0.95f, 0.52f, 0.13f);
-		glPushMatrix();
-			glScalef(0.15f, 1.1f, 1.0f);
-			glRotatef(180, 0, 0, 1);
-			drawTriangle();
+		//Base da cenoura
+			glColor3f(0.95f, 0.52f, 0.13f);
+			glPushMatrix();
+				glScalef(0.15f, 1.1f, 1.0f);
+				glRotatef(180, 0, 0, 1);
+				drawTriangle();
+			glPopMatrix();
+
+
 		glPopMatrix();
 
 }
@@ -486,14 +492,14 @@ int rabbitLives = 3; // vidas iniciais do coelho, aumentam ao comer alface
 const int MAX_VIDAS = 3;
 
 // Velocidade normal do coelho e velocidade durante o "turbo" dado pela cenoura
-const float VELOCIDADE_NORMAL = 0.1f;
-const float VELOCIDADE_TURBO = 0.30f;
+const float VELOCIDADE_NORMAL = 0.05f;
+const float VELOCIDADE_TURBO = 0.20f;
 int framesDeTurboRestantes = 0;              // enquanto > 0, o turbo esta ativo
 const int DURACAO_TURBO_EM_FRAMES = 150;     // ~3,6 segundos de turbo
 
 // Altura de pulo normal e altura durante o bonus dado pelo rabanete
-const float PULO_NORMAL = 3.5f;
-const float PULO_REFORCADO = 5.0f;
+const float PULO_NORMAL = 2.0f;
+const float PULO_REFORCADO = 3.0f;
 int framesDePuloReforcadoRestantes = 0;          // enquanto > 0, o pulo alto esta ativo
 const int DURACAO_PULO_REFORCADO_EM_FRAMES = 300; // ~7,2 segundos de pulo reforcado
 
@@ -704,6 +710,42 @@ float foxTailSwingAmount = 6.0f;
 float foxTailTipPhase = 0.0f;
 float foxTailTipPhaseSpeed = 0.17f;  // a ponta se move num ritmo diferente
 float foxTailTipSwingAmount = 12.0f;
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// SISTEMA DE PERSEGUICAO DA RAPOSA
+//
+// A raposa fica a maior parte do tempo escondida (fora da cena). De tempos
+// em tempos, ela entra correndo por uma das bordas da tela, pelo lado de
+// TRAS do coelho, e persegue ele ate: (a) alcança-lo, fazendo o jogador
+// perder uma vida, ou (b) o coelho conseguir escapar (correndo, pulando por
+// cima dela, ou usando o turbo da cenoura), momento em que ela desiste e
+// some ate a proxima vez que for sorteada para aparecer.
+
+bool foxActive = false;   // true enquanto a raposa esta perseguindo o coelho na tela
+float foxX = -12.0f;      // posicao da raposa no eixo X
+float foxY = 0.5f;        // a raposa sempre corre rente ao chao (mesma altura do coelho parado)
+float foxDirecao = 1.0f;  // pra qual lado a raposa esta olhando (1 = direita, -1 = esquerda)
+
+const float VELOCIDADE_RAPOSA = 0.11f; // um pouco mais rapida que o coelho no ritmo normal, pra criar pressao
+const float RAIO_COLISAO_RAPOSA = 1.1f; // "alcance" da raposa para pegar o coelho
+
+// Como a raposa agora atravessa o coelho em vez de sumir ao colidir, ela
+// pode ficar varios frames seguidos "dentro" do raio de colisao enquanto
+// passa por cima dele. Essa variavel garante que cada passagem da raposa
+// tire APENAS UMA vida, mesmo que a colisao dure vários frames.
+bool foxJaTirouVidaNestaPassagem = false;
+
+// Quantos frames se passam, aproximadamente, em 1 segundo (usado so para
+// transformar "15 a 45 segundos" em uma contagem de frames)
+const int FRAMES_POR_SEGUNDO = 1000 / msecs;
+
+// Contagem regressiva (em frames) ate a raposa aparecer pela primeira vez.
+// Usamos um valor fixo aqui (20 segundos) porque esta variavel e inicializada
+// antes do srand() rodar em main() -- ou seja, antes de sortearmos numeros de
+// verdade. Da segunda aparicao em diante, o tempo passa a ser sorteado
+// normalmente entre 15 e 45 segundos (veja controlarSurgimentoDaRaposa).
+int framesAteProximaRaposa = 20 * FRAMES_POR_SEGUNDO;
 
 
 void drawFox(){
@@ -1134,7 +1176,7 @@ void drawBackground1(){
 // Quadrado controlado pelo usuario
 
 // Controla o pulo do quadrado andante
-float jump_maximum_height = 3.5f;
+float jump_maximum_height = 2.0f;
 float speed_jump = 0.15f;
 float jump_height = 0.5f;
 bool isJumping = false;
@@ -1143,7 +1185,7 @@ bool goingUp = true; // controla se está na fase de subida ou descida do pulo
 
 // Controlam o movimento no eixo x do quadrado andante
 float squarePos = 0.0f;
-float squareSpeed = 0.1f;
+float squareSpeed = 0.05f;
 
 
 // booleanos que controlam se a setinha do teclado está pressionada (neste caso, estas teclas sao especiais)
@@ -1298,6 +1340,83 @@ void atualizarBonusAtivos(){
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+// Faz a raposa aparecer na tela, pronta para perseguir o coelho. Ela sempre
+// entra pela borda ESQUERDA da tela, um pouco fora da area visivel.
+void spawnRaposa(){
+
+	foxActive = true;
+	foxX = -11.0f; // sempre entra pela esquerda (a tela vai de -8 a 8)
+	foxJaTirouVidaNestaPassagem = false; // nova passagem, pode tirar vida de novo se colidir
+}
+
+
+// Controla o "relogio" que decide quando a raposa vai aparecer de novo.
+// Ela surge periodicamente, em um intervalo aleatorio entre 15 e 45 segundos,
+// e so sorteia um novo intervalo quando ela nao esta mais ativa na tela.
+void controlarSurgimentoDaRaposa(){
+
+	if (foxActive) return; // ja esta perseguindo o coelho, entao nao sorteia outra
+
+	framesAteProximaRaposa--;
+
+	if (framesAteProximaRaposa <= 0) {
+		spawnRaposa();
+		framesAteProximaRaposa = (1 + rand() % 15) * FRAMES_POR_SEGUNDO; // entre 15 e 45 segundos
+	}
+}
+
+
+// Move a raposa sempre em direcao a DIREITA da tela, numa linha reta,
+// sem se importar com a posicao do coelho. Ao sair da area visivel, ela e
+// "destruida": some da cena e libera o relogio para a proxima aparicao.
+void moverRaposa(){
+
+	if (!foxActive) return;
+
+	foxX += VELOCIDADE_RAPOSA;
+	foxDirecao = 1.0f; // sempre olhando/correndo pra direita
+
+	if (foxX > 10.0f) { // passou da borda direita da tela (visivel vai de -8 a 8)
+		foxActive = false; // "destroi" a raposa: ela deixa de existir na cena
+		framesAteProximaRaposa = (15 + rand() % 31) * FRAMES_POR_SEGUNDO; // sorteia quando ela volta
+	}
+}
+
+
+// Verifica se a raposa encostou no coelho. A checagem usa a mesma ideia da
+// colisao com os vegetais (distancia entre dois "circulos"), mas aqui ela
+// tambem leva em conta a altura do pulo: se o coelho estiver pulando bem
+// alto na hora em que a raposa passa perto, ele passa por cima dela e escapa!
+//
+// Ao colidir, a raposa NAO desaparece: ela continua correndo em frente
+// normalmente, so o coelho perde uma vida (apenas uma vez por passagem,
+// mesmo que a colisao dure varios frames seguidos).
+void verificarColisaoComRaposa(){
+
+	if (!foxActive) return;
+
+	float dx = foxX - squarePos;
+	float dy = foxY - jump_height;
+	float distancia = sqrt(dx * dx + dy * dy);
+
+	if (distancia < RAIO_COLISAO_RAPOSA) {
+
+		if (!foxJaTirouVidaNestaPassagem) {
+			if (rabbitLives > 0) {
+				rabbitLives--; // o jogador perde uma vida
+			}
+			foxJaTirouVidaNestaPassagem = true; // trava ate a raposa se afastar de novo
+		}
+
+	} else {
+		// A raposa se afastou o suficiente: libera para tirar vida de novo
+		// caso ela volte a encostar no coelho mais pra frente
+		foxJaTirouVidaNestaPassagem = false;
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 // Função que controla a animacao
 void anim (int valor) {
 
@@ -1416,6 +1535,14 @@ void anim (int valor) {
      atualizarBonusAtivos();
 
 
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Controla a perseguicao da raposa: faz ela surgir periodicamente,
+     // correr em direcao ao coelho, e verifica se ela alcançou ele
+     controlarSurgimentoDaRaposa();
+     moverRaposa();
+     verificarColisaoComRaposa();
+
+
 
 
 	//======================================================================================================================================================================================================================================================
@@ -1455,10 +1582,14 @@ void display() {
 		glPopMatrix();
 
 
-		glPushMatrix();
-			glTranslatef(3.0f, 5.0f, 1);
-			drawFox();
-		glPopMatrix();
+	// Desenha a raposa somente enquanto ela estiver perseguindo o coelho
+		if (foxActive) {
+			glPushMatrix();
+				glTranslatef(foxX, foxY, 1.0f);
+				glScalef(0.9f * foxDirecao, 0.8f, 1.0f); // mesmo tamanho do coelho, virada pro lado que esta correndo
+				drawFox();
+			glPopMatrix();
+		}
 
 
 
@@ -1477,7 +1608,7 @@ void display() {
 		glPushMatrix();
 			glTranslatef(squarePos, jump_height, 1.0f);
 			//glRotatef(float(squareAngle), 0, 0, 1);
-			glScalef(0.5f * direcaoCoelho, 0.5f, 1.0f);
+			glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
 			drawRabbit();
 		glPopMatrix();
 
@@ -1493,6 +1624,9 @@ void display() {
 		}
 		if (framesDePuloReforcadoRestantes > 0) {
 			drawText(-7.7f, 6.0f, "Pulo reforcado!");
+		}
+		if (foxActive) {
+			drawText(-7.7f, 5.4f, "Cuidado, a raposa esta te perseguindo!");
 		}
 
 
