@@ -14,7 +14,6 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <cmath>
-#include <numbers>
 #include <cstdlib>   // Para sortear posicoes e tipos de vegetais aleatoriamente (rand)
 #include <ctime>     // Para "semear" o sorteio com o horario atual (srand)
 #include <cstdio>    // Para montar o texto do HUD (snprintf)
@@ -121,7 +120,23 @@ void drawDiskLine(double radius){
 
 // Controlam o movimento no eixo x do quadrado andante
 float characterPos = 0.0f;
-float squareSpeed = 0.05f;
+float characterSpeed = 0.05f;
+
+
+// booleanos que controlam se a setinha do teclado está pressionada (neste caso, estas teclas sao especiais)
+bool rightArrowPressed = false;
+bool leftArrowPressed = false;
+bool upArrowPressed = false;
+bool downArrowPressed = false;
+
+
+// Controlam a velocidade e a posicao do cenario de fundo, que "rola" pela
+// tela pra dar a sensacao de que o coelho esta sempre correndo. Varios
+// outros sistemas (vegetais, tocas) tambem usam bgSpeed para se mover na
+// mesma velocidade do cenario.
+float bgSpeed = 0.1f;      // velocidade do fundo (independente do coelho)
+float bgWidth = 40.0f;     // largura de uma "tile" do fundo (2 * 50 do glScalef)
+float bgPos = 0.0f;        // posição atual do fundo
 
 
 // Velocidade normal do coelho e velocidade durante o "turbo" dado pela cenoura
@@ -716,6 +731,99 @@ void drawText(float x, float y, const char *texto){
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TOCA (esconderijo do coelho)
+//
+// De tempos em tempos, uma toca (um buraco no chao) passa pela tela, andando
+// junto com o cenario (igual aos vegetais). Se o jogador segurar a seta PARA
+// BAIXO enquanto o coelho estiver pertinho de uma toca, o coelho entra nela:
+// fica escondido, a salvo da raposa, ate que o jogador solte a seta pra
+// baixo ou tente se mover/pular (o que faz o coelho sair de novo).
+
+// Cada toca e representada apenas pela sua posicao no eixo X (ela sempre
+// fica no chao, numa altura fixa).
+struct Toca {
+	float x;
+	float y;
+};
+
+// Comecamos com duas tocas espalhadas pela cena. Quando uma sai da tela
+// (pela esquerda), ela reaparece do outro lado, um pouco mais afastada, e
+// assim vai se repetindo ao longo do jogo -- igual ao truque usado no
+// cenario de fundo para parecer "infinito".
+std::vector<Toca> tocas = { {9.0f, 0.35f}, {20.0f, 0.35f} };
+
+const float RAIO_TOCA = 0.8f; // distancia maxima do coelho ate a toca para poder entrar/sair dela
+
+bool coelhoEscondido = false;   // true enquanto o coelho estiver escondido dentro de uma toca
+int tocaOndeEstaEscondido = -1; // indice, dentro de "tocas", de onde o coelho esta escondido (-1 = nenhuma)
+
+
+// Desenha uma toca: um monte de terra ao redor e um buraco escuro no meio
+void drawToca(){
+
+	// Monte de terra ao redor do buraco
+	glColor3f(0.478f, 0.290f, 0.168f);
+	glPushMatrix();
+		glScalef(0.9f, 0.5f, 1.0f);
+		drawDisk(1.0f);
+	glPopMatrix();
+
+	// O buraco em si (bem escuro, para parecer um vao profundo)
+	glColor3f(0.12f, 0.09f, 0.07f);
+	glPushMatrix();
+		glTranslatef(0.0f, 0.05f, 0.1f);
+		glScalef(0.6f, 0.32f, 1.0f);
+		drawDisk(1.0f);
+	glPopMatrix();
+
+}
+
+
+// Move as tocas junto com o cenario (igual aos vegetais). A toca onde o
+// coelho estiver escondido no momento NAO se move, pra nao "arrastar" o
+// coelho escondido dentro dela.
+void atualizarTocas(){
+	for (int i = 0; i < (int)tocas.size(); i++) {
+
+		if (coelhoEscondido && tocaOndeEstaEscondido == i) continue;
+
+		tocas[i].x -= bgSpeed;
+
+		if (tocas[i].x < -10.0f) { // saiu da tela pela esquerda
+			tocas[i].x = 9.0f + (rand() % 600) / 100.0f; // reaparece do outro lado (entre 9 e 15)
+		}
+	}
+}
+
+
+// Controla o coelho entrando e saindo de uma toca.
+void atualizarEsconderijoDoCoelho(){
+
+	// Se ja esta escondido, verifica se chegou a hora de sair: solta a
+	// seta pra baixo, ou tenta andar/pular (nesses casos, sai da toca)
+	if (coelhoEscondido) {
+		if (!downArrowPressed || leftArrowPressed || rightArrowPressed || upArrowPressed) {
+			coelhoEscondido = false;
+			tocaOndeEstaEscondido = -1;
+		}
+		return;
+	}
+
+	// Ainda nao esta escondido: so tenta entrar numa toca se a seta pra
+	// baixo estiver sendo segurada, e se o coelho nao estiver no meio de um pulo
+	if (!downArrowPressed || isJumping) return;
+
+	for (int i = 0; i < (int)tocas.size(); i++) {
+		float distancia = fabs(tocas[i].x - characterPos);
+		if (distancia < RAIO_TOCA) {
+			coelhoEscondido = true;
+			tocaOndeEstaEscondido = i;
+			break;
+		}
+	}
+}
+
 
 
 float foxWalkPhase = 0.0f;
@@ -986,16 +1094,134 @@ void drawFox(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha o background "infinito"
 
-float bgSpeed = 0.1f;      // velocidade do fundo (independente do carro)
-float bgWidth = 40.0f;     // largura de uma "tile" do fundo (2 * 50 do glScalef)
-float bgPos = 0.0f;         // posição atual do fundo
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// CICLO DE COR DO CEU (amanhecer -> dia -> entardecer -> noite -> amanhecer)
+//
+// A ideia e simples: guardamos um "relogio" (tempoDeDiaFase) que vai de 0.0
+// a 1.0 e depois volta pra 0.0, se repetindo pra sempre. Esse relogio e
+// dividido em 4 pedacos iguais (dia, entardecer, noite e amanhecer) e, a
+// cada frame, calculamos a cor do ceu fazendo uma interpolacao (uma mistura
+// gradual) entre a cor do pedaco atual e a cor do proximo pedaco.
+
+float tempoDeDiaFase = 0.0f; // "relogio" do dia, sempre entre 0.0 e 1.0
+
+// O quanto o relogio avanca a cada frame, calculado para completar uma
+// volta inteira (um dia inteiro) a cada ~60 segundos de jogo.
+const float VELOCIDADE_CICLO_DIA = 1.0f / (60.0f * (1000.0f / msecs));
+
+// Cor atual do ceu, recalculada a cada frame por atualizarCorDoCeu()
+float skyR = 0.68f, skyG = 0.81f, skyB = 0.98f;
+
+
+// Faz uma mistura gradual entre duas cores: quando "t" = 0.0, o resultado e
+// "inicio"; quando "t" = 1.0, o resultado e "fim"; valores no meio misturam
+// as duas cores proporcionalmente.
+float interpolarCor(float inicio, float fim, float t){
+	return inicio + (fim - inicio) * t;
+}
+
+
+// Recalcula a cor do ceu (skyR/skyG/skyB) de acordo com o momento atual do
+// "relogio do dia", e depois avanca esse relogio para o proximo frame.
+void atualizarCorDoCeu(){
+
+	// Cores de referencia de cada momento do dia
+	float diaR = 0.68f, diaG = 0.81f, diaB = 0.98f;                     // azul claro (ceu de dia)
+	float entardecerR = 0.95f, entardecerG = 0.55f, entardecerB = 0.40f; // laranja/rosa
+	float noiteR = 0.07f, noiteG = 0.09f, noiteB = 0.22f;                // azul bem escuro
+	float amanhecerR = 0.95f, amanhecerG = 0.72f, amanhecerB = 0.58f;    // rosa claro
+
+	// O relogio (0.0 a 1.0) e dividido em 4 partes iguais, uma para cada transicao
+	if (tempoDeDiaFase < 0.25f) {
+		// Dia -> Entardecer
+		float t = tempoDeDiaFase / 0.25f;
+		skyR = interpolarCor(diaR, entardecerR, t);
+		skyG = interpolarCor(diaG, entardecerG, t);
+		skyB = interpolarCor(diaB, entardecerB, t);
+	} else if (tempoDeDiaFase < 0.5f) {
+		// Entardecer -> Noite
+		float t = (tempoDeDiaFase - 0.25f) / 0.25f;
+		skyR = interpolarCor(entardecerR, noiteR, t);
+		skyG = interpolarCor(entardecerG, noiteG, t);
+		skyB = interpolarCor(entardecerB, noiteB, t);
+	} else if (tempoDeDiaFase < 0.75f) {
+		// Noite -> Amanhecer
+		float t = (tempoDeDiaFase - 0.5f) / 0.25f;
+		skyR = interpolarCor(noiteR, amanhecerR, t);
+		skyG = interpolarCor(noiteG, amanhecerG, t);
+		skyB = interpolarCor(noiteB, amanhecerB, t);
+	} else {
+		// Amanhecer -> Dia
+		float t = (tempoDeDiaFase - 0.75f) / 0.25f;
+		skyR = interpolarCor(amanhecerR, diaR, t);
+		skyG = interpolarCor(amanhecerG, diaG, t);
+		skyB = interpolarCor(amanhecerB, diaB, t);
+	}
+
+	tempoDeDiaFase += VELOCIDADE_CICLO_DIA;
+	if (tempoDeDiaFase > 1.0f) {
+		tempoDeDiaFase -= 1.0f; // mantém o relogio sempre entre 0.0 e 1.0
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// BORBOLETAS decorativas, sobrevoando os canteiros
+
+float butterflyPhase = 0.0f;      // fase atual da animacao de voo (compartilhada por todas)
+float butterflyPhaseSpeed = 0.12f; // velocidade com que a fase avanca a cada frame
+
+
+// Desenha uma borboleta simples: um corpo bem fino no centro e duas asas
+// ovais (feitas com drawDisk "achatado") que abrem e fecham, simulando o
+// bater de asas. O parametro "fasePropria" desloca o ritmo de cada
+// borboleta, para que elas nao fiquem todas batendo asa exatamente juntas.
+void drawButterfly(float fasePropria, float asaR, float asaG, float asaB){
+
+	float fase = butterflyPhase + fasePropria;
+
+	// Bater de asas: a largura da asa oscila entre quase fechada e bem aberta
+	float wingFlap = 0.35f + 0.65f * (float) fabs(sin(fase * 4.0f));
+
+	// Um pequeno "passeio" no ar: sobe/desce e balança de um lado a outro
+	float voarX = sin(fase) * 0.6f;
+	float voarY = sin(fase * 2.3f) * 0.25f;
+
+	glPushMatrix();
+		glTranslatef(voarX, voarY, 0.0f);
+
+		// Corpo (bem fino, no centro das asas)
+		glColor3f(0.15f, 0.15f, 0.15f);
+		glPushMatrix();
+			glScalef(0.025f, 0.11f, 1.0f);
+			drawSquare();
+		glPopMatrix();
+
+		// Asa esquerda
+		glColor3f(asaR, asaG, asaB);
+		glPushMatrix();
+			glTranslatef(-0.11f, 0.03f, 0.0f);
+			glScalef(wingFlap, 1.0f, 1.0f);
+			drawDisk(0.13f);
+		glPopMatrix();
+
+		// Asa direita
+		glPushMatrix();
+			glTranslatef(0.11f, 0.03f, 0.0f);
+			glScalef(wingFlap, 1.0f, 1.0f);
+			drawDisk(0.13f);
+		glPopMatrix();
+
+	glPopMatrix();
+}
 
 
 void drawBackgroundContent(){
 
 	// Fazer o background com 50 pixels de largura
-	// Desenhar o ceu
-		glColor3f(0.68f, 0.81f, 0.98f);
+	// Desenhar o ceu (a cor muda sozinha ao longo do tempo, veja atualizarCorDoCeu)
+		glColor3f(skyR, skyG, skyB);
 		glPushMatrix();
 			// X = 24
 			glScalef(bgWidth + (bgWidth / 2), 10, 1);
@@ -1148,6 +1374,23 @@ void drawBackgroundContent(){
 		glPopMatrix();
 
 
+	// Borboletas sobrevoando os canteiros, para deixar o cenario mais vivo.
+	// Cada uma recebe um deslocamento de fase diferente (0.0, 2.0, 4.0...)
+	// para que elas nao batam as asas todas exatamente no mesmo instante.
+		glPushMatrix();
+			glTranslatef(23.0f, 0.9f, 1.0f);
+			drawButterfly(0.0f, 0.95f, 0.55f, 0.15f); // laranja
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(25.6f, 1.3f, 1.0f);
+			drawButterfly(2.0f, 0.75f, 0.35f, 0.85f); // roxa
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(29.6f, 1.0f, 1.0f);
+			drawButterfly(4.0f, 0.95f, 0.85f, 0.20f); // amarela
+		glPopMatrix();
 
 
 	/* O mundo é 32 pixels, logo os 8 primeiros pixels e os 8 ultimos precisam ser "iguais"
@@ -1193,13 +1436,6 @@ void drawBackground1(){
 
 
 
-// booleanos que controlam se a setinha do teclado está pressionada (neste caso, estas teclas sao especiais)
-bool rightArrowPressed = false;
-bool leftArrowPressed = false;
-bool upArrowPressed = false;
-bool downArrowPressed = false;
-
-
 // Habilita a manipulacao por setinha
 void arrowKeysDown(int key, int x, int y) {
     if (key == GLUT_KEY_RIGHT) {
@@ -1231,7 +1467,7 @@ void arrowKeysUp(int key, int x, int y) {
        	upArrowPressed = false;
 	}
 	if (key == GLUT_KEY_DOWN) {
-		upArrowPressed = false;
+		downArrowPressed = false; // correção: antes zerava "upArrowPressed" por engano
 	}
 }
 
@@ -1287,6 +1523,8 @@ void moverVegetais(){
 // os formatos exatos dos desenhos, o que deixa a colisao facil de entender.
 void verificarColisaoComVegetais(){
 
+	if (coelhoEscondido) return; // escondido na toca, o coelho nao alcança nada la fora
+
 	// Centro aproximado do coelho na tela (o corpo dele fica um pouco a
 	// frente da posicao "characterPos", por causa da cabeca e das orelhas)
 	float centroCoelhoX = characterPos + 0.3f;
@@ -1306,6 +1544,7 @@ void verificarColisaoComVegetais(){
 		}
 	}
 }
+
 
 
 // Controla o "relogio" que decide quando o proximo vegetal vai aparecer,
@@ -1328,9 +1567,9 @@ void atualizarBonusAtivos(){
 
 	if (framesDeTurboRestantes > 0) {
 		framesDeTurboRestantes--;
-		squareSpeed = VELOCIDADE_TURBO;
+		characterSpeed = VELOCIDADE_TURBO;
 		if (framesDeTurboRestantes == 0) {
-			squareSpeed = VELOCIDADE_NORMAL;
+			characterSpeed = VELOCIDADE_NORMAL;
 		}
 	}
 
@@ -1400,6 +1639,9 @@ void verificarColisaoComRaposa(){
 
 	if (!foxActive) return;
 
+	// O coelho esta escondido na toca: a raposa passa reto, sem alcança-lo
+	if (coelhoEscondido) return;
+
 	float dx = foxX - characterPos;
 	float dy = foxY - jump_height;
 	float distancia = sqrt(dx * dx + dy * dy);
@@ -1426,59 +1668,71 @@ void verificarColisaoComRaposa(){
 void anim (int valor) {
 
 
-	// inputs inseridos para rodar com a setinha esquerda do teclado
-	if (leftArrowPressed) {
+	// Verifica se o coelho esta entrando ou saindo de uma toca. Isso e feito
+	// antes de tudo, para que o restante da funcao ja saiba se o coelho
+	// esta escondido (e, portanto, nao deve se mover nem pular) neste frame.
+	atualizarEsconderijoDoCoelho();
 
-		  direcaoCoelho = -1.0f; // vira pra esquerda
-		  ///////////////////////////////////
-		  // Permite o quadrado a andar pra esquerda pela cena
-		  if (characterPos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
-			  characterPos -= 0;
-		  } else {
-			  characterPos -= squareSpeed;
+
+	// Enquanto o coelho estiver escondido na toca, ele fica parado: nao
+	// processa as setas de movimento nem a animacao de pulo.
+	if (!coelhoEscondido) {
+
+		// inputs inseridos para rodar com a setinha esquerda do teclado
+		if (leftArrowPressed) {
+
+			  direcaoCoelho = -1.0f; // vira pra esquerda
+			  ///////////////////////////////////
+			  // Permite o quadrado a andar pra esquerda pela cena
+			  if (characterPos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
+				  characterPos -= 0;
+			  } else {
+				  characterPos -= characterSpeed;
+			  }
+
+			  ///////////////////////////////////
+			  // Rotaciona o quadrado qdo anda pra esquerda
+			  //squareAngle += squareAngleSpeed;
+
+		}
+
+
+		// inputs inseridos para rodar com a setinha direita do teclado
+		if (rightArrowPressed) {
+
+			  direcaoCoelho = 1.0f; // vira pra direita
+			  ///////////////////////////////////
+			  // Permite o quadrado a andar pra direita pela cena
+				if (characterPos > 8.0f) { // esse if não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
+					characterPos += 0;
+				} else {
+					characterPos += characterSpeed;
+				}
+
+			  ///////////////////////////////////
+
+		 }
+
+
+		  //////////////////////////////////////////////////////////////////////////////////////
+		  // Controla a animação de pulo do quadrado
+		  if (isJumping) {
+			  if (goingUp) {
+				  jump_height += speed_jump;
+				  if (jump_height >= jump_maximum_height) {
+					  jump_height = jump_maximum_height; // trava no topo
+					  goingUp = false; // começa a fase de descida
+				  }
+			  } else {
+				  jump_height -= speed_jump;
+				  if (jump_height <= 0.5f) {
+					  jump_height = 0.5f; // trava no chão certinho
+					  isJumping = false; // pulo terminou, pode pular de novo
+				  }
+			  }
 		  }
 
-		  ///////////////////////////////////
-		  // Rotaciona o quadrado qdo anda pra esquerda
-		  //squareAngle += squareAngleSpeed;
-
 	}
-
-
-	// inputs inseridos para rodar com a setinha direita do teclado
-    if (rightArrowPressed) {
-
-    	  direcaoCoelho = 1.0f; // vira pra direita
-          ///////////////////////////////////
-          // Permite o quadrado a andar pra direita pela cena
-			if (characterPos > 8.0f) { // esse if não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
-				characterPos += 0;
-			} else {
-				characterPos += squareSpeed;
-			}
-
-          ///////////////////////////////////
-
-     }
-
-
-      //////////////////////////////////////////////////////////////////////////////////////
-      // Controla a animação de pulo do quadrado
-      if (isJumping) {
-          if (goingUp) {
-              jump_height += speed_jump;
-              if (jump_height >= jump_maximum_height) {
-                  jump_height = jump_maximum_height; // trava no topo
-                  goingUp = false; // começa a fase de descida
-              }
-          } else {
-              jump_height -= speed_jump;
-              if (jump_height <= 0.5f) {
-                  jump_height = 0.5f; // trava no chão certinho
-                  isJumping = false; // pulo terminou, pode pular de novo
-              }
-          }
-      }
 
 
      //////////////////////////////////////////////////////////////////////////////////////
@@ -1492,17 +1746,17 @@ void anim (int valor) {
 
 
      //////////////////////////////////////////////////////////////////////////////////////
-     // Controla a animacao de corrida da raposa (patas e orelhas), do mesmo
-     // jeito que a animacao do coelho: sempre avancando, pra ficar sempre animada.
+     // A RAPOSA NAO CONGELA: mesmo com o coelho escondido na toca, ela
+     // continua correndo da esquerda pra direita normalmente (patas, orelhas,
+     // cauda, surgimento e movimento). E assim que o coelho consegue "esperar
+     // ela passar" escondido, sem ficar preso enquanto ela atravessa a tela.
+     // (a colisao em si e ignorada dentro de verificarColisaoComRaposa quando
+     // o coelho esta escondido, entao ele nao perde vida mesmo se ela passar por cima)
      foxWalkPhase += foxWalkPhaseSpeed;
      if (foxWalkPhase > 2 * PI) {
-    	 foxWalkPhase -= 2 * PI; // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
+    	 foxWalkPhase -= 2 * PI;
      }
 
-
-     //////////////////////////////////////////////////////////////////////////////////////
-     // Controla a animacao da cauda da raposa: a base e a ponta avancam em
-     // velocidades diferentes, entao seus balancos nunca ficam sincronizados
      foxTailPhase += foxTailPhaseSpeed;
      if (foxTailPhase > 2 * PI) {
     	 foxTailPhase -= 2 * PI;
@@ -1513,39 +1767,59 @@ void anim (int valor) {
     	 foxTailTipPhase -= 2 * PI;
      }
 
-
-
-     //////////////////////////////////////////////////////////////////////////////////////
-     // Controla a animacao de "flutuar" das nuvens
-     cloudPhase += cloudPhaseSpeed;
-     if (cloudPhase > 2 * PI) {
-    	 cloudPhase -= 2 * PI; // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
-     }
-
-
-
-     //////////////////////////////////////////////////////////////////////////////////////
-     // Controla o background de fundo
-     bgPos -= bgSpeed;
-     bgPos = fmod(bgPos, bgWidth); // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
-
-
-     //////////////////////////////////////////////////////////////////////////////////////
-     // Controla os vegetais de bonificacao: faz eles surgirem aos poucos,
-     // andarem pela tela junto com o cenario, sumirem quando capturados
-     // pelo coelho, e atualiza os bonus (turbo/pulo alto) que estiverem ativos
-     controlarSurgimentoDeVegetais();
-     moverVegetais();
-     verificarColisaoComVegetais();
-     atualizarBonusAtivos();
-
-
-     //////////////////////////////////////////////////////////////////////////////////////
-     // Controla a perseguicao da raposa: faz ela surgir periodicamente,
-     // correr em direcao ao coelho, e verifica se ela alcançou ele
      controlarSurgimentoDaRaposa();
      moverRaposa();
      verificarColisaoComRaposa();
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // AS BORBOLETAS TAMBEM NAO CONGELAM: sao só um detalhe decorativo
+     // sobrevoando os canteiros, entao nao faz sentido elas pararem no ar
+     // junto com o resto do cenario.
+     butterflyPhase += butterflyPhaseSpeed;
+     if (butterflyPhase > 2 * PI) {
+    	 butterflyPhase -= 2 * PI;
+     }
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Nuvens (o balanço/flutuação delas) -- NAO congela: continuam
+     // flutuando no ceu normalmente, mesmo com o coelho escondido.
+     cloudPhase += cloudPhaseSpeed;
+     if (cloudPhase > 2 * PI) {
+    	 cloudPhase -= 2 * PI;
+     }
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // Cor do ceu (ciclo de amanhecer/dia/entardecer/noite) -- NAO congela:
+     // o tempo continua passando mesmo com o coelho escondido.
+     atualizarCorDoCeu();
+
+
+     //////////////////////////////////////////////////////////////////////////////////////
+     // DAQUI PRA BAIXO E O QUE REALMENTE "CONGELA" enquanto o coelho esta
+     // escondido: a rolagem do CENARIO de fundo (chao, cerca, canteiros), as
+     // TOCAS e os VEGETAIS (surgimento, movimento, colisao e bonus). Só essas
+     // coisas ficam paradas -- tudo o mais (raposa, borboletas, nuvens, ceu)
+     // continua se movendo/animando normalmente.
+     if (!coelhoEscondido) {
+
+	     // Rolagem do fundo (chao, cerca, canteiros)
+	     bgPos -= bgSpeed;
+	     bgPos = fmod(bgPos, bgWidth);
+
+	     // Tocas
+	     atualizarTocas();
+
+	     // Vegetais de bonificacao: surgimento, movimento, colisao e os
+	     // bonus (turbo/pulo alto) que estiverem ativos
+	     controlarSurgimentoDeVegetais();
+	     moverVegetais();
+	     verificarColisaoComVegetais();
+	     atualizarBonusAtivos();
+
+     }
 
 
 
@@ -1587,6 +1861,15 @@ void display() {
 		glPopMatrix();
 
 
+	// Desenha cada toca (buraco) que estiver na tela
+		for (const Toca &toca : tocas) {
+			glPushMatrix();
+				glTranslatef(toca.x, toca.y, 1.0f);
+				drawToca();
+			glPopMatrix();
+		}
+
+
 	// Desenha a raposa somente enquanto ela estiver perseguindo o coelho
 		if (foxActive) {
 			glPushMatrix();
@@ -1610,12 +1893,44 @@ void display() {
 
 	// Criando coelho com input do usuario na tela
 		glColor3f(0, 0, 0);
-		glPushMatrix();
-			glTranslatef(characterPos, jump_height, 1.0f);
-			//glRotatef(float(squareAngle), 0, 0, 1);
-			glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
-			drawRabbit();
-		glPopMatrix();
+
+		if (coelhoEscondido) {
+
+			// Escondido: so mostramos as orelhas espiando pra fora do
+			// buraco, pra deixar claro que o coelho ainda esta ali,
+			// só que a salvo. As orelhas ficam mais curtas (metade pra
+			// fora) do que as orelhas normais do coelho.
+			const Toca &tocaAtual = tocas[tocaOndeEstaEscondido];
+
+			glPushMatrix();
+				glTranslatef(tocaAtual.x, tocaAtual.y + 0.18f, 1.0f);
+				glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
+				glColor3f(0.96f, 0.93f, 0.89f);
+
+				glPushMatrix();
+					glRotatef(10.0f, 0, 0, 1);
+					glScalef(0.125f, 0.6f, 1.0f);
+					drawTriangle();
+				glPopMatrix();
+
+				glPushMatrix();
+					glTranslatef(0.5f, 0.0f, 0.0f);
+					glRotatef(-10.0f, 0, 0, 1);
+					glScalef(0.125f, 0.6f, 1.0f);
+					drawTriangle();
+				glPopMatrix();
+			glPopMatrix();
+
+		} else {
+
+			glPushMatrix();
+				glTranslatef(characterPos, jump_height, 1.0f);
+				//glRotatef(float(squareAngle), 0, 0, 1);
+				glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
+				drawRabbit();
+			glPopMatrix();
+
+		}
 
 
 	// HUD: mostra as vidas do coelho e, quando ativos, os bonus de turbo e pulo alto
@@ -1632,6 +1947,20 @@ void display() {
 		}
 		if (foxActive) {
 			drawText(-7.7f, 5.4f, "Cuidado, a raposa esta te perseguindo!");
+		}
+
+		if (coelhoEscondido) {
+			// O coelho esta escondido: avisa que ele esta a salvo por enquanto
+			drawText(-7.7f, 4.8f, "Escondido na toca - a salvo da raposa!");
+		} else {
+			// Nao esta escondido: se estiver perto o suficiente de uma toca,
+			// mostra uma dica de como se esconder nela
+			for (const Toca &toca : tocas) {
+				if (fabs(toca.x - characterPos) < RAIO_TOCA) {
+					drawText(-7.7f, 4.8f, "Aperte a seta para baixo para se esconder!");
+					break;
+				}
+			}
 		}
 
 
