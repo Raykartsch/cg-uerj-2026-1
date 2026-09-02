@@ -1,3 +1,4 @@
+#include "AveRapina.hpp"
 #include "Animacao.hpp"
 #include "Cenario.hpp"
 #include "Coelho.hpp"
@@ -95,6 +96,13 @@ void anim(int valor) {
     verificarColisaoComRaposa(characterPos, jump_height, coelhoEscondido, rabbitLives,
                               foxX, foxY, foxActive, foxJaTirouVidaNestaPassagem);
 
+    /////////////////////////////////////////////////////////////////////////////
+    //Controlar o surgimento, movimento e colisao da ave
+    controlarSurgimentoDaAve(characterPos);
+	moverAve();
+	verificarColisaoComAve(characterPos, jump_height, coelhoEscondido, rabbitLives,
+						   aveX, aveY, aveActive, aveJaTirouVida);
+
     butterflyPhase += butterflyPhaseSpeed;
     if (butterflyPhase > 2 * PI) butterflyPhase -= 2 * PI;
 
@@ -152,6 +160,15 @@ void display() {
         glPopMatrix();
     }
 
+    // Adicione a renderização da ave logo após a raposa:
+	if (aveActive) {
+		glPushMatrix();
+			glTranslatef(aveX, aveY, 1.0f);
+			drawAve();
+		glPopMatrix();
+	}
+
+
     for (const Vegetal &veg : vegetais) {
         if (!veg.ativo) continue;
         glPushMatrix();
@@ -198,6 +215,8 @@ void display() {
     if (framesDeTurboRestantes > 0) drawText(-7.7f, 6.6f, "Turbo de velocidade!");
     if (framesDePuloReforcadoRestantes > 0) drawText(-7.7f, 6.0f, "Pulo reforcado!");
     if (foxActive) drawText(-7.7f, 5.4f, "Cuidado, a raposa esta te perseguindo!");
+    if (aveActive) drawText(-7.7f, 4.8f, "Gaviao atacando do alto!");
+
 
     if (coelhoEscondido) {
         drawText(-7.7f, 4.8f, "Escondido na toca - a salvo da raposa!");

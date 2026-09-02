@@ -9,3 +9,6 @@ void verificarColisaoComVegetais(float coelhoX, float coelhoY, bool coelhoEscond
 
 void verificarColisaoComRaposa(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
                                float foxX, float foxY, bool foxActive, bool& foxJaTirouVidaNestaPassagem);
+
+void verificarColisaoComAve(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
+                            float aveX, float aveY, bool aveActive, bool& aveJaTirouVida);

@@ -1,6 +1,7 @@
 #include "SistemaColisao.hpp"
 #include <cmath>
 
+
 void verificarColisaoComVegetais(float coelhoX, float coelhoY, bool coelhoEscondido, std::vector<Vegetal>& listaVegetais) {
     if (coelhoEscondido) return;
 
@@ -22,6 +23,7 @@ void verificarColisaoComVegetais(float coelhoX, float coelhoY, bool coelhoEscond
     }
 }
 
+
 void verificarColisaoComRaposa(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
                                float foxX, float foxY, bool foxActive, bool& foxJaTirouVidaNestaPassagem) {
     if (!foxActive) return;
@@ -41,5 +43,26 @@ void verificarColisaoComRaposa(float coelhoX, float coelhoY, bool coelhoEscondid
         }
     } else {
         foxJaTirouVidaNestaPassagem = false;
+    }
+}
+
+
+void verificarColisaoComAve(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
+                            float aveX, float aveY, bool aveActive, bool& aveJaTirouVida) {
+    if (!aveActive) return;
+    if (coelhoEscondido) return; // Salvo na toca
+
+    float dx = aveX - coelhoX;
+    float dy = aveY - coelhoY;
+    float distancia = sqrt(dx * dx + dy * dy);
+    float raioColisao = 1.0f;
+
+    if (distancia < raioColisao) {
+        if (!aveJaTirouVida) {
+            if (rabbitLives > 0) rabbitLives--;
+            aveJaTirouVida = true;
+        }
+    } else {
+        aveJaTirouVida = false;
     }
 }

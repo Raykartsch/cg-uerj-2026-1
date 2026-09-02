@@ -12,7 +12,7 @@
 #include <cstdlib>
 #include <ctime>
 
-
+#include "AveRapina.cpp"
 #include "PrimitivasGeometricas.cpp"
 #include "Borboleta.cpp"
 #include "Cenario.cpp"
