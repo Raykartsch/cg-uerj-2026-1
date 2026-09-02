@@ -137,6 +137,7 @@ void display() {
     	drawBackgroundSky();
     glPopMatrix();
 
+    // Desenha o sol no background
     glPushMatrix();
         glTranslatef(6.5f, 6.8f, 1);
         drawSun();

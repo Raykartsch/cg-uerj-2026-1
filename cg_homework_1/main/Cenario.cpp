@@ -528,10 +528,11 @@ void moverVegetais() {
     }
 }
 
+//Controla o tempo de spawn dos vegetais do cenario
 void controlarSurgimentoDeVegetais() {
     framesAteProximoVegetal--;
     if (framesAteProximoVegetal <= 0) {
         spawnVegetable();
-        framesAteProximoVegetal = 60 + (rand() % 80);
+        framesAteProximoVegetal = 120 + (rand() % 80);
     }
 }
