@@ -301,18 +301,47 @@ void drawText(float x, float y, const char *texto) {
 }
 
 void drawToca() {
+
+	glColor3f(0.549f, 0.776f, 0.247f);
+	glPushMatrix();
+		glTranslatef(-0.1f, -0.2f, 1.0f);
+		glScalef(1.25f, 0.5f, 1.0f);
+		drawSquare();
+	glPopMatrix();
+
+	glColor3f(0.549f, 0.776f, 0.247f);
+	glPushMatrix();
+		glTranslatef(-0.1f, 0.2f, 1.0f);
+		glScalef(1.25f, 1.35f, 1.0f);
+		drawDisk(1.0f);
+	glPopMatrix();
+
+
     glColor3f(0.478f, 0.290f, 0.168f);
     glPushMatrix();
-        glScalef(0.9f, 0.5f, 1.0f);
+    	glTranslatef(0.15f, 0.30f, 1.0f);
+        glScalef(0.85f, 0.9f, 1.0f);
         drawDisk(1.0f);
     glPopMatrix();
 
+
+	glColor3f(0.478f, 0.290f, 0.168f);
+	glPushMatrix();
+	glTranslatef(0.15f, 0.0f, 1.0f);
+	   glScalef(0.85f, 0.5f, 1.0f);
+	   drawSquare();
+	glPopMatrix();
+
+
+
     glColor3f(0.12f, 0.09f, 0.07f);
     glPushMatrix();
-        glTranslatef(0.0f, 0.05f, 0.1f);
-        glScalef(0.6f, 0.32f, 1.0f);
+        glTranslatef(0.25f, 0.125f, 0.1f);
+        glScalef(0.6f, 0.9f, 1.0f);
         drawDisk(1.0f);
     glPopMatrix();
+
+
 }
 
 void atualizarTocas() {
@@ -366,18 +395,6 @@ void atualizarCorDoCeu() {
 }
 
 void drawBackgroundContent() {
-    glColor3f(skyR, skyG, skyB);
-    glPushMatrix();
-        glScalef(bgWidth + (bgWidth / 2), 10, 1);
-        drawSquare();
-    glPopMatrix();
-
-    glColor3f(0.549f, 0.776f, 0.247f);
-    glPushMatrix();
-        glTranslatef(0.0f, -4.0f, 1.0f);
-        glScalef(bgWidth + (bgWidth / 2), 4.0f, 1);
-        drawSquare();
-    glPopMatrix();
 
     glPushMatrix();
         glTranslatef(16.0f, 0.5f, 1.0f);
@@ -406,11 +423,24 @@ void drawBackgroundContent() {
             glScalef(2.5f, 1.0f, 1.0f);
             drawSquare();
         glPopMatrix();
-
-        glPushMatrix(); glTranslatef(22.0f, -1.5f, 1.0f); glScalef(1.2f, 1.2f, 1.0f); drawFruit(0.909f, 0.447f, 0.172f); glPopMatrix();
-        glPushMatrix(); glTranslatef(23.4f, -1.8f, 1.0f); glScalef(1.5f, 1.5f, 1.0f); drawFruit(0.909f, 0.447f, 0.172f); glPopMatrix();
-        glPushMatrix(); glTranslatef(24.3f, -1.3f, 1.0f); drawFruit(0.909f, 0.447f, 0.172f); glPopMatrix();
-        glPushMatrix(); glTranslatef(25.7f, -2.1f, 1.0f); drawFruit(0.909f, 0.447f, 0.172f); glPopMatrix();
+        glPushMatrix();
+        glTranslatef(22.0f, -1.5f, 1.0f);
+			glScalef(1.2f, 1.2f, 1.0f);
+			drawFruit(0.909f, 0.447f, 0.172f);
+        glPopMatrix();
+        glPushMatrix();
+        glTranslatef(23.4f, -1.8f, 1.0f);
+			glScalef(1.5f, 1.5f, 1.0f);
+			drawFruit(0.909f, 0.447f, 0.172f);
+        glPopMatrix();
+        glPushMatrix();
+			glTranslatef(24.3f, -1.3f, 1.0f);
+			drawFruit(0.909f, 0.447f, 0.172f);
+        glPopMatrix();
+        glPushMatrix();
+			glTranslatef(25.7f, -2.1f, 1.0f);
+			drawFruit(0.909f, 0.447f, 0.172f);
+        glPopMatrix();
 
         glColor3f(0.243f, 0.556f, 0.180f);
         glPushMatrix();
@@ -461,10 +491,31 @@ void drawBackgroundContent() {
     glPushMatrix(); glTranslatef(44.0f, 0.5f, 1.0f); drawFence(); glPopMatrix();
 }
 
-void drawBackground1() {
+
+void drawBackgroundSky() {
+    glColor3f(skyR, skyG, skyB);
     glPushMatrix();
-        drawBackgroundContent();
+        glScalef(bgWidth + (bgWidth / 2), 10, 1);
+        drawSquare();
     glPopMatrix();
+
+    glColor3f(0.549f, 0.776f, 0.247f);
+    glPushMatrix();
+        glTranslatef(0.0f, -4.0f, 1.0f);
+        glScalef(bgWidth + (bgWidth / 2), 4.0f, 1);
+        drawSquare();
+    glPopMatrix();
+
+}
+
+void drawBackgroundGrass(){
+
+	 glColor3f(0.549f, 0.776f, 0.247f);
+	    glPushMatrix();
+	        glTranslatef(0.0f, -4.0f, 1.0f);
+	        glScalef(bgWidth + (bgWidth / 2), 4.0f, 1);
+	        drawSquare();
+	    glPopMatrix();
 }
 
 void moverVegetais() {

@@ -132,11 +132,9 @@ void display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-
-
+    // Desenha o efeito do ceu no background
     glPushMatrix();
-        glTranslatef(bgPos, 0, 1);
-        drawBackground1();
+    	drawBackgroundSky();
     glPopMatrix();
 
     glPushMatrix();
@@ -152,6 +150,14 @@ void display() {
         glPopMatrix();
     }
 
+
+
+	glPushMatrix();
+		  drawBackgroundGrass();
+		  glTranslatef(bgPos, 0, 1);
+		  drawBackgroundContent();
+	glPopMatrix();
+
     if (foxActive) {
         glPushMatrix();
             glTranslatef(foxX, foxY, 1.0f);
@@ -164,7 +170,7 @@ void display() {
 	if (aveActive) {
 		glPushMatrix();
 			glTranslatef(aveX, aveY, 1.0f);
-			drawAve();
+			drawBird();
 		glPopMatrix();
 	}
 
@@ -212,18 +218,26 @@ void display() {
     snprintf(textoVidas, sizeof(textoVidas), "Vidas: %d", rabbitLives);
     drawText(-7.7f, 7.2f, textoVidas);
 
-    if (framesDeTurboRestantes > 0) drawText(-7.7f, 6.6f, "Turbo de velocidade!");
-    if (framesDePuloReforcadoRestantes > 0) drawText(-7.7f, 6.0f, "Pulo reforcado!");
-    if (foxActive) drawText(-7.7f, 5.4f, "Cuidado, a raposa esta te perseguindo!");
-    if (aveActive) drawText(-7.7f, 4.8f, "Gaviao atacando do alto!");
+    if (framesDeTurboRestantes > 0) {
+    	drawText(-7.7f, 6.6f, "Turbo de velocidade!");
+    }
+    if (framesDePuloReforcadoRestantes > 0) {
+    	drawText(-7.7f, 6.0f, "Pulo reforcado!");
+    }
+    if (foxActive) {
+    	drawText(-7.7f, 5.4f, "Cuidado, a raposa esta te perseguindo!");
+    }
+    if (aveActive) {
+    	drawText(-7.7f, 4.8f, "Gaviao atacando do alto!");
+    }
 
 
     if (coelhoEscondido) {
-        drawText(-7.7f, 4.8f, "Escondido na toca - a salvo da raposa!");
+        drawText(-7.7f, 4.8f, "Escondido na toca!");
     } else {
         for (const Toca &toca : tocas) {
             if (fabs(toca.x - characterPos) < RAIO_TOCA) {
-                drawText(-7.7f, 4.8f, "Aperte a seta para baixo para se esconder!");
+                drawText(-7.7f, 4.8f, "Aperte a seta para baixo pra se esconder!");
                 break;
             }
         }

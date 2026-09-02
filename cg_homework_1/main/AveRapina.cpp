@@ -15,37 +15,159 @@ const float VELOCIDADE_AVE_X = 0.18f;
 int framesAteProximaAve = 25 * (1000 / 24);
 float aveAlvoX = 0.0f; // Coordenada X onde será o ponto mais baixo do mergulho
 
-void drawAve() {
+void drawBird() {
     avePhase += 0.35f;
     if (avePhase > 2 * 3.1415f) avePhase -= 2 * 3.1415f;
 
     float wingFlap = sin(avePhase);
 
     glPushMatrix();
-        glColor3f(0.35f, 0.20f, 0.10f); // Marrom escuro
 
+    // Asas batendo
+	   glColor3f(0.27f, 0.23f, 0.13f);
+	   glPushMatrix();
+		   glTranslatef(-0.2f, 0.1f, 0.0f);
+		   glRotatef(wingFlap * 50.0f, 0, 0, 1);
+		   glScalef(0.4f, 0.8f, 1.0f);
+		   drawTriangle();
+
+		   glColor3f(0.27f, 0.23f, 0.13f);
+		   drawTriangleLine();
+
+		   glColor3f(0.411f, 0.334f, 0.20f);
+		   glScalef(0.6f, 0.5f, 1.0f);
+		   drawTriangle();
+	   glPopMatrix();
+
+    	//glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
         // Corpo
         glPushMatrix();
+        	glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
             glScalef(0.6f, 0.25f, 1.0f);
             drawDisk(1.0f);
+            glColor3f(0.27f, 0.23f, 0.13f);
+            drawDiskLine(1.0f);
         glPopMatrix();
 
-        // Bico (virado para a esquerda)
-        glColor3f(0.85f, 0.70f, 0.15f);
+        // Mancha da barriga
         glPushMatrix();
-            glTranslatef(-0.6f, 0.0f, 0.0f);
-            glScalef(0.2f, 0.15f, 1.0f);
+        	glTranslatef(0.0f, -0.1f, 1.0f);
+        	glColor3f(0.96f, 0.93f, 0.89f);// Marrom escuro
+		   glScalef(0.8f, 0.25f, 1.0f);
+		   drawDisk(0.5f);
+	   glPopMatrix();
+
+        // Cabeca
+		glPushMatrix();
+			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
+			glTranslatef(-0.7f, 0.1f, 1.0f);
+			glScalef(0.20f, 0.16f, 1.0f);
+			drawDisk(1.0f);
+			glColor3f(0.27f, 0.23f, 0.13f);
+			drawDiskLine(1.0f);
+		glPopMatrix();
+
+		//Detalhe cabeca
+		glPushMatrix();
+			glTranslatef(-0.7f, 0.125f, 1.0f);
+			glScalef(0.45f, 0.16f, 1.0f);
+			glColor3f(0.27f, 0.23f, 0.13f);
+			drawDisk(0.4f);
+		glPopMatrix();
+
+		 glPushMatrix();
+			glTranslatef(-0.7f, 0.125f, 0.0f);
+			glColor3f(0.0f, 0.0f, 0.0f);
+			drawDisk(0.032);
+		glPopMatrix();
+
+		//Moicano da cabeca
+		glPushMatrix();
+			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
+			glTranslatef(-0.7f, 0.3f, 1.0f);
+			glScalef(0.45f, 0.05f, 1.0f);
+			glRotatef(-80, 0, 0, 1);
+			drawTriangle();
+			glColor3f(0.27f, 0.23f, 0.13f);
+			drawTriangleLine();
+		glPopMatrix();
+
+		glPushMatrix();
+			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
+			glTranslatef(-0.7f, 0.35f, 1.0f);
+			glScalef(0.45f, 0.05f, 1.0f);
+			glRotatef(-105, 0, 0, 1);
+			drawTriangle();
+			glColor3f(0.27f, 0.23f, 0.13f);
+			drawTriangleLine();
+		glPopMatrix();
+
+
+		// Rabo
+		glPushMatrix();
+			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
+			glTranslatef(0.78f, 0.1f, 1.0f);
+			glScalef(0.25f, 0.05f, 1.0f);
+			glRotatef(-80, 0, 0, 1);
+			drawSquare();
+			glColor3f(0.27f, 0.23f, 0.13f);
+			drawSquareLine();
+		glPopMatrix();
+
+		glPushMatrix();
+			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
+			glTranslatef(0.78f, 0.0f, 1.0f);
+			glScalef(0.35f, 0.05f, 1.0f);
+			glRotatef(-80, 0, 0, 1);
+			drawSquare();
+			glColor3f(0.27f, 0.23f, 0.13f);
+			drawSquareLine();
+		glPopMatrix();
+
+		glPushMatrix();
+			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
+			glTranslatef(0.78f, -0.1f, 1.0f);
+			glScalef(0.25f, 0.05f, 1.0f);
+			glRotatef(-80, 0, 0, 1);
+			drawSquare();
+			glColor3f(0.27f, 0.23f, 0.13f);
+			drawSquareLine();
+		glPopMatrix();
+
+
+        // Bico (virado para a esquerda)
+		glColor3f(1.0f, 0.77f, 0.10f);
+        glPushMatrix();
+            glTranslatef(-0.92f, 0.0f, 0.0f);
+            glScalef(0.12f, 0.10f, 1.0f);
             drawTriangle();
         glPopMatrix();
 
+        glColor3f(1.0f, 0.77f, 0.10f);
+		glPushMatrix();
+			glTranslatef(-0.93f, 0.0f, 0.0f);
+			glRotatef(90, 0, 0, 1);
+			glScalef(0.12f, 0.10f, 1.0f);
+			drawTriangle();
+		glPopMatrix();
+
         // Asas batendo
-        glColor3f(0.25f, 0.15f, 0.05f);
+        glColor3f(0.27f, 0.23f, 0.13f);
         glPushMatrix();
-            glTranslatef(0.1f, 0.1f, 0.0f);
+            glTranslatef(0.1f, 0.3f, 0.0f);
             glRotatef(wingFlap * 50.0f, 0, 0, 1);
             glScalef(0.4f, 0.8f, 1.0f);
             drawTriangle();
+
+            glColor3f(0.27f, 0.23f, 0.13f);
+            drawTriangleLine();
+
+            glColor3f(0.411f, 0.334f, 0.20f);
+            glScalef(0.6f, 0.5f, 1.0f);
+            drawTriangle();
         glPopMatrix();
+
+
     glPopMatrix();
 }
 

@@ -99,6 +99,7 @@ void drawRabbit() {
             glColor3f(0.705f, 0.64f, 0.58f);
             drawDiskLine(0.6);
 
+            //olho do coelho
             glPushMatrix();
                 glTranslatef(0.3f, 0.1f, 0.0f);
                 glColor3f(0.0f, 0.0f, 0.0f);
