@@ -145,6 +145,26 @@ const float VELOCIDADE_TURBO = 0.20f;
 int framesDeTurboRestantes = 0;              // enquanto > 0, o turbo esta ativo
 const int DURACAO_TURBO_EM_FRAMES = 150;     // ~3,6 segundos de turbo
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// SISTEMA DE CORRIDA (SPRINT) COM FOLEGO
+//
+// Enquanto o jogador segura a tecla "R", o coelho corre mais rapido do que
+// o normal. Só que correr cansa: a cada frame correndo, um pouco do
+// "folego" do coelho e gasto. Quando o folego acaba, o coelho e obrigado a
+// voltar pra velocidade normal ate recuperar folego suficiente (o que
+// acontece automaticamente, aos poucos, sempre que ele NAO estiver correndo).
+
+const float VELOCIDADE_CORRENDO = 0.09f; // mais rapida que o normal, mas mais lenta que o turbo da cenoura
+
+const float FOLEGO_MAXIMO = 100.0f;       // folego maximo que o coelho pode ter
+float folegoAtual = FOLEGO_MAXIMO;        // folego atual (comeca cheio)
+
+const float GASTO_FOLEGO_POR_FRAME = 0.6f;       // quanto o folego diminui a cada frame correndo
+const float RECUPERACAO_FOLEGO_POR_FRAME = 0.3f; // quanto o folego se recupera a cada frame sem correr
+
+bool coelhoCorrendo = false; // true enquanto o coelho estiver de fato correndo neste frame
+
 // Controla o pulo do coelho
 float jump_maximum_height = 2.5f;
 float speed_jump = 0.1f;
@@ -1583,6 +1603,61 @@ void atualizarBonusAtivos(){
 }
 
 
+// Enquanto o coelho esta escondido na toca, ele recupera folego mais rapido
+// do que o normal (como se estivesse descansando la dentro)
+const float RECUPERACAO_FOLEGO_ESCONDIDO = RECUPERACAO_FOLEGO_POR_FRAME * 2.0f;
+
+
+// Controla o "correr" do coelho: enquanto o jogador segura a tecla R E
+// ainda sobra folego, o coelho corre mais rapido, gastando folego aos
+// poucos. Quando solta a tecla (ou o folego acaba), ele volta ao normal e
+// o folego comeca a se recuperar sozinho. Quando ele esta escondido na
+// toca, nao tem como correr de jeito nenhum -- so descansa e recupera
+// folego (mais rapido do que recuperaria parado la fora).
+void atualizarCorrida(){
+
+	if (coelhoEscondido) {
+
+		coelhoCorrendo = false;
+
+		folegoAtual += RECUPERACAO_FOLEGO_ESCONDIDO;
+		if (folegoAtual > FOLEGO_MAXIMO) {
+			folegoAtual = FOLEGO_MAXIMO;
+		}
+
+		return; // escondido nao mexe em characterSpeed, ja que nao esta se movendo
+	}
+
+	// So consegue correr se estiver segurando "R" e ainda tiver folego sobrando
+	if (r_key_pressed && folegoAtual > 0.0f) {
+
+		coelhoCorrendo = true;
+
+		folegoAtual -= GASTO_FOLEGO_POR_FRAME;
+		if (folegoAtual < 0.0f) {
+			folegoAtual = 0.0f; // acabou o folego, nao deixa ficar negativo
+		}
+
+	} else {
+
+		coelhoCorrendo = false;
+
+		// Enquanto nao esta correndo, o folego vai voltando aos poucos
+		folegoAtual += RECUPERACAO_FOLEGO_POR_FRAME;
+		if (folegoAtual > FOLEGO_MAXIMO) {
+			folegoAtual = FOLEGO_MAXIMO;
+		}
+	}
+
+	// O turbo da cenoura e mais forte e tem prioridade: se ele estiver
+	// ativo, a velocidade de corrida normal nao mexe em nada aqui (quem
+	// controla characterSpeed nesse caso e atualizarBonusAtivos)
+	if (framesDeTurboRestantes == 0) {
+		characterSpeed = coelhoCorrendo ? VELOCIDADE_CORRENDO : VELOCIDADE_NORMAL;
+	}
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Faz a raposa aparecer na tela, pronta para perseguir o coelho. Ela sempre
 // entra pela borda ESQUERDA da tela, um pouco fora da area visivel.
@@ -1672,6 +1747,13 @@ void anim (int valor) {
 	// antes de tudo, para que o restante da funcao ja saiba se o coelho
 	// esta escondido (e, portanto, nao deve se mover nem pular) neste frame.
 	atualizarEsconderijoDoCoelho();
+
+
+	// Calcula a velocidade deste frame (normal, "correndo" ou "descansando
+	// na toca") antes de usa-la nos blocos das setas, logo abaixo. Chamamos
+	// sempre, mesmo com o coelho escondido, pois e ela quem recupera o
+	// folego dele enquanto esta na toca.
+	atualizarCorrida();
 
 
 	// Enquanto o coelho estiver escondido na toca, ele fica parado: nao
@@ -1962,6 +2044,39 @@ void display() {
 				}
 			}
 		}
+
+
+	// Barra de folego: um retangulo cinza (o "fundo", sempre do tamanho
+	// maximo) com outro retangulo verde por cima, que encolhe conforme o
+	// folego vai acabando. E facil de entender: quanto mais verde, mais
+	// folego o coelho ainda tem pra correr.
+		float folegoPorcentagem = folegoAtual / FOLEGO_MAXIMO; // de 0.0 (vazio) a 1.0 (cheio)
+		float larguraBarra = 1.6f;
+		float alturaBarra = 0.12f;
+
+		glPushMatrix();
+			glTranslatef(-7.7f, 4.15f, 1.0f);
+
+			// Fundo da barra (cinza escuro)
+			glColor3f(0.35f, 0.35f, 0.35f);
+			glPushMatrix();
+				glTranslatef(larguraBarra / 2.0f, 0.0f, 0.0f);
+				glScalef(larguraBarra / 2.0f, alturaBarra, 1.0f);
+				drawSquare();
+			glPopMatrix();
+
+			// Parte preenchida (verde), proporcional ao folego atual
+			glColor3f(0.30f, 0.75f, 0.35f);
+			glPushMatrix();
+				glTranslatef((larguraBarra * folegoPorcentagem) / 2.0f, 0.0f, 0.0f);
+				glScalef((larguraBarra * folegoPorcentagem) / 2.0f, alturaBarra, 1.0f);
+				drawSquare();
+			glPopMatrix();
+
+		glPopMatrix();
+
+		glColor3f(0.0f, 0.0f, 0.0f);
+		drawText(-7.7f, 3.75f, "Folego (segure R para correr)");
 
 
 	// Alterar a display daqui pra cima
