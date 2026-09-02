@@ -1,8 +1,4 @@
-#ifndef PRIMITIVAS_HPP
-#define PRIMITIVAS_HPP
-
-#include <GL/glut.h>
-#include <math.h>
+#pragma once
 
 extern double PI;
 
@@ -12,5 +8,3 @@ void drawTriangle();
 void drawTriangleLine();
 void drawDisk(double radius);
 void drawDiskLine(double radius);
-
-#endif

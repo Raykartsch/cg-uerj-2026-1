@@ -1,36 +1,28 @@
 #include "Animacao.hpp"
-#include "Primitivas.hpp"
 #include "Cenario.hpp"
 #include "Coelho.hpp"
 #include "Raposa.hpp"
+#include "SistemaColisao.hpp"
+#include "PrimitivasGeometricas.hpp"
 #include "Borboleta.hpp"
-#include <cstdio>
 #include <GL/glut.h>
-#include <math.h>
+#include <cmath>
+#include <cstdio>
 
 int FrameNumber = 0;
 int speed = 50;
 int msecs = 24;
 
-bool rightArrowPressed = false;
-bool leftArrowPressed = false;
-bool upArrowPressed = false;
-bool downArrowPressed = false;
 bool r_key_pressed = false;
 bool e_key_pressed = false;
-
-void init(void) {
-  glClearColor(1.0, 1.0, 1.0, 1.0);
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho (-8, 8, -8, 8, -8, 8);
-}
 
 void arrowKeysDown(int key, int x, int y) {
     if (key == GLUT_KEY_RIGHT) rightArrowPressed = true;
     if (key == GLUT_KEY_LEFT)  leftArrowPressed = true;
     if (key == GLUT_KEY_UP && !isJumping) {
-    	upArrowPressed = true; isJumping = true; goingUp = true;
+        upArrowPressed = true;
+        isJumping = true;
+        goingUp = true;
     }
     if (key == GLUT_KEY_DOWN) downArrowPressed = true;
 }
@@ -39,12 +31,12 @@ void arrowKeysUp(int key, int x, int y) {
     if (key == GLUT_KEY_RIGHT) rightArrowPressed = false;
     if (key == GLUT_KEY_LEFT)  leftArrowPressed = false;
     if (key == GLUT_KEY_UP)    upArrowPressed = false;
-	if (key == GLUT_KEY_DOWN)  downArrowPressed = false;
+    if (key == GLUT_KEY_DOWN)  downArrowPressed = false;
 }
 
 void keyboard_callback(unsigned char key, int x, int y) {
-	if (key == 101) e_key_pressed = true;
-	if (key == 114) r_key_pressed = true;
+    if (key == 101) e_key_pressed = true; // letra e
+    if (key == 114) r_key_pressed = true; // letra r
 }
 
 void keyboard_up_callback(unsigned char key, int x, int y) {
@@ -52,7 +44,152 @@ void keyboard_up_callback(unsigned char key, int x, int y) {
     if (key == 114) r_key_pressed = false;
 }
 
-void desenharHUD() {
+void anim(int valor) {
+    atualizarEsconderijoDoCoelho();
+    atualizarCorrida();
+
+    if (!coelhoEscondido) {
+        if (leftArrowPressed) {
+            direcaoCoelho = -1.0f;
+            if (characterPos < -8.0f) characterPos -= 0;
+            else characterPos -= characterSpeed;
+        }
+
+        if (rightArrowPressed) {
+            direcaoCoelho = 1.0f;
+            if (characterPos > 8.0f) characterPos += 0;
+            else characterPos += characterSpeed;
+        }
+
+        if (isJumping) {
+            if (goingUp) {
+                jump_height += speed_jump;
+                if (jump_height >= jump_maximum_height) {
+                    jump_height = jump_maximum_height;
+                    goingUp = false;
+                }
+            } else {
+                jump_height -= speed_jump;
+                if (jump_height <= 0.5f) {
+                    jump_height = 0.5f;
+                    isJumping = false;
+                }
+            }
+        }
+    }
+
+    walkPhase += walkPhaseSpeed;
+    if (walkPhase > 2 * PI) walkPhase -= 2 * PI;
+
+    foxWalkPhase += foxWalkPhaseSpeed;
+    if (foxWalkPhase > 2 * PI) foxWalkPhase -= 2 * PI;
+
+    foxTailPhase += foxTailPhaseSpeed;
+    if (foxTailPhase > 2 * PI) foxTailPhase -= 2 * PI;
+
+    foxTailTipPhase += foxTailTipPhaseSpeed;
+    if (foxTailTipPhase > 2 * PI) foxTailTipPhase -= 2 * PI;
+
+    controlarSurgimentoDaRaposa();
+    moverRaposa();
+    verificarColisaoComRaposa(characterPos, jump_height, coelhoEscondido, rabbitLives,
+                              foxX, foxY, foxActive, foxJaTirouVidaNestaPassagem);
+
+    butterflyPhase += butterflyPhaseSpeed;
+    if (butterflyPhase > 2 * PI) butterflyPhase -= 2 * PI;
+
+    cloudPhase += cloudPhaseSpeed;
+    if (cloudPhase > 2 * PI) cloudPhase -= 2 * PI;
+
+    atualizarCorDoCeu();
+
+    if (!coelhoEscondido) {
+        bgPos -= bgSpeed;
+        bgPos = fmod(bgPos, bgWidth);
+
+        atualizarTocas();
+        controlarSurgimentoDeVegetais();
+        moverVegetais();
+        verificarColisaoComVegetais(characterPos, jump_height, coelhoEscondido, vegetais);
+        atualizarBonusAtivos();
+    }
+
+    FrameNumber++;
+    glutPostRedisplay();
+    glutTimerFunc(msecs, anim, valor);
+}
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+
+
+    glPushMatrix();
+        glTranslatef(bgPos, 0, 1);
+        drawBackground1();
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(6.5f, 6.8f, 1);
+        drawSun();
+    glPopMatrix();
+
+
+    for (const Toca &toca : tocas) {
+        glPushMatrix();
+            glTranslatef(toca.x, toca.y, 1.0f);
+            drawToca();
+        glPopMatrix();
+    }
+
+    if (foxActive) {
+        glPushMatrix();
+            glTranslatef(foxX, foxY, 1.0f);
+            glScalef(0.9f * foxDirecao, 0.8f, 1.0f);
+            drawFox();
+        glPopMatrix();
+    }
+
+    for (const Vegetal &veg : vegetais) {
+        if (!veg.ativo) continue;
+        glPushMatrix();
+            glTranslatef(veg.x, veg.y, 1.0f);
+            drawVegetable(veg.tipo);
+        glPopMatrix();
+    }
+
+    glColor3f(0, 0, 0);
+
+    if (coelhoEscondido) {
+        const Toca &tocaAtual = tocas[tocaOndeEstaEscondido];
+        glPushMatrix();
+            glTranslatef(tocaAtual.x, tocaAtual.y + 0.18f, 1.0f);
+            glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
+            glColor3f(0.96f, 0.93f, 0.89f);
+
+            glPushMatrix();
+                glRotatef(10.0f, 0, 0, 1);
+                glScalef(0.125f, 0.6f, 1.0f);
+                drawTriangle();
+            glPopMatrix();
+
+            glPushMatrix();
+                glTranslatef(0.5f, 0.0f, 0.0f);
+                glRotatef(-10.0f, 0, 0, 1);
+                glScalef(0.125f, 0.6f, 1.0f);
+                drawTriangle();
+            glPopMatrix();
+        glPopMatrix();
+    } else {
+        glPushMatrix();
+            glTranslatef(characterPos, jump_height, 1.0f);
+            glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
+            drawRabbit();
+        glPopMatrix();
+    }
+
     glColor3f(0.0f, 0.0f, 0.0f);
     char textoVidas[32];
     snprintf(textoVidas, sizeof(textoVidas), "Vidas: %d", rabbitLives);
@@ -74,100 +211,29 @@ void desenharHUD() {
     }
 
     float folegoPorcentagem = folegoAtual / FOLEGO_MAXIMO;
-    float larguraBarra = 1.6f; float alturaBarra = 0.12f;
+    float larguraBarra = 1.6f;
+    float alturaBarra = 0.12f;
 
     glPushMatrix();
         glTranslatef(-7.7f, 4.15f, 1.0f);
+
         glColor3f(0.35f, 0.35f, 0.35f);
         glPushMatrix();
-            glTranslatef(larguraBarra / 2.0f, 0.0f, 0.0f); glScalef(larguraBarra / 2.0f, alturaBarra, 1.0f); drawSquare();
+            glTranslatef(larguraBarra / 2.0f, 0.0f, 0.0f);
+            glScalef(larguraBarra / 2.0f, alturaBarra, 1.0f);
+            drawSquare();
         glPopMatrix();
+
         glColor3f(0.30f, 0.75f, 0.35f);
         glPushMatrix();
             glTranslatef((larguraBarra * folegoPorcentagem) / 2.0f, 0.0f, 0.0f);
-            glScalef((larguraBarra * folegoPorcentagem) / 2.0f, alturaBarra, 1.0f); drawSquare();
+            glScalef((larguraBarra * folegoPorcentagem) / 2.0f, alturaBarra, 1.0f);
+            drawSquare();
         glPopMatrix();
     glPopMatrix();
 
-    glColor3f(0.0f, 0.0f, 0.0f); drawText(-7.7f, 3.75f, "Folego (segure R para correr)");
-}
+    glColor3f(0.0f, 0.0f, 0.0f);
+    drawText(-7.7f, 3.75f, "Folego (segure R para correr)");
 
-void anim(int valor) {
-	atualizarEsconderijoDoCoelho();
-	atualizarCorrida();
-
-	if (!coelhoEscondido) {
-        moverCoelho();
-	}
-
-    animarCoelho();
-    animarRaposa();
-    controlarSurgimentoDaRaposa();
-    moverRaposa();
-    verificarColisaoComRaposa();
-    animarBorboleta();
-    animarNuvensECeu();
-
-    if (!coelhoEscondido) {
-	     bgPos -= bgSpeed;
-	     bgPos = fmod(bgPos, bgWidth);
-	     atualizarTocas();
-	     controlarSurgimentoDeVegetais();
-	     moverVegetais();
-	     verificarColisaoComVegetais();
-	     atualizarBonusAtivos();
-    }
-
-	FrameNumber++;
-	glutPostRedisplay();
-	glutTimerFunc(msecs, anim, valor);
-}
-
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    glMatrixMode (GL_MODELVIEW);
-    glLoadIdentity();
-
-    glPushMatrix();
-        glTranslatef(bgPos, 0, 1);
-        drawBackground1();
-    glPopMatrix();
-
-    glPushMatrix();
-        glTranslatef(6.5f, 6.8f, 1);
-        drawSun();
-    glPopMatrix();
-
-    desenharTocas();
-
-    if (foxActive) {
-        glPushMatrix();
-            glTranslatef(foxX, foxY, 1.0f);
-            glScalef(0.9f * foxDirecao, 0.8f, 1.0f);
-            drawFox();
-        glPopMatrix();
-    }
-
-    desenharVegetais();
-
-    glColor3f(0, 0, 0);
-    if (coelhoEscondido) {
-        const Toca &tocaAtual = tocas[tocaOndeEstaEscondido];
-        glPushMatrix();
-            glTranslatef(tocaAtual.x, tocaAtual.y + 0.18f, 1.0f);
-            glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
-            glColor3f(0.96f, 0.93f, 0.89f);
-            glPushMatrix(); glRotatef(10.0f, 0, 0, 1); glScalef(0.125f, 0.6f, 1.0f); drawTriangle(); glPopMatrix();
-            glPushMatrix(); glTranslatef(0.5f, 0.0f, 0.0f); glRotatef(-10.0f, 0, 0, 1); glScalef(0.125f, 0.6f, 1.0f); drawTriangle(); glPopMatrix();
-        glPopMatrix();
-    } else {
-        glPushMatrix();
-            glTranslatef(characterPos, jump_height, 1.0f);
-            glScalef(0.4f * direcaoCoelho, 0.4f, 1.0f);
-            drawRabbit();
-        glPopMatrix();
-    }
-
-    desenharHUD();
     glutSwapBuffers();
 }

@@ -1,10 +1,6 @@
-#ifndef BORBOLETA_HPP
-#define BORBOLETA_HPP
+#pragma once
 
 extern float butterflyPhase;
 extern float butterflyPhaseSpeed;
 
 void drawButterfly(float fasePropria, float asaR, float asaG, float asaB);
-void animarBorboleta();
-
-#endif
