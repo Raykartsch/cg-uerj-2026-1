@@ -18,31 +18,53 @@ bool r_key_pressed = false;
 bool e_key_pressed = false;
 
 void arrowKeysDown(int key, int x, int y) {
-    if (key == GLUT_KEY_RIGHT) rightArrowPressed = true;
-    if (key == GLUT_KEY_LEFT)  leftArrowPressed = true;
+    if (key == GLUT_KEY_RIGHT) {
+    	rightArrowPressed = true;
+    }
+    if (key == GLUT_KEY_LEFT) {
+    	leftArrowPressed = true;
+    }
     if (key == GLUT_KEY_UP && !isJumping) {
         upArrowPressed = true;
         isJumping = true;
         goingUp = true;
     }
-    if (key == GLUT_KEY_DOWN) downArrowPressed = true;
+    if (key == GLUT_KEY_DOWN) {
+    	downArrowPressed = true;
+    }
 }
 
 void arrowKeysUp(int key, int x, int y) {
-    if (key == GLUT_KEY_RIGHT) rightArrowPressed = false;
-    if (key == GLUT_KEY_LEFT)  leftArrowPressed = false;
-    if (key == GLUT_KEY_UP)    upArrowPressed = false;
-    if (key == GLUT_KEY_DOWN)  downArrowPressed = false;
+    if (key == GLUT_KEY_RIGHT) {
+    	rightArrowPressed = false;
+    }
+    if (key == GLUT_KEY_LEFT)  {
+		leftArrowPressed = false;
+    }
+    if (key == GLUT_KEY_UP)    {
+		upArrowPressed = false;
+    }
+    if (key == GLUT_KEY_DOWN)  {
+		downArrowPressed = false;
+    }
 }
 
 void keyboard_callback(unsigned char key, int x, int y) {
-    if (key == 101) e_key_pressed = true; // letra e
-    if (key == 114) r_key_pressed = true; // letra r
+    if (key == 101) {
+    	e_key_pressed = true; // letra e
+    }
+    if (key == 114) {
+    	r_key_pressed = true; // letra r
+    }
 }
 
 void keyboard_up_callback(unsigned char key, int x, int y) {
-    if (key == 101) e_key_pressed = false;
-    if (key == 114) r_key_pressed = false;
+    if (key == 101) {
+    	e_key_pressed = false;
+    }
+    if (key == 114) {
+    	r_key_pressed = false;
+    }
 }
 
 void anim(int valor) {
@@ -52,14 +74,22 @@ void anim(int valor) {
     if (!coelhoEscondido) {
         if (leftArrowPressed) {
             direcaoCoelho = -1.0f;
-            if (characterPos < -8.0f) characterPos -= 0;
-            else characterPos -= characterSpeed;
+            if (characterPos < -8.0f) {
+            	characterPos -= 0;
+            }
+            else {
+            	characterPos -= characterSpeed;
+            }
         }
 
         if (rightArrowPressed) {
             direcaoCoelho = 1.0f;
-            if (characterPos > 8.0f) characterPos += 0;
-            else characterPos += characterSpeed;
+            if (characterPos > 8.0f) {
+            	characterPos += 0;
+            }
+            else {
+            	characterPos += characterSpeed;
+            }
         }
 
         if (isJumping) {
@@ -80,16 +110,24 @@ void anim(int valor) {
     }
 
     walkPhase += walkPhaseSpeed;
-    if (walkPhase > 2 * PI) walkPhase -= 2 * PI;
+    if (walkPhase > 2 * PI) {
+    	walkPhase -= 2 * PI;
+    }
 
     foxWalkPhase += foxWalkPhaseSpeed;
-    if (foxWalkPhase > 2 * PI) foxWalkPhase -= 2 * PI;
+    if (foxWalkPhase > 2 * PI) {
+    	foxWalkPhase -= 2 * PI;
+    }
 
     foxTailPhase += foxTailPhaseSpeed;
-    if (foxTailPhase > 2 * PI) foxTailPhase -= 2 * PI;
+    if (foxTailPhase > 2 * PI) {
+    	foxTailPhase -= 2 * PI;
+    }
 
     foxTailTipPhase += foxTailTipPhaseSpeed;
-    if (foxTailTipPhase > 2 * PI) foxTailTipPhase -= 2 * PI;
+    if (foxTailTipPhase > 2 * PI) {
+    	foxTailTipPhase -= 2 * PI;
+    }
 
     controlarSurgimentoDaRaposa();
     moverRaposa();
@@ -104,10 +142,14 @@ void anim(int valor) {
 						   aveX, aveY, aveActive, aveJaTirouVida);
 
     butterflyPhase += butterflyPhaseSpeed;
-    if (butterflyPhase > 2 * PI) butterflyPhase -= 2 * PI;
+    if (butterflyPhase > 2 * PI) {
+    	butterflyPhase -= 2 * PI;
+    }
 
     cloudPhase += cloudPhaseSpeed;
-    if (cloudPhase > 2 * PI) cloudPhase -= 2 * PI;
+    if (cloudPhase > 2 * PI) {
+    	cloudPhase -= 2 * PI;
+    }
 
     atualizarCorDoCeu();
 
@@ -229,7 +271,7 @@ void display() {
     	drawText(-7.7f, 5.4f, "Cuidado, a raposa esta te perseguindo!");
     }
     if (aveActive) {
-    	drawText(-7.7f, 4.8f, "Gaviao atacando do alto!");
+    	drawText(-7.7f, 4.0f, "Gaviao atacando do alto!");
     }
 
 
@@ -254,11 +296,11 @@ void display() {
         glColor3f(0.35f, 0.35f, 0.35f);
         glPushMatrix();
             glTranslatef(larguraBarra / 2.0f, 0.0f, 0.0f);
-            glScalef(larguraBarra / 2.0f, alturaBarra, 1.0f);
+            glScalef(larguraBarra / 2.0f, alturaBarra + 0.05, 1.0f);
             drawSquare();
         glPopMatrix();
 
-        glColor3f(0.30f, 0.75f, 0.35f);
+        glColor3f(0.30f, 0.75f, 0.35f); // Barra verde do personagem
         glPushMatrix();
             glTranslatef((larguraBarra * folegoPorcentagem) / 2.0f, 0.0f, 0.0f);
             glScalef((larguraBarra * folegoPorcentagem) / 2.0f, alturaBarra, 1.0f);
