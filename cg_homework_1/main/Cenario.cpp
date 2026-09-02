@@ -301,46 +301,46 @@ void drawText(float x, float y, const char *texto) {
 }
 
 void drawToca() {
+	//Desenha a grama envolta da toca
+		glColor3f(0.549f, 0.776f, 0.247f);
+		glPushMatrix();
+			glTranslatef(-0.1f, -0.2f, 1.0f);
+			glScalef(1.25f, 0.5f, 1.0f);
+			drawSquare();
+		glPopMatrix();
 
-	glColor3f(0.549f, 0.776f, 0.247f);
-	glPushMatrix();
-		glTranslatef(-0.1f, -0.2f, 1.0f);
-		glScalef(1.25f, 0.5f, 1.0f);
-		drawSquare();
-	glPopMatrix();
-
-	glColor3f(0.549f, 0.776f, 0.247f);
-	glPushMatrix();
-		glTranslatef(-0.1f, 0.2f, 1.0f);
-		glScalef(1.25f, 1.35f, 1.0f);
-		drawDisk(1.0f);
-	glPopMatrix();
-
-
-    glColor3f(0.478f, 0.290f, 0.168f);
-    glPushMatrix();
-    	glTranslatef(0.15f, 0.30f, 1.0f);
-        glScalef(0.85f, 0.9f, 1.0f);
-        drawDisk(1.0f);
-    glPopMatrix();
+		glColor3f(0.549f, 0.776f, 0.247f);
+		glPushMatrix();
+			glTranslatef(-0.1f, 0.2f, 1.0f);
+			glScalef(1.25f, 1.35f, 1.0f);
+			drawDisk(1.0f);
+		glPopMatrix();
 
 
-	glColor3f(0.478f, 0.290f, 0.168f);
-	glPushMatrix();
-	glTranslatef(0.15f, 0.0f, 1.0f);
-	   glScalef(0.85f, 0.5f, 1.0f);
-	   drawSquare();
-	glPopMatrix();
+	//Desenha o buraco em volta da toca
+		glColor3f(0.478f, 0.290f, 0.168f);
+		glPushMatrix();
+			glTranslatef(0.15f, 0.30f, 1.0f);
+			glScalef(0.85f, 0.9f, 1.0f);
+			drawDisk(1.0f);
+		glPopMatrix();
+
+
+		glColor3f(0.478f, 0.290f, 0.168f);
+		glPushMatrix();
+		glTranslatef(0.15f, 0.0f, 1.0f);
+		   glScalef(0.85f, 0.5f, 1.0f);
+		   drawSquare();
+		glPopMatrix();
 
 
 
-    glColor3f(0.12f, 0.09f, 0.07f);
-    glPushMatrix();
-        glTranslatef(0.25f, 0.125f, 0.1f);
-        glScalef(0.6f, 0.9f, 1.0f);
-        drawDisk(1.0f);
-    glPopMatrix();
-
+		glColor3f(0.12f, 0.09f, 0.07f);
+		glPushMatrix();
+			glTranslatef(0.25f, 0.125f, 0.1f);
+			glScalef(0.6f, 0.9f, 1.0f);
+			drawDisk(1.0f);
+		glPopMatrix();
 
 }
 

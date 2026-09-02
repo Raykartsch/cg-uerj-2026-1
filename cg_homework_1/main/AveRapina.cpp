@@ -5,15 +5,17 @@
 #include <cmath>
 #include <cstdlib>
 
+//Determina o estado e de onde a ave vira do cenario
 bool aveActive = false;
 float aveX = 12.0f;
 float aveY = 7.0f;
 float avePhase = 0.0f;
 bool aveJaTirouVida = false;
 
+// Detec
 const float VELOCIDADE_AVE_X = 0.18f;
 int framesAteProximaAve = 25 * (1000 / 24);
-float aveAlvoX = 0.0f; // Coordenada X onde será o ponto mais baixo do mergulho
+float aveAlvoX = 0.0f; // Coordenada X onde será o ponto mais baixo do mergulho da ave
 
 void drawBird() {
     avePhase += 0.35f;
@@ -174,7 +176,7 @@ void drawBird() {
 void spawnAve(float targetX) {
     aveActive = true;
     aveX = 12.0f;
-    aveAlvoX = targetX; // Grava onde o coelho estava para fazer o vértice do mergulho ali
+    aveAlvoX = targetX; // Grava onde o coelho estava para fazer o vértice do mergulho
     aveJaTirouVida = false;
 }
 
