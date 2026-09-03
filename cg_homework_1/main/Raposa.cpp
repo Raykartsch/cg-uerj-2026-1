@@ -1,6 +1,6 @@
 #include "Raposa.hpp"
 #include "PrimitivasGeometricas.hpp"
-#include "Animacao.hpp" // Para acessar msecs e resolver FRAMES_POR_SEGUNDO
+// Dependência de Animacao.hpp removida, agora o compilador usa os globais declarados em main.cpp
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>

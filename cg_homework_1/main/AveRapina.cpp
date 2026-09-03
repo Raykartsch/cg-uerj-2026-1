@@ -1,6 +1,6 @@
 #include "AveRapina.hpp"
 #include "PrimitivasGeometricas.hpp"
-#include "Animacao.hpp"
+// Dependência de Animacao.hpp removida
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>

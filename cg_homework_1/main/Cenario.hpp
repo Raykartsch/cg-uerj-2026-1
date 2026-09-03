@@ -54,7 +54,8 @@ void atualizarTocas();
 float interpolarCor(float inicio, float fim, float t);
 void atualizarCorDoCeu();
 void drawBackgroundContent();
-void drawBackground1();
+void drawBackgroundSky();   // Assinatura corrigida para o .cpp
+void drawBackgroundGrass(); // Assinatura corrigida para o .cpp
 void moverVegetais();
 void controlarSurgimentoDeVegetais();
 void initCenario();

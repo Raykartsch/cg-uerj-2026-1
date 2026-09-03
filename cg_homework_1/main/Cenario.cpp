@@ -2,7 +2,7 @@
 #include "PrimitivasGeometricas.hpp"
 #include "Borboleta.hpp"
 #include "Coelho.hpp" // Para acessar rabbitLives e rabbit-related globals na hora de aplicar bônus
-#include "Animacao.hpp" // Para acessar msecs
+// Dependência de Animacao.hpp removida
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>
