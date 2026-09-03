@@ -1,8 +1,7 @@
 #include "Cenario.hpp"
 #include "PrimitivasGeometricas.hpp"
-#include "Borboleta.hpp"
+#include "Borboleta.hpp" //Para acessar as borboletas
 #include "Coelho.hpp" // Para acessar rabbitLives e rabbit-related globals na hora de aplicar bônus
-// Dependência de Animacao.hpp removida
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>
@@ -16,7 +15,7 @@ std::vector<Vegetal> vegetais;
 const int MAX_VEGETAIS = 15;
 int framesAteProximoVegetal = 60;
 
-std::vector<Toca> tocas; // Apenas declara o vetor vazio
+std::vector<Toca> tocas; // Apenas declara o vetor vazio de tocas
 
 void initCenario() {
     // Declara as structs e preenche os atributos explicitamente
@@ -44,9 +43,10 @@ float tempoDeDiaFase = 0.0f;
 const float VELOCIDADE_CICLO_DIA = 1.0f / (60.0f * (1000.0f / 24.0f));
 float skyR = 0.68f, skyG = 0.81f, skyB = 0.98f;
 
-void drawSun() {
+
+void drawSun(float alpha) {
     int i;
-    glColor3f(1.0f, 0.823f, 0.298f);
+    glColor4f(1.0f, 0.823f, 0.298f, alpha); //glColor4f para mudar a opacidade da cor
     glLineWidth(3);
     glRotatef(float(-FrameNumber), 0, 0, 1);
     glBegin(GL_LINES);
@@ -57,6 +57,29 @@ void drawSun() {
     glEnd();
     drawDisk(0.65);
     glColor3f(0, 0, 0);
+}
+
+void drawMoon(float alpha) {
+    // base da Lua
+    glColor4f(0.90f, 0.90f, 0.92f, alpha); // Branco acinzentado
+    drawDisk(0.65);
+
+    // crateras
+    glColor4f(0.80f, 0.80f, 0.82f, alpha); // cinza um pouco mais escuro
+    glPushMatrix();
+        glTranslatef(-0.2f, 0.2f, 0.1f);
+        drawDisk(0.15);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(0.2f, -0.1f, 0.1f);
+        drawDisk(0.2);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(-0.1f, -0.25f, 0.1f);
+        drawDisk(0.12);
+    glPopMatrix();
 }
 
 void drawCloud() {

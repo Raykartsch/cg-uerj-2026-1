@@ -38,8 +38,9 @@ extern const float VELOCIDADE_CICLO_DIA;
 extern float skyR, skyG, skyB;
 
 // Funções do Cenario
-void drawSun();
-void drawCloud();
+void drawSun(float alpha = 1.0f); //Funcao do sol
+void drawMoon(float alpha = 1.0f);  //Funcao da lua
+void drawCloud(); // Funcao da nuvem
 void drawFence();
 void drawFruit(float red, float green, float blue);
 void drawCarrot();
@@ -54,8 +55,8 @@ void atualizarTocas();
 float interpolarCor(float inicio, float fim, float t);
 void atualizarCorDoCeu();
 void drawBackgroundContent();
-void drawBackgroundSky();   // Assinatura corrigida para o .cpp
-void drawBackgroundGrass(); // Assinatura corrigida para o .cpp
+void drawBackgroundSky();
+void drawBackgroundGrass();
 void moverVegetais();
 void controlarSurgimentoDeVegetais();
 void initCenario();

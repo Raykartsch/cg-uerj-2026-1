@@ -14,7 +14,7 @@
 #include <cmath>
 #include <cstdio>
 
-// Globais que pertenciam ao Animacao.cpp (colocadas aqui no topo para os outros .cpp enxergarem)
+
 int FrameNumber = 0;
 int speed = 50;
 int msecs = 24;
@@ -146,6 +146,9 @@ void anim(int valor) {
     	foxTailTipPhase -= 2 * PI;
     }
 
+
+    /////////////////////////////////////////////////////////////////////////////
+    //Controla o surgimento, movimento e colisao da ave
     controlarSurgimentoDaRaposa();
     moverRaposa();
     verificarColisaoComRaposa(characterPos, jump_height, coelhoEscondido, rabbitLives,
@@ -196,11 +199,45 @@ void display() {
     	drawBackgroundSky();
     glPopMatrix();
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Calcula a transicao entre o sol e a lua do cenario
     // Desenha o sol no background
-    glPushMatrix();
-        glTranslatef(6.5f, 6.8f, 1);
-        drawSun();
-    glPopMatrix();
+    float alphaSol = 1.0f;
+        float alphaLua = 0.0f;
+
+        if (tempoDeDiaFase >= 0.25f && tempoDeDiaFase <= 0.35f) {
+            // Entardecer: Sol desaparece, Lua aparece
+            float t = (tempoDeDiaFase - 0.25f) / 0.10f; // t vai de 0.0 a 1.0
+            alphaSol = 1.0f - t;
+            alphaLua = t;
+        } else if (tempoDeDiaFase > 0.35f && tempoDeDiaFase < 0.75f) {
+            // Noite Pura
+            alphaSol = 0.0f;
+            alphaLua = 1.0f;
+        } else if (tempoDeDiaFase >= 0.75f && tempoDeDiaFase <= 0.85f) {
+            // Amanhecer: Lua desaparece, Sol aparece
+            float t = (tempoDeDiaFase - 0.75f) / 0.10f; // t vai de 0.0 a 1.0
+            alphaSol = t;
+            alphaLua = 1.0f - t;
+        }
+
+        // Renderiza o Sol se ele estiver visível
+        if (alphaSol > 0.0f) {
+            glPushMatrix();
+                glTranslatef(6.5f, 6.8f, 1);
+                drawSun(alphaSol);
+            glPopMatrix();
+        }
+
+        // Renderiza a Lua se ela estiver visível
+        if (alphaLua > 0.0f) {
+            glPushMatrix();
+                glTranslatef(6.5f, 6.8f, 1);
+                drawMoon(alphaLua);
+            glPopMatrix();
+        }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     for (const Toca &toca : tocas) {
@@ -338,6 +375,12 @@ void init(void) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-8, 8, -8, 8, -8, 8);
+
+    // Habilita transparencia do openGL
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
     initCenario();
 }
 
