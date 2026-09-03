@@ -203,39 +203,39 @@ void display() {
     // Calcula a transicao entre o sol e a lua do cenario
     // Desenha o sol no background
     float alphaSol = 1.0f;
-        float alphaLua = 0.0f;
+    float alphaLua = 0.0f;
 
-        if (tempoDeDiaFase >= 0.25f && tempoDeDiaFase <= 0.35f) {
-            // Entardecer: Sol desaparece, Lua aparece
-            float t = (tempoDeDiaFase - 0.25f) / 0.10f; // t vai de 0.0 a 1.0
-            alphaSol = 1.0f - t;
-            alphaLua = t;
-        } else if (tempoDeDiaFase > 0.35f && tempoDeDiaFase < 0.75f) {
-            // Noite Pura
-            alphaSol = 0.0f;
-            alphaLua = 1.0f;
-        } else if (tempoDeDiaFase >= 0.75f && tempoDeDiaFase <= 0.85f) {
-            // Amanhecer: Lua desaparece, Sol aparece
-            float t = (tempoDeDiaFase - 0.75f) / 0.10f; // t vai de 0.0 a 1.0
-            alphaSol = t;
-            alphaLua = 1.0f - t;
-        }
+	if (tempoDeDiaFase >= 0.25f && tempoDeDiaFase <= 0.35f) {
+		// Entardecer: Sol desaparece, Lua aparece
+		float t = (tempoDeDiaFase - 0.25f) / 0.10f; // t vai de 0.0 a 1.0
+		alphaSol = 1.0f - t;
+		alphaLua = t;
+	} else if (tempoDeDiaFase > 0.35f && tempoDeDiaFase < 0.75f) {
+		// Noite Pura
+		alphaSol = 0.0f;
+		alphaLua = 1.0f;
+	} else if (tempoDeDiaFase >= 0.75f && tempoDeDiaFase <= 0.85f) {
+		// Amanhecer: Lua desaparece, Sol aparece
+		float t = (tempoDeDiaFase - 0.75f) / 0.10f; // t vai de 0.0 a 1.0
+		alphaSol = t;
+		alphaLua = 1.0f - t;
+	}
 
-        // Renderiza o Sol se ele estiver visível
-        if (alphaSol > 0.0f) {
-            glPushMatrix();
-                glTranslatef(6.5f, 6.8f, 1);
-                drawSun(alphaSol);
-            glPopMatrix();
-        }
+	// Renderiza o Sol se ele estiver visível
+	if (alphaSol > 0.0f) {
+		glPushMatrix();
+			glTranslatef(6.5f, 6.8f, 1);
+			drawSun(alphaSol);
+		glPopMatrix();
+	}
 
-        // Renderiza a Lua se ela estiver visível
-        if (alphaLua > 0.0f) {
-            glPushMatrix();
-                glTranslatef(6.5f, 6.8f, 1);
-                drawMoon(alphaLua);
-            glPopMatrix();
-        }
+	// Renderiza a Lua se ela estiver visível
+	if (alphaLua > 0.0f) {
+		glPushMatrix();
+			glTranslatef(6.5f, 6.8f, 1);
+			drawMoon(alphaLua);
+		glPopMatrix();
+	}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -248,13 +248,13 @@ void display() {
     }
 
 
-
 	glPushMatrix();
 		  drawBackgroundGrass();
 		  glTranslatef(bgPos, 0, 1);
 		  drawBackgroundContent();
 	glPopMatrix();
 
+	 // Verifica se a raposa esta ativa no cenario
     if (foxActive) {
         glPushMatrix();
             glTranslatef(foxX, foxY, 1.0f);
@@ -263,7 +263,7 @@ void display() {
         glPopMatrix();
     }
 
-    // Adicione a renderização da ave logo após a raposa:
+    // Verifica se a ave esta ativa no cenario
 	if (aveActive) {
 		glPushMatrix();
 			glTranslatef(aveX, aveY, 1.0f);
@@ -282,6 +282,7 @@ void display() {
 
     glColor3f(0, 0, 0);
 
+    // Esta e a parte que faz o coelho ficar "escondido" ou não no cenario
     if (coelhoEscondido) {
         const Toca &tocaAtual = tocas[tocaOndeEstaEscondido];
         glPushMatrix();
@@ -340,6 +341,8 @@ void display() {
         }
     }
 
+
+    // Gerencia a barra de estamina da HUD
     float folegoPorcentagem = folegoAtual / FOLEGO_MAXIMO;
     float larguraBarra = 1.6f;
     float alturaBarra = 0.12f;
