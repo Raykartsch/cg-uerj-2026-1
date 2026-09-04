@@ -24,7 +24,7 @@ void drawBird() {
 
     glPushMatrix();
 
-    // Asas batendo
+    // Asa traseira do passaro
 	   glColor3f(0.27f, 0.23f, 0.13f);
 	   glPushMatrix();
 		   glTranslatef(-0.2f, 0.1f, 0.0f);
@@ -152,7 +152,7 @@ void drawBird() {
 			drawTriangle();
 		glPopMatrix();
 
-        // Asas batendo
+        // Asa mais proxima da tela
         glColor3f(0.27f, 0.23f, 0.13f);
         glPushMatrix();
             glTranslatef(0.1f, 0.3f, 0.0f);
