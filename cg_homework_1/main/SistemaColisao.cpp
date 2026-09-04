@@ -1,7 +1,7 @@
 #include "SistemaColisao.hpp"
 #include <cmath>
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void verificarColisaoComVegetais(float coelhoX, float coelhoY, bool coelhoEscondido, std::vector<Vegetal>& listaVegetais) {
     if (coelhoEscondido) {
     	return;
@@ -32,7 +32,7 @@ void verificarColisaoComVegetais(float coelhoX, float coelhoY, bool coelhoEscond
     }
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Verifica se a raposa encostou no coelho.
 void verificarColisaoComRaposa(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
                                float foxX, float foxY, bool foxActive, bool& foxJaTirouVidaNestaPassagem) {
@@ -77,7 +77,7 @@ void verificarColisaoComRaposa(float coelhoX, float coelhoY, bool coelhoEscondid
     }
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Verifica se a ave encostou no coelho
 void verificarColisaoComAve(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
                             float aveX, float aveY, bool aveActive, bool& aveJaTirouVida) {

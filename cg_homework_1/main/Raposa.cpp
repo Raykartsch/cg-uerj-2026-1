@@ -48,6 +48,8 @@ const int FRAMES_POR_SEGUNDO = 1000 / 24; // 24 msecs como base original
 int framesAteProximaRaposa = 20 * FRAMES_POR_SEGUNDO;
 
 //Desenha todas as partes da raposa como um unico objeto
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void drawFox() {
 
 	/*A mesma ideia usada no coelho: a partir de uma unica onda senoidal,
@@ -266,6 +268,7 @@ void drawFox() {
     glPopMatrix(); // Fim do Corpo
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Faz a raposa aparecer na tela, pronta para atravessar. Ela sempre entra
 pela borda ESQUERDA da tela, um pouco fora da area visivel, e comeca a
 correr para a direita (veja moverRaposa). */
@@ -277,6 +280,7 @@ void spawnRaposa() {
     foxJaTirouVidaNestaPassagem = false; // nova passagem: pode tirar vida de novo se colidir
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Controla o "relogio" que decide quando a raposa vai aparecer de novo.
 void controlarSurgimentoDaRaposa() {
     if (foxActive) {
@@ -291,6 +295,7 @@ void controlarSurgimentoDaRaposa() {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Move a raposa em linha reta para a direita, a uma velocidade constante ate ela sair completamente da tela do outro lado.
 void moverRaposa() {
 

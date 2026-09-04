@@ -413,6 +413,7 @@ void display() {
     glPushMatrix();
         glTranslatef(-7.7f, 4.15f, 1.0f);
 
+        // Parte cinza da barra de folego
         glColor3f(0.35f, 0.35f, 0.35f);
         glPushMatrix();
             glTranslatef(larguraBarra / 2.0f, 0.0f, 0.0f);
@@ -420,7 +421,9 @@ void display() {
             drawSquare();
         glPopMatrix();
 
-        glColor3f(0.30f, 0.75f, 0.35f); // Barra verde do personagem
+
+        // Parte verde da barra de folego
+        glColor3f(0.30f, 0.75f, 0.35f);
         glPushMatrix();
             glTranslatef((larguraBarra * folegoPorcentagem) / 2.0f, 0.0f, 0.0f);
             glScalef((larguraBarra * folegoPorcentagem) / 2.0f, alturaBarra, 1.0f);
