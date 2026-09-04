@@ -215,6 +215,8 @@ void atualizarEsconderijoDoCoelho() {
 
 // Atualiza a questao dos buffs dados ao coelho (pulo e velocidade extra)
 void atualizarBonusAtivos() {
+
+
     if (framesDeTurboRestantes > 0) {
         framesDeTurboRestantes--;
         characterSpeed = VELOCIDADE_TURBO;
@@ -243,13 +245,14 @@ void atualizarCorrida() {
         return;
     }
 
+    // Reduz a quantidade de folego do coelho quando ele corre
     if (r_key_pressed && folegoAtual > 0.0f) {
         coelhoCorrendo = true;
         folegoAtual -= GASTO_FOLEGO_POR_FRAME;
         if (folegoAtual < 0.0f) {
         	folegoAtual = 0.0f;
         }
-    } else {
+    } else { // Se não estiver correndo, este pedaço de código faz a recuperacao do folego
         coelhoCorrendo = false;
         folegoAtual += RECUPERACAO_FOLEGO_POR_FRAME;
         if (folegoAtual > FOLEGO_MAXIMO) {

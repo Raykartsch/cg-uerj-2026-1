@@ -4,22 +4,45 @@
 #include <cmath>
 #include <cstdlib>
 
-//Determina o estado e de onde a ave vira do cenario
+//Determina o estado da ave e se ela existe na cena
 bool aveActive = false;
+
+/*Posicao atual da ave na tela (eixo X e Y). aveX comeca sempre no mesmo
+lugar (bem a direita, fora da tela) e vai diminuindo a cada frame; aveY e
+recalculado a cada frame para formar a curva do mergulho (veja moverAve).
+*/
+
 float aveX = 12.0f;
 float aveY = 7.0f;
 float avePhase = 0.0f;
 bool aveJaTirouVida = false;
 
-// Detec
+// Velocidade horizontal da ave, quanto mais o aveX diminui a cada frame enquanto ela atravessa a tela da direita para a esquerda.
 const float VELOCIDADE_AVE_X = 0.18f;
+
+// Tempo definido para a proxima aparicao do inimigo
 int framesAteProximaAve = 25 * (1000 / 24);
+
 float aveAlvoX = 0.0f; // Coordenada X onde será o ponto mais baixo do mergulho da ave
 
-void drawBird() {
-    avePhase += 0.35f;
-    if (avePhase > 2 * 3.1415f) avePhase -= 2 * 3.1415f;
 
+// Desenha o corpo da ave de rapina
+void drawBird() {
+
+	/*Avanca a fase do bater de asas a cada frame que a ave e desenhada (ou
+	 seja, so enquanto ela esta ativa/visivel), e mantem o valor sempre
+	 dentro de uma volta completa (0 a 2*PI), sem crescer pra sempre.
+	*/
+    avePhase += 0.35f;
+    if (avePhase > 2 * 3.1415f) {
+    	avePhase -= 2 * 3.1415f;
+    }
+
+    /*
+    O seno da fase da um valor que oscila suavemente entre -1 e 1: e ele
+    que faz as asas subirem e descerem (usado no glRotatef das asas, mais
+    abaixo, multiplicado por 50 graus de amplitude).
+     */
     float wingFlap = sin(avePhase);
 
     glPushMatrix();
@@ -172,6 +195,11 @@ void drawBird() {
     glPopMatrix();
 }
 
+/*Faz a ave aparecer na tela, pronta para iniciar o mergulho. Recebe a
+ posicao X onde o coelho estava naquele instante (targetX), e guarda esse
+ valor em aveAlvoX -- e esse ponto que vira o "fundo" da curva do mergulho,
+ calculada depois em moverAve().*/
+
 void spawnAve(float targetX) {
     aveActive = true;
     aveX = 12.0f;
@@ -179,8 +207,11 @@ void spawnAve(float targetX) {
     aveJaTirouVida = false;
 }
 
+// Controlar o tempo de surgimento da ave para atacar o coelho
 void controlarSurgimentoDaAve(float coelhoX) {
-    if (aveActive) return;
+    if (aveActive) {
+    	return;
+    }
 
     framesAteProximaAve--;
     if (framesAteProximaAve <= 0) {
@@ -192,16 +223,25 @@ void controlarSurgimentoDaAve(float coelhoX) {
 void moverAve() {
     if (!aveActive) return;
 
+
     aveX -= VELOCIDADE_AVE_X;
 
     // Cálculo da trajetória parabólica: Y = a(X - H)^2 + K
     // H = aveAlvoX (ponto mais baixo em X), K = 0.5f (altura de mergulho no nível do coelho)
     float distBase = 12.0f - aveAlvoX;
+
+
     float a = (7.0f - 0.5f) / (distBase * distBase + 0.0001f); // Evita divisão por zero
 
+    /*"dx" e a distancia (no eixo X) entre onde a ave esta agora e o ponto
+    mais baixo do mergulho. Quanto mais perto de zero, mais perto do
+    fundo da curva -- e por isso mais perto do chao (aveY proximo de K).*/
     float dx = (aveX - aveAlvoX);
     aveY = a * (dx * dx) + 0.5f;
 
+    //Quando a ave sai bem pra fora da tela do lado esquerdo, ela e
+   // desativada -- para de ser desenhada e de colidir com o coelho, ate
+   // que controlarSurgimentoDaAve() a traga de volta depois de um tempo.
     if (aveX < -12.0f) {
         aveActive = false;
     }
