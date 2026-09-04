@@ -30,9 +30,6 @@ bool e_key_pressed = false;
 #include "Raposa.cpp"
 #include "SistemaColisao.cpp"
 
-// =========================================================
-// Funcoes migradas de Animacao.cpp
-// =========================================================
 
 void arrowKeysDown(int key, int x, int y) {
     if (key == GLUT_KEY_RIGHT) {

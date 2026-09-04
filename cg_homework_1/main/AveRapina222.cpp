@@ -1,301 +1,156 @@
-#include "AveRapina.hpp"
-#include "PrimitivasGeometricas.hpp"
-#include <GL/glut.h>
+#include "SistemaColisao.hpp"
 #include <cmath>
-#include <cstdlib>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// AVE DE RAPINA (gaviao/falcao) -- um segundo "perigo" para o coelho, alem
-// da raposa. Diferente da raposa (que corre pelo chao), a ave aparece la em
-// cima e faz um mergulho em curva ate a altura do coelho, tentando pega-lo
-// de surpresa vindo do ceu.
-
-// Indica se a ave esta "no ar" fazendo o mergulho neste momento. Enquanto
-// for false, ela nao existe na cena (nem e desenhada, nem colide com nada).
-bool aveActive = false;
-
-// Posicao atual da ave na tela (eixo X e Y). aveX comeca sempre no mesmo
-// lugar (bem a direita, fora da tela) e vai diminuindo a cada frame; aveY e
-// recalculado a cada frame para formar a curva do mergulho (veja moverAve).
-float aveX = 12.0f;
-float aveY = 7.0f;
-
-// Fase usada so para animar o bater de asas da ave (nao tem relacao com a
-// posicao dela na tela -- e so um "relogio" que gira sem parar, feito o
-// walkPhase do coelho e o foxWalkPhase da raposa).
-float avePhase = 0.0f;
-
-// Evita que uma unica passagem da ave tire mais de uma vida do jogador,
-// mesmo que a colisao dure varios frames seguidos (a mesma ideia ja usada
-// no "foxJaTirouVidaNestaPassagem" da raposa).
-bool aveJaTirouVida = false;
-
-// Velocidade horizontal da ave: o quanto aveX diminui a cada frame enquanto
-// ela atravessa a tela da direita para a esquerda.
-const float VELOCIDADE_AVE_X = 0.18f;
-
-// Contagem regressiva (em frames) ate a ave aparecer de novo. Comeca valendo
-// 25 segundos (25 * quantos frames cabem em 1 segundo), e depois de cada
-// aparicao um novo tempo aleatorio e sorteado em controlarSurgimentoDaAve.
-int framesAteProximaAve = 25 * (1000 / 24);
-
-// Posicao X onde a ave deve atingir o ponto mais baixo do mergulho -- ou
-// seja, a posicao X onde o coelho estava no instante em que a ave apareceu.
-// E o "alvo" que da forma a parabola do mergulho (veja moverAve).
-float aveAlvoX = 0.0f;
-
-// Desenha a ave de rapina inteira: corpo, cabeca, bico, rabo e as duas asas
-// batendo. Assim como o coelho e a raposa, cada parte e um circulo/triangulo/
-// quadrado simples, posicionado e escalado em volta de um "corpo" central.
-void drawBird() {
-
-    // Avanca a fase do bater de asas a cada frame que a ave e desenhada (ou
-    // seja, so enquanto ela esta ativa/visivel), e mantem o valor sempre
-    // dentro de uma volta completa (0 a 2*PI), sem crescer pra sempre.
-    avePhase += 0.35f;
-    if (avePhase > 2 * 3.1415f) {
-    	avePhase -= 2 * 3.1415f;
-    }
-
-    // O seno da fase da um valor que oscila suavemente entre -1 e 1: e ele
-    // que faz as asas subirem e descerem (usado no glRotatef das asas, mais
-    // abaixo, multiplicado por 50 graus de amplitude).
-    float wingFlap = sin(avePhase);
-
-    glPushMatrix();
-
-    // Asa traseira do passaro. E desenhada com DOIS triangulos sobrepostos:
-    // um maior e mais escuro por baixo (funciona como um "contorno"/sombra)
-    // e outro menor e mais claro por cima (o preenchimento da asa). O
-    // glRotatef usa "wingFlap * 50.0f" para girar a asa para cima e para
-    // baixo, entre -50 e +50 graus, seguindo o bater de asas calculado acima.
-	   glColor3f(0.27f, 0.23f, 0.13f);
-	   glPushMatrix();
-		   glTranslatef(-0.2f, 0.1f, 0.0f);
-		   glRotatef(wingFlap * 50.0f, 0, 0, 1);
-		   glScalef(0.4f, 0.8f, 1.0f);
-		   drawTriangle();
-
-		   glColor3f(0.27f, 0.23f, 0.13f);
-		   drawTriangleLine();
-
-		   glColor3f(0.411f, 0.334f, 0.20f);
-		   glScalef(0.6f, 0.5f, 1.0f);
-		   drawTriangle();
-	   glPopMatrix();
-
-    	//glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-        // Corpo: um disco achatado (mais largo que alto), na cor marrom
-        // clara, com um contorno marrom escuro em volta (drawDiskLine).
-        glPushMatrix();
-        	glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-            glScalef(0.6f, 0.25f, 1.0f);
-            drawDisk(1.0f);
-            glColor3f(0.27f, 0.23f, 0.13f);
-            drawDiskLine(1.0f);
-        glPopMatrix();
-
-        // Mancha da barriga: um disco branco/creme, menor e deslocado para
-        // baixo, sobreposto ao corpo -- da o efeito de peito claro da ave.
-        glPushMatrix();
-        	glTranslatef(0.0f, -0.1f, 1.0f);
-        	glColor3f(0.96f, 0.93f, 0.89f);// Marrom escuro
-		   glScalef(0.8f, 0.25f, 1.0f);
-		   drawDisk(0.5f);
-	   glPopMatrix();
-
-        // Cabeca: outro disco, bem menor, deslocado para a esquerda do
-        // corpo (onde fica a "frente" da ave, do lado do bico).
-		glPushMatrix();
-			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-			glTranslatef(-0.7f, 0.1f, 1.0f);
-			glScalef(0.20f, 0.16f, 1.0f);
-			drawDisk(1.0f);
-			glColor3f(0.27f, 0.23f, 0.13f);
-			drawDiskLine(1.0f);
-		glPopMatrix();
-
-		//Detalhe cabeca: uma "mascara" escura por cima da cabeca, dando um
-		// contraste de cor ao redor dos olhos (como em aves de rapina reais).
-		glPushMatrix();
-			glTranslatef(-0.7f, 0.125f, 1.0f);
-			glScalef(0.45f, 0.16f, 1.0f);
-			glColor3f(0.27f, 0.23f, 0.13f);
-			drawDisk(0.4f);
-		glPopMatrix();
-
-		 // Olho: um pontinho preto, bem pequeno, sobre a cabeca.
-		 glPushMatrix();
-			glTranslatef(-0.7f, 0.125f, 0.0f);
-			glColor3f(0.0f, 0.0f, 0.0f);
-			drawDisk(0.032);
-		glPopMatrix();
-
-		//Moicano da cabeca: dois triangulos finos e compridos, rotacionados
-		// em angulos diferentes (-80 e -105 graus), formando as penas
-		// "espetadas" no topo da cabeca da ave.
-		glPushMatrix();
-			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-			glTranslatef(-0.7f, 0.3f, 1.0f);
-			glScalef(0.45f, 0.05f, 1.0f);
-			glRotatef(-80, 0, 0, 1);
-			drawTriangle();
-			glColor3f(0.27f, 0.23f, 0.13f);
-			drawTriangleLine();
-		glPopMatrix();
-
-		glPushMatrix();
-			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-			glTranslatef(-0.7f, 0.35f, 1.0f);
-			glScalef(0.45f, 0.05f, 1.0f);
-			glRotatef(-105, 0, 0, 1);
-			drawTriangle();
-			glColor3f(0.27f, 0.23f, 0.13f);
-			drawTriangleLine();
-		glPopMatrix();
+// SISTEMA DE COLISAO
+//
+// Este arquivo concentra toda a deteccao de "toque" entre o coelho e os
+// outros elementos do jogo (vegetais, raposa e ave). A ideia por tras de
+// todas as funcoes aqui e sempre a mesma, bem simples: tratamos cada
+// personagem/objeto como se fosse um circulo invisivel, e calculamos a
+// distancia entre os centros desses circulos. Se essa distancia for menor
+// que um certo "raio de colisao", consideramos que os dois se tocaram.
+//
+// Essa tecnica se chama "colisao por circulos" (ou bounding circle) e e uma
+// forma bem mais simples de detectar toque do que comparar o formato exato
+// de cada desenho -- funciona muito bem para jogos 2D como este.
 
 
-		// Rabo: tres quadrados finos e compridos (as "penas" da cauda),
-		// posicionados um ao lado do outro do lado direito do corpo,
-		// todos com a mesma rotacao para parecerem um leque de penas.
-		glPushMatrix();
-			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-			glTranslatef(0.78f, 0.1f, 1.0f);
-			glScalef(0.25f, 0.05f, 1.0f);
-			glRotatef(-80, 0, 0, 1);
-			drawSquare();
-			glColor3f(0.27f, 0.23f, 0.13f);
-			drawSquareLine();
-		glPopMatrix();
+// Verifica se o coelho encostou em algum vegetal ativo (cenoura, alface ou
+// rabanete) espalhado pelo cenario. Cada vegetal capturado desaparece da
+// tela e concede o bonus correspondente ao coelho (velocidade, pulo alto
+// ou vida extra -- veja aplicarBonusDoVegetal).
+void verificarColisaoComVegetais(float coelhoX, float coelhoY, bool coelhoEscondido, std::vector<Vegetal>& listaVegetais) {
 
-		glPushMatrix();
-			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-			glTranslatef(0.78f, 0.0f, 1.0f);
-			glScalef(0.35f, 0.05f, 1.0f);
-			glRotatef(-80, 0, 0, 1);
-			drawSquare();
-			glColor3f(0.27f, 0.23f, 0.13f);
-			drawSquareLine();
-		glPopMatrix();
+    // Escondido na toca, o coelho nao alcança nada que esteja la fora
+    if (coelhoEscondido) return;
 
-		glPushMatrix();
-			glColor3f(0.411f, 0.334f, 0.20f); // Marrom escuro
-			glTranslatef(0.78f, -0.1f, 1.0f);
-			glScalef(0.25f, 0.05f, 1.0f);
-			glRotatef(-80, 0, 0, 1);
-			drawSquare();
-			glColor3f(0.27f, 0.23f, 0.13f);
-			drawSquareLine();
-		glPopMatrix();
+    // Centro aproximado do coelho na tela. Somamos +0.3 em X e Y porque o
+    // corpo do coelho fica um pouco a frente/acima da posicao "oficial"
+    // dele (coelhoX, coelhoY), por causa da cabeca e das orelhas -- esse
+    // pequeno ajuste faz o "circulo de colisao" ficar melhor centralizado
+    // no desenho de verdade.
+    float centroCoelhoX = coelhoX + 0.3f;
+    float centroCoelhoY = coelhoY + 0.3f;
+    float raioDeCaptura = 1.1f; // "alcance" do coelho para pegar um vegetal
 
+    // Percorre todos os vegetais que existem no jogo (ativos ou nao) e
+    // testa a distancia so dos que estao realmente ativos na tela
+    for (Vegetal &veg : listaVegetais) {
+        if (!veg.ativo) continue;
 
-        // Bico (virado para a esquerda): dois triangulos pequenos e
-        // amarelos, um deles rotacionado 90 graus em relacao ao outro, para
-        // formar a "ponta" pontiaguda caracteristica do bico de uma ave de
-        // rapina.
-		glColor3f(1.0f, 0.77f, 0.10f);
-        glPushMatrix();
-            glTranslatef(-0.92f, 0.0f, 0.0f);
-            glScalef(0.12f, 0.10f, 1.0f);
-            drawTriangle();
-        glPopMatrix();
+        // Distancia entre o centro do coelho e o centro do vegetal,
+        // calculada com o Teorema de Pitagoras: distancia = raiz(dx² + dy²)
+        float dx = veg.x - centroCoelhoX;
+        float dy = veg.y - centroCoelhoY;
+        float distancia = sqrt(dx * dx + dy * dy);
 
-        glColor3f(1.0f, 0.77f, 0.10f);
-		glPushMatrix();
-			glTranslatef(-0.93f, 0.0f, 0.0f);
-			glRotatef(90, 0, 0, 1);
-			glScalef(0.12f, 0.10f, 1.0f);
-			drawTriangle();
-		glPopMatrix();
-
-        // Asa mais proxima da tela (a "da frente"): igual a asa traseira
-        // desenhada no comeco da funcao (mesmo esquema de dois triangulos e
-        // o mesmo bater de asas com "wingFlap"), so que posicionada do outro
-        // lado do corpo, para dar a ideia de profundidade/3D na ave 2D.
-        glColor3f(0.27f, 0.23f, 0.13f);
-        glPushMatrix();
-            glTranslatef(0.1f, 0.3f, 0.0f);
-            glRotatef(wingFlap * 50.0f, 0, 0, 1);
-            glScalef(0.4f, 0.8f, 1.0f);
-            drawTriangle();
-
-            glColor3f(0.27f, 0.23f, 0.13f);
-            drawTriangleLine();
-
-            glColor3f(0.411f, 0.334f, 0.20f);
-            glScalef(0.6f, 0.5f, 1.0f);
-            drawTriangle();
-        glPopMatrix();
-
-
-    glPopMatrix();
-}
-
-// Faz a ave aparecer na tela, pronta para iniciar o mergulho. Recebe a
-// posicao X onde o coelho estava naquele instante (targetX), e guarda esse
-// valor em aveAlvoX -- e esse ponto que vira o "fundo" da curva do mergulho,
-// calculada depois em moverAve().
-void spawnAve(float targetX) {
-    aveActive = true;
-    aveX = 12.0f; // sempre comeca no mesmo lugar: bem a direita, fora da tela
-    aveAlvoX = targetX; // Grava onde o coelho estava para fazer o vértice do mergulho
-    aveJaTirouVida = false;
-}
-
-// Controla o "relogio" que decide quando a ave vai aparecer de novo,
-// igualzinho ao sistema equivalente da raposa: conta os frames ate chegar a
-// zero e entao chama spawnAve(), sorteando em seguida um novo tempo de
-// espera (entre 25 e 45 segundos) para a proxima aparicao.
-void controlarSurgimentoDaAve(float coelhoX) {
-    if (aveActive) {
-    	return; // ja tem uma ave voando, nao sorteia outra em cima dela
-    }
-
-    framesAteProximaAve--;
-    if (framesAteProximaAve <= 0) {
-        spawnAve(coelhoX);
-        framesAteProximaAve = (25 + rand() % 20) * (1000 / 24); // Sorteia entre 25 e 45 segundos
+        // Os dois "circulos" se tocaram: o vegetal e capturado
+        if (distancia < raioDeCaptura) {
+            veg.ativo = false;                // o vegetal desaparece da tela
+            aplicarBonusDoVegetal(veg.tipo);  // e concede o bonus correspondente
+        }
     }
 }
 
-// Move a ave a cada frame, fazendo ela "mergulhar" numa curva (uma
-// parabola) partindo do alto direito da tela ate passar rente ao chao, na
-// posicao onde o coelho estava quando ela apareceu, e depois voltar a subir
-// enquanto continua indo para a esquerda.
-void moverAve() {
-    if (!aveActive) return;
 
-    // O eixo X anda sempre na mesma velocidade constante, da direita pra
-    // esquerda -- quem faz a curva do mergulho e so o calculo do Y, abaixo.
-    aveX -= VELOCIDADE_AVE_X;
+// Verifica se a raposa encostou no coelho. Diferente dos vegetais (que
+// desaparecem ao serem tocados), a raposa NAO some quando colide -- ela
+// continua correndo pelo cenario normalmente. O que precisa ser controlado
+// aqui e o jogador perder exatamente UMA vida por passagem da raposa, e nao
+// uma vida a cada frame em que ela estiver encostada nele (o que aconteceria
+// muito rapido, ja que o jogo roda varios frames por segundo).
+//
+// Repare que "rabbitLives" e "foxJaTirouVidaNestaPassagem" sao recebidos por
+// REFERENCIA (o "&" depois do tipo): isso significa que essa funcao pode
+// alterar o valor original dessas variaveis, nao so uma copia -- e assim que
+// a vida perdida e a trava "ja tirou vida" realmente afetam o resto do jogo.
+void verificarColisaoComRaposa(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
+                               float foxX, float foxY, bool foxActive, bool& foxJaTirouVidaNestaPassagem) {
+    if (!foxActive) {
+    	return; // nao ha raposa na tela agora, entao nao ha o que verificar
+    }
 
-    // Cálculo da trajetória parabólica: Y = a(X - H)^2 + K
-    //
-    // Isso e a equacao de uma parabola "em pe" (formato de U), igual a de um
-    // grafico de funcao do 2o grau. Os termos significam:
-    //   H = aveAlvoX -> a posicao X onde fica o "fundo" da curva (o ponto
-    //                    mais baixo do mergulho, bem em cima de onde o
-    //                    coelho estava)
-    //   K = 0.5f     -> a altura Y desse ponto mais baixo (rente ao chao,
-    //                    na mesma altura em que o coelho fica parado)
-    //   a            -> controla o quao "aberta" ou "fechada" e a curva.
-    //                    Calculamos esse valor na linha abaixo para
-    //                    garantir que a ave comece exatamente na altura
-    //                    inicial dela (7.0f) quando aveX ainda esta bem
-    //                    longe (em 12.0f, distBase de distancia do alvo)
-    float distBase = 12.0f - aveAlvoX;
-    float a = (7.0f - 0.5f) / (distBase * distBase + 0.0001f); // Evita divisão por zero
+    // Se o coelho estiver escondido na toca, ele esta a salvo da raposa
+    if (coelhoEscondido) {
+    	return;
+    }
 
-    // "dx" e a distancia (no eixo X) entre onde a ave esta agora e o ponto
-    // mais baixo do mergulho. Quanto mais perto de zero, mais perto do
-    // fundo da curva -- e por isso mais perto do chao (aveY proximo de K).
-    float dx = (aveX - aveAlvoX);
-    aveY = a * (dx * dx) + 0.5f;
+    // Mesma ideia de "colisao por circulos" usada com os vegetais: calcula
+    // a distancia entre o coelho e a raposa via Teorema de Pitagoras
+    float dx = foxX - coelhoX;
+    float dy = foxY - coelhoY;
+    float distancia = sqrt(dx * dx + dy * dy);
+    float raioColisao = 1.1f;
 
-    // Quando a ave sai bem pra fora da tela do lado esquerdo, ela e
-    // desativada -- para de ser desenhada e de colidir com o coelho, ate
-    // que controlarSurgimentoDaAve() a traga de volta depois de um tempo.
-    if (aveX < -12.0f) {
-        aveActive = false;
+
+    /*Faz o check de colisao da raposa com o coelho.
+     Se a raposa ja acertou o coelho nessa aparicao corrente, ela continua a correr pelo cenario.
+     Este check é importante para tirar apenas uma vida do coelho e não varias
+     devido a quantidade de frames por segundo na cena */
+    if (distancia < raioColisao) {
+        // So tira vida se a trava ainda estiver "destravada" (ou seja, se
+        // essa e a primeira vez que os dois se tocam nesta passagem)
+        if (!foxJaTirouVidaNestaPassagem) {
+            if (rabbitLives > 0) {
+                rabbitLives--; // o jogador perde uma vida
+            }
+            foxJaTirouVidaNestaPassagem = true; // trava ate a raposa se afastar de novo
+        }
+    } else {
+        // A raposa se afastou o suficiente: libera a trava, para poder
+        // tirar vida de novo caso ela volte a encostar no coelho mais pra frente
+        foxJaTirouVidaNestaPassagem = false;
+    }
+}
+
+
+// Verifica se a ave de rapina encostou no coelho durante o mergulho.
+// Segue exatamente a mesma logica da colisao com a raposa (a ave tambem nao
+// desaparece ao acertar o coelho, so continua o voo, e tambem so pode tirar
+// UMA vida por passagem, gracas a trava "aveJaTirouVida").
+void verificarColisaoComAve(float coelhoX, float coelhoY, bool coelhoEscondido, int& rabbitLives,
+                            float aveX, float aveY, bool aveActive, bool& aveJaTirouVida) {
+    if (!aveActive) {
+    	return; // nao ha ave voando agora, entao nao ha o que verificar
+    }
+
+    // Se o coelho esta na toca, logo esta a salvo da ave
+    if (coelhoEscondido) {
+    	return;
+    }
+
+    // Distancia entre o coelho e a ave, na mesma logica de "colisao por
+    // circulos" das duas funcoes anteriores
+    float dx = aveX - coelhoX;
+    float dy = aveY - coelhoY;
+    float distancia = sqrt(dx * dx + dy * dy);
+    float raioColisao = 1.0f;
+
+    /*Faz o check de colisao da ave com o coelho.
+    Se a ave ja acertou o coelho numa aparicao, a ave só continua o voo,
+    isto é importante para tirar apenas uma vida do coelho e não varias
+    devido a quantidade de frames por segundo na cena */
+    if (distancia < raioColisao) {
+        if (!aveJaTirouVida) {
+            // ATENCAO: aqui a trava "aveJaTirouVida" so e ligada DENTRO do
+            // "if (rabbitLives > 0)". Isso e uma pequena diferenca em
+            // relacao a verificarColisaoComRaposa() (onde a trava e ligada
+            // mesmo que o coelho ja esteja com 0 vidas). Na pratica isso so
+            // faz diferenca quando rabbitLives chega a 0: nesse caso, aqui
+            // a trava nunca liga, entao esse "if" continua sendo reavaliado
+            // a cada frame enquanto durar a colisao (sem efeito pratico
+            // grave, ja que o "rabbitLives--" tambem esta protegido, mas
+            // vale considerar deixar igual a funcao da raposa para manter o
+            // comportamento consistente entre as duas).
+            if (rabbitLives > 0) {
+            	rabbitLives--; // o jogador perde uma vida
+            	aveJaTirouVida = true; // trava ate a ave se afastar de novo
+            }
+        }
+    } else {
+        // A ave se afastou o suficiente: libera a trava, para poder tirar
+        // vida de novo caso ela volte a encostar no coelho mais pra frente
+        aveJaTirouVida = false;
     }
 }

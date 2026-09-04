@@ -202,7 +202,7 @@ void atualizarEsconderijoDoCoelho() {
     	return;
     }
 
-    // Verifica onde o coelho esta escondido
+    // Verifica onde o coelho esta escondido e em qual toca
     for (int i = 0; i < (int)tocas.size(); i++) {
         float distancia = float(fabs(tocas[i].x - characterPos));
         if (distancia < RAIO_TOCA) {
@@ -215,8 +215,6 @@ void atualizarEsconderijoDoCoelho() {
 
 // Atualiza a questao dos buffs dados ao coelho (pulo e velocidade extra)
 void atualizarBonusAtivos() {
-
-
     if (framesDeTurboRestantes > 0) {
         framesDeTurboRestantes--;
         characterSpeed = VELOCIDADE_TURBO;
