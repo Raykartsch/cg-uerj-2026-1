@@ -4,6 +4,7 @@
 
 double PI = 3.14;
 
+// Desenha a primitiva quadrado
 void drawSquare() {
     glBegin(GL_POLYGON);
         glVertex3f(-1, -1, 0);
@@ -13,6 +14,7 @@ void drawSquare() {
     glEnd();
 }
 
+// Desenha o tracejado do quadrado
 void drawSquareLine() {
     glLineWidth(1.5f);
     glBegin(GL_LINE_LOOP);
@@ -23,6 +25,7 @@ void drawSquareLine() {
     glEnd();
 }
 
+// Desenha a primitiva triangulo
 void drawTriangle() {
     glBegin(GL_POLYGON);
       glVertex3f(-1, 0, 0);
@@ -31,6 +34,7 @@ void drawTriangle() {
     glEnd();
 }
 
+// Desenha o tracejado do triangulo
 void drawTriangleLine() {
     glLineWidth(1.5f);
     glBegin(GL_LINE_LOOP);
@@ -40,6 +44,7 @@ void drawTriangleLine() {
     glEnd();
 }
 
+// Desenha o circulo
 void drawDisk(double radius) {
     int d;
     glBegin(GL_POLYGON);
@@ -50,6 +55,7 @@ void drawDisk(double radius) {
     glEnd();
 }
 
+// Desenha o tracejado do circulo
 void drawDiskLine(double radius) {
     int d;
     glLineWidth(1.5f);
