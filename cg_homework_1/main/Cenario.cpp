@@ -490,9 +490,21 @@ void drawBackgroundContent() {
             drawSquare();
         glPopMatrix();
 
-        glPushMatrix(); glTranslatef(29.2f, -1.5f, 1.0f); glScalef(1.2f, 1.2f, 1.0f); drawFruit(0.839f, 0.270f, 0.313f); glPopMatrix();
-        glPushMatrix(); glTranslatef(30.1f, -1.8f, 1.0f); glScalef(1.5f, 1.5f, 1.0f); drawFruit(0.839f, 0.270f, 0.313f); glPopMatrix();
-        glPushMatrix(); glTranslatef(30.8f, -1.3f, 1.0f); drawFruit(0.839f, 0.270f, 0.313f); glPopMatrix();
+        glPushMatrix();
+			glTranslatef(29.2f, -1.5f, 1.0f);
+			glScalef(1.2f, 1.2f, 1.0f);
+			drawFruit(0.839f, 0.270f, 0.313f);
+		glPopMatrix();
+        glPushMatrix();
+			glTranslatef(30.1f, -1.8f, 1.0f);
+			glScalef(1.5f, 1.5f, 1.0f);
+			drawFruit(0.839f, 0.270f, 0.313f);
+		glPopMatrix();
+        glPushMatrix();
+			glTranslatef(30.8f, -1.3f, 1.0f);
+			drawFruit(0.839f, 0.270f, 0.313f);
+		glPopMatrix();
+
 
         glColor3f(0.243f, 0.556f, 0.180f);
         glPushMatrix();
@@ -504,14 +516,40 @@ void drawBackgroundContent() {
     glPopMatrix();
 
     // Borboletas
-    glPushMatrix(); glTranslatef(23.0f, 0.9f, 1.0f); drawButterfly(0.0f, 0.95f, 0.55f, 0.15f); glPopMatrix();
-    glPushMatrix(); glTranslatef(25.6f, 1.3f, 1.0f); drawButterfly(2.0f, 0.75f, 0.35f, 0.85f); glPopMatrix();
-    glPushMatrix(); glTranslatef(29.6f, 1.0f, 1.0f); drawButterfly(4.0f, 0.95f, 0.85f, 0.20f); glPopMatrix();
+    glPushMatrix();
+		glTranslatef(23.0f, 0.9f, 1.0f);
+		drawButterfly(0.0f, 0.95f, 0.55f, 0.15f);
+	glPopMatrix();
 
-    glPushMatrix(); glTranslatef(4.0f, 5.0f, 1.0f); drawCloud(); glPopMatrix();
-    glPushMatrix(); glTranslatef(44.0f, 5.0f, 1.0f); drawCloud(); glPopMatrix();
-    glPushMatrix(); glTranslatef(4.0f, 0.5f, 1.0f); drawFence(); glPopMatrix();
-    glPushMatrix(); glTranslatef(44.0f, 0.5f, 1.0f); drawFence(); glPopMatrix();
+	glPushMatrix();
+		glTranslatef(25.6f, 1.3f, 1.0f);
+		drawButterfly(2.0f, 0.75f, 0.35f, 0.85f);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(29.6f, 1.0f, 1.0f);
+		drawButterfly(4.0f, 0.95f, 0.85f, 0.20f);
+	glPopMatrix();
+
+    glPushMatrix();
+		glTranslatef(4.0f, 5.0f, 1.0f);
+		drawCloud();
+	glPopMatrix();
+
+    glPushMatrix();
+		glTranslatef(44.0f, 5.0f, 1.0f);
+		drawCloud();
+	glPopMatrix();
+
+    glPushMatrix();
+		glTranslatef(4.0f, 0.5f, 1.0f);
+		drawFence();
+	glPopMatrix();
+
+    glPushMatrix();
+    	glTranslatef(44.0f, 0.5f, 1.0f);
+    	drawFence();
+	glPopMatrix();
 }
 
 

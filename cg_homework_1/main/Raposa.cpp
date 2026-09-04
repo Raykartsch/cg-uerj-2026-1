@@ -4,10 +4,20 @@
 #include <cmath>
 #include <cstdlib>
 
-float foxWalkPhase = 0.0f;
-float foxWalkPhaseSpeed = 0.22f;
-float foxLegLiftAmount = 0.15f;
-float foxEarSwingAmount = 8.0f;
+/////////////////////////////////////////////////////////////////////////////////////
+// ---- Animacao de "correr" da raposa (patas e orelhas) ----
+float foxWalkPhase = 0.0f; // fase atual da animacao das patas/orelhas
+float foxWalkPhaseSpeed = 0.22f;  // velocidade com que essa fase avanca a cada frame
+float foxLegLiftAmount = 0.15f; // o quanto cada pata sobe no eixo Y
+float foxEarSwingAmount = 8.0f; // o quanto cada orelha balanca (em graus)
+
+/////////////////////////////////////////////////////////////////////////////////////
+// ---- Animacao da cauda ----
+/*A cauda tem DUAS fases independentes: uma para a base (perto do corpo) e
+outra para a ponta (a extremidade com a mancha branca). Como elas avancam
+em velocidades diferentes, a cauda nunca balanca de um jeito totalmente
+"robotico"*/
+
 
 float foxTailPhase = 0.0f;
 float foxTailPhaseSpeed = 0.10f;
@@ -17,22 +27,31 @@ float foxTailTipPhase = 0.0f;
 float foxTailTipPhaseSpeed = 0.17f;
 float foxTailTipSwingAmount = 12.0f;
 
-bool foxActive = false;
-float foxX = -12.0f;
-float foxY = 0.5f;
-float foxDirecao = 1.0f;
+/////////////////////////////////////////////////////////////////////////////////////
+// ---- Estado e posicao da raposa na cena ----
+bool foxActive = false; // true enquanto a raposa esta na tela correndo
+float foxX = -12.0f;  // posicao atual da raposa no eixo X
+float foxY = 0.5f; // altura fixa (a raposa sempre corre rente ao chao)
+float foxDirecao = 1.0f;  // 1.0 = correndo para a direita (unico sentido que ela usa)
 
-const float VELOCIDADE_RAPOSA = 0.11f;
-const float RAIO_COLISAO_RAPOSA = 1.1f;
+/////////////////////////////////////////////////////////////////////////////////////
+// ---- Configuracoes de velocidade e colisao ----
+
+
+const float VELOCIDADE_RAPOSA = 0.11f;  // o quanto foxX aumenta a cada frame
+const float RAIO_COLISAO_RAPOSA = 1.1f;  // "alcance" da raposa para tocar o coelho
+
+// Evita que uma unica passagem da raposa tire mais de uma vida do coelho
 bool foxJaTirouVidaNestaPassagem = false;
 
 const int FRAMES_POR_SEGUNDO = 1000 / 24; // 24 msecs como base original
 int framesAteProximaRaposa = 20 * FRAMES_POR_SEGUNDO;
 
+//Desenha todas as partes da raposa como um unico objeto
 void drawFox() {
 
-	// A mesma ideia usada no coelho: a partir de uma unica onda senoidal,
-	// decidimos quais patas sobem e quais orelhas balancam pra frente.
+	/*A mesma ideia usada no coelho: a partir de uma unica onda senoidal,
+	decidimos quais patas sobem e quais orelhas balancam pra frente.*/
     float foxPhaseSin = sin(foxWalkPhase);
 
     // Orelhas: enquanto uma balanca pra frente, a outra fica parada (igual ao coelho)
@@ -47,7 +66,7 @@ void drawFox() {
     float tailSwing    = sin(foxTailPhase)    * foxTailSwingAmount;
     float tailTipSwing = sin(foxTailTipPhase) * foxTailTipSwingAmount;
 
-    // Cores base
+    // Cores base usadas para colorir o objeto
     float orangeR = 0.95f, orangeG = 0.45f, orangeB = 0.10f;
     float orangeDarkR = 0.80f, orangeDarkG = 0.35f, orangeDarkB = 0.08f;
     float whiteR  = 1.00f, whiteG  = 1.00f, whiteB  = 1.00f;
@@ -247,15 +266,18 @@ void drawFox() {
     glPopMatrix(); // Fim do Corpo
 }
 
-// Sistema de spawn da raposa
+/* Faz a raposa aparecer na tela, pronta para atravessar. Ela sempre entra
+pela borda ESQUERDA da tela, um pouco fora da area visivel, e comeca a
+correr para a direita (veja moverRaposa). */
+
 void spawnRaposa() {
     foxActive = true;
 
     foxX = -11.0f; // Ponto onde a raposa inicia a corrida
-    foxJaTirouVidaNestaPassagem = false;
+    foxJaTirouVidaNestaPassagem = false; // nova passagem: pode tirar vida de novo se colidir
 }
 
-// Sistema de controle da raposa
+// Controla o "relogio" que decide quando a raposa vai aparecer de novo.
 void controlarSurgimentoDaRaposa() {
     if (foxActive) {
     	return;
@@ -269,15 +291,21 @@ void controlarSurgimentoDaRaposa() {
     }
 }
 
-// Controla o movimento da raposa
+//  Move a raposa em linha reta para a direita, a uma velocidade constante ate ela sair completamente da tela do outro lado.
 void moverRaposa() {
+
+	// nao ha raposa correndo agora, nada a fazer
     if (!foxActive) {
     	return;
     }
 
     foxX += VELOCIDADE_RAPOSA;
-    foxDirecao = 1.0f;
+    foxDirecao = 1.0f; // a raposa so corre para a direita neste jogo
 
+    /*
+    Passou da borda direita da tela: desativa a raposa (ela some da
+    cena) e ja sorteia daqui a quanto tempo ela deve aparecer de novo
+     */
     if (foxX > 10.0f) {
         foxActive = false;
         framesAteProximaRaposa =  (1 + (rand() % 15)) * FRAMES_POR_SEGUNDO;
