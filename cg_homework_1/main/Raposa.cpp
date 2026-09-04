@@ -1,6 +1,5 @@
 #include "Raposa.hpp"
 #include "PrimitivasGeometricas.hpp"
-// Dependência de Animacao.hpp removida, agora o compilador usa os globais declarados em main.cpp
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>

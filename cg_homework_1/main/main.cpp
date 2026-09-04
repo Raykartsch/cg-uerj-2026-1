@@ -85,13 +85,29 @@ void keyboard_up_callback(unsigned char key, int x, int y) {
 }
 
 void anim(int valor) {
+	/*Verifica se o coelho esta entrando ou saindo de uma toca. Isso e feito
+	antes de tudo, para que o restante da funcao ja saiba se o coelho
+	esta escondido (e, portanto, nao deve se mover nem pular) neste frame.*/
     atualizarEsconderijoDoCoelho();
+
+    /* Calcula a velocidade deste frame (normal, "correndo" ou "descansando
+     na toca") antes de usa-la nos blocos das setas, logo abaixo. Chamamos
+     sempre, mesmo com o coelho escondido, pois e ela quem recupera o
+     folego dele enquanto esta na toca.*/
     atualizarCorrida();
 
+    /*Enquanto o coelho estiver escondido na toca, ele fica parado: nao
+    processa as setas de movimento nem a animacao de pulo.*/
+
     if (!coelhoEscondido) {
+
+    	// inputs inseridos para rodar com a setinha esquerda do teclado
         if (leftArrowPressed) {
-            direcaoCoelho = -1.0f;
-            if (characterPos < -8.0f) {
+
+            direcaoCoelho = -1.0f; // vira o personagem pra esquerda
+
+            // Permite o personagem andar pra esquerda pela cena
+            if (characterPos < -8.0f) { // esse comando não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
             	characterPos -= 0;
             }
             else {
@@ -99,9 +115,12 @@ void anim(int valor) {
             }
         }
 
+        // inputs inseridos para rodar com a setinha direita do teclado
         if (rightArrowPressed) {
-            direcaoCoelho = 1.0f;
-            if (characterPos > 8.0f) {
+            direcaoCoelho = 1.0f; // vira o personagem pra direita
+
+            // Permite o personagem andar pra direita pela cena
+            if (characterPos > 8.0f) {  // esse if não deixa o quadrado sair da tela, pra mudar o limite, olhar o glOrtho, está definido para 8 agora!
             	characterPos += 0;
             }
             else {
@@ -109,33 +128,53 @@ void anim(int valor) {
             }
         }
 
+
+        //////////////////////////////////////////////////////////////////////////////////////
+        // Controla a animação de pulo do quadrado
         if (isJumping) {
             if (goingUp) {
                 jump_height += speed_jump;
                 if (jump_height >= jump_maximum_height) {
-                    jump_height = jump_maximum_height;
-                    goingUp = false;
+                    jump_height = jump_maximum_height;  // trava no topo
+                    goingUp = false; // começa a fase de descida
                 }
             } else {
                 jump_height -= speed_jump;
                 if (jump_height <= 0.5f) {
-                    jump_height = 0.5f;
-                    isJumping = false;
+                    jump_height = 0.5f; // trava no chão certinho
+                    isJumping = false; // pulo terminou, pode pular de novo
                 }
             }
         }
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////////////
+   	/*Controla a animacao de corrida do coelho (patas e orelhas)
+   	Avanca sempre, independente de o coelho estar se movendo pela cena ou nao,
+   	para que ele fique "sempre" animado.*/
+
     walkPhase += walkPhaseSpeed;
     if (walkPhase > 2 * PI) {
-    	walkPhase -= 2 * PI;
+    	walkPhase -= 2 * PI; // mantém o valor sempre dentro de uma faixa, sem crescer pra sempre
     }
 
+
+
+    //////////////////////////////////////////////////////////////////////////////////////
+  	/*Mesmo com o coelho escondido na toca, ela
+    continua correndo da esquerda pra direita normalmente (patas, orelhas,
+    cauda, surgimento e movimento). E assim que o coelho consegue "esperar
+    ela passar" escondido, sem ficar preso enquanto ela atravessa a tela.
+    (a colisao em si e ignorada dentro de verificarColisaoComRaposa quando
+    o coelho esta escondido, entao ele nao perde vida mesmo se ela passar por cima)*/
     foxWalkPhase += foxWalkPhaseSpeed;
     if (foxWalkPhase > 2 * PI) {
     	foxWalkPhase -= 2 * PI;
     }
 
+
+    /* Determina a fase da cauda da raposa*/
     foxTailPhase += foxTailPhaseSpeed;
     if (foxTailPhase > 2 * PI) {
     	foxTailPhase -= 2 * PI;
@@ -161,29 +200,55 @@ void anim(int valor) {
 	verificarColisaoComAve(characterPos, jump_height, coelhoEscondido, rabbitLives,
 						   aveX, aveY, aveActive, aveJaTirouVida);
 
+
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	/*As borboletas sao um detalhe decorativo
+	 sobrevoando os canteiros, entao nao faz sentido elas pararem no ar
+	 junto com o resto do cenario.**/
     butterflyPhase += butterflyPhaseSpeed;
     if (butterflyPhase > 2 * PI) {
     	butterflyPhase -= 2 * PI;
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////
+    //Configura as nuvens flutuando no ceu
     cloudPhase += cloudPhaseSpeed;
     if (cloudPhase > 2 * PI) {
     	cloudPhase -= 2 * PI;
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////////////
+    //Chamada do ciclo de passagem do tempo: amanhecer/dia/entardecer/noite
     atualizarCorDoCeu();
 
+
+    //////////////////////////////////////////////////////////////////////////////////////
+	/*Esse condicional abaixo congela o coelho e outras funcionalidades enquanto
+	 * ele esta escondido como tocas, surgimento de vegetais, animacao do cenarios, passagem do background
+	 * no fundo, etc.*/
     if (!coelhoEscondido) {
+
+    	 // Rolagem do fundo (chao, cerca, canteiros)
         bgPos -= bgSpeed;
         bgPos = fmod(bgPos, bgWidth);
 
+
+        // Tocas
         atualizarTocas();
+
+        /* Vegetais de bonificacao: surgimento, movimento, colisao e os
+     	 bonus (turbo/pulo alto) que estiverem ativos*/
         controlarSurgimentoDeVegetais();
         moverVegetais();
         verificarColisaoComVegetais(characterPos, jump_height, coelhoEscondido, vegetais);
         atualizarBonusAtivos();
     }
 
+
+    //======================================================================================================================================================================================================================================================
+    // Comandos padrao da funcao anim
     FrameNumber++;
     glutPostRedisplay();
     glutTimerFunc(msecs, anim, valor);
@@ -239,7 +304,7 @@ void display() {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+	// Desenha cada toca (buraco) que estiver na tela
     for (const Toca &toca : tocas) {
         glPushMatrix();
             glTranslatef(toca.x, toca.y, 1.0f);
@@ -254,7 +319,7 @@ void display() {
 		  drawBackgroundContent();
 	glPopMatrix();
 
-	 // Verifica se a raposa esta ativa no cenario
+	// Desenha a raposa somente enquanto ela estiver perseguindo o coelho
     if (foxActive) {
         glPushMatrix();
             glTranslatef(foxX, foxY, 1.0f);
@@ -272,6 +337,7 @@ void display() {
 	}
 
 
+	// Desenha cada vegetal de bonificacao que estiver ativo na cena
     for (const Vegetal &veg : vegetais) {
         if (!veg.ativo) continue;
         glPushMatrix();

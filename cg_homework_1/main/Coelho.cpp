@@ -1,7 +1,6 @@
 #include "Coelho.hpp"
 #include "PrimitivasGeometricas.hpp"
 #include "Cenario.hpp"
-// Dependência de Animacao.hpp removida
 #include <GL/glut.h>
 #include <cmath>
 
