@@ -1,6 +1,6 @@
 // Run these commands in terminal to execute this code in Linux:
-// 1. g++ -o code code.cpp -lglut -lGLU -lGL -lm
-// 2. ./code
+// 1. g++ -o main main.cpp -lglut -lGLU -lGL -lm
+// 2. ./main
 
 
 // Run these commands in terminal to execute this code in Windows:
