@@ -6,7 +6,7 @@
 float butterflyPhase = 0.0f; // Fase angular global, avança a cada frame (relógio da animação)
 float butterflyPhaseSpeed = 0.12f;  // Velocidade com que a fase avança por frame (define o ritmo do voo)
 
-/*FEATURE: Desenho de uma borboleta individual
+/*
  Parâmetros:
  - fasePropria: um deslocamento de fase único para cada borboleta, somado à
    fase global. Isso faz com que várias borboletas na tela batam as asas e
