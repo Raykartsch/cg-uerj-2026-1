@@ -37,7 +37,7 @@ void drawButterfly(float fasePropria, float asaR, float asaG, float asaB) {
 
     glPushMatrix();
 
-    	// Aplica o deslocamento de voo calculado acima a todo o desenho da borboleta
+    	// Aplica o deslocamento de voo calculado acima a o desenho da borboleta
         glTranslatef(voarX, voarY, 0.0f);
 
         glColor3f(0.15f, 0.15f, 0.15f);
@@ -49,8 +49,8 @@ void drawButterfly(float fasePropria, float asaR, float asaG, float asaB) {
         /*Um disco colorido (cor recebida por parâmetro) posicionado à
 		esquerda do corpo. A escala horizontal é multiplicada por
 		wingFlap, fazendo a asa "encolher" e "abrir" no eixo X, simulando
-		o movimento de bater as asas (visto de frente).
-        glColor3f(asaR, asaG, asaB);*/
+		o movimento de bater as asas (visto de frente).*/
+        glColor3f(asaR, asaG, asaB);
         glPushMatrix();
             glTranslatef(-0.11f, 0.03f, 0.0f); // Desloca para o lado esquerdo do corpo
             glScalef(wingFlap, 1.0f, 1.0f); // Escala horizontal anima a batida da asa
