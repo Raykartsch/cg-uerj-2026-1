@@ -21,6 +21,8 @@
 #include "Cenario3D.hpp"
 #include "Vegetais3D.hpp"
 #include "SistemaColisao3D.hpp"
+#include "Raposa3D.hpp"
+#include "AveRapina3D.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*Unity build (igual ao main.cpp do jogo 2D): os arquivos de implementacao sao
@@ -31,6 +33,8 @@ havera erro de "multiple definition".*/
 #include "Coelho3D.cpp"
 #include "Vegetais3D.cpp"
 #include "SistemaColisao3D.cpp"
+#include "Raposa3D.cpp"
+#include "AveRapina3D.cpp"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int FrameNumber = 0;
@@ -72,7 +76,13 @@ void keyboard_callback(unsigned char key, int x, int y) {
         iniciarPulo();        // Barra de espaco: pula (no 2D era a seta para cima)
     }
     if ((key == 'v' || key == 'V') && rabbitLives > 0) {
-        rabbitLives--;        // TESTE: sem raposa/ave ainda nao ha como perder vida; remover quando os inimigos entrarem
+        rabbitLives--;        // TESTE: tira vida para testar a alface
+    }
+    if (key == 'f' || key == 'F') {
+        spawnRaposa();        // TESTE: dispara a passagem da raposa imediatamente
+    }
+    if (key == 'a' || key == 'A') {
+        spawnAve(coelhoX, coelhoZ); // TESTE: dispara o mergulho da ave mirando no coelho
     }
 }
 
@@ -93,6 +103,16 @@ void anim(int valor) {
         moverVegetais();
         verificarColisaoComVegetais(coelhoX, coelhoY, coelhoZ, coelhoEscondido, vegetais);
         atualizarBonusAtivos();
+
+        // Raposa (predador terrestre): surgimento aleatorio, corrida no campo e colisao
+        controlarSurgimentoDaRaposa();
+        moverRaposa();
+        verificarColisaoComRaposa();
+
+        // Ave de Rapina (predador aereo): surgimento aleatorio, mergulho parabolico e colisao
+        controlarSurgimentoDaAve(coelhoX, coelhoZ);
+        moverAve();
+        verificarColisaoComAve();
     }
 
     FrameNumber++;
@@ -136,7 +156,7 @@ void drawHUD() {
         drawText(20, janelaAltura - 86, "Pulo reforcado!");
     }
 
-    drawText(20, 20, "Setas: mover | Espaco: pular | ESC: sair");
+    drawText(20, 20, "Setas: mover | Espaco: pular | F: raposa | A: ave | ESC: sair");
 
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -166,9 +186,39 @@ void display() {
     drawCampo();
     drawSombrasVegetais();
     drawSombraCoelho();
+    drawSombraRaposa();
+    drawSombraAve();
 
     // Vegetais ativos (cada um em sua posicao, girando)
     drawVegetais();
+
+    // Raposa ativa atravessando o campo
+    if (foxActive) {
+        glPushMatrix();
+            glTranslatef(foxX, foxY, foxZ);
+            glRotatef(foxDirecao, 0.0f, 1.0f, 0.0f);
+            drawFox();
+        glPopMatrix();
+    }
+
+    // Ave de Rapina ativa mergulhando dos ceus
+    if (aveActive) {
+        glPushMatrix();
+            glTranslatef(aveX, aveY, aveZ);
+
+            // A ave voa no sentido -X (yaw de 180 graus)
+            glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+
+            // Inclinacao do mergulho (pitch): aponta o bico para baixo na descida e para cima na subida
+            float distBase = 14.0f - aveAlvoX;
+            float a = (7.5f - 0.55f) / (distBase * distBase + 0.0001f);
+            float dx = aveX - aveAlvoX;
+            float inclinacaoGraus = std::atan(2.0f * a * dx) * 180.0f / PI_F;
+            glRotatef(-inclinacaoGraus, 0.0f, 0.0f, 1.0f);
+
+            drawBird();
+        glPopMatrix();
+    }
 
     // Coelho: primeiro posiciona (translate) e depois gira (rotate) em torno do eixo Y
     glPushMatrix();
@@ -231,7 +281,7 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // + GLUT_DEPTH: buffer de profundidade
     glutInitWindowSize(janelaLargura, janelaAltura);
     glutInitWindowPosition(100, 100);
-    glutCreateWindow("Coelho 3D - Etapa 2 (setas: mover | espaco: pular | ESC: sair)");
+    glutCreateWindow("Coelho 3D - Etapa 2 (setas: mover | espaco: pular | F: raposa | A: ave | ESC: sair)");
 
     init();
 

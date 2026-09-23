@@ -1,9 +1,10 @@
 #pragma once
 
 // ---------------------------------------------------------------------------
-// Coelho 3D: o personagem principal e uma ESFERA que se move sobre o
-// quadrilatero do campo (plano XZ). O corpo do coelho sera modelado depois;
-// a esfera e o volume de colisao/posicao que ele vai herdar.
+// Coelho 3D: personagem principal modelado com uma hierarquia de solidos GLUT
+// (esferas e elipsoides escalados, cubos), espelhando fielmente o design e as
+// cores do coelho 2D do Trabalho 1 (corpo, cabeca, bochechas, nariz, olhos com
+// brilho, orelhas articuladas com parte interna rosada, patas e rabo pom-pom).
 // ---------------------------------------------------------------------------
 
 // Posicao do CENTRO da esfera no mundo.
@@ -51,9 +52,15 @@ extern const int MAX_VIDAS;
 // jogo 2D congela o cenario (e ignora colisoes) enquanto o coelho esta escondido.
 extern bool coelhoEscondido;
 
+// Animacao da caminhada/corrida (mesmas variaveis e logica do Trabalho 1)
+extern float walkPhase;        // Fase atual da animacao (em radianos)
+extern float walkPhaseSpeed;   // Velocidade com que a fase avanca a cada frame
+extern float legLiftAmount;    // O quanto as patinhas sobem no eixo Y ao caminhar
+extern float earSwingAmount;   // O quanto as orelhas balancam para frente e para tras (em graus)
+
 void moverCoelho();            // Atualiza a posicao a cada frame a partir das setas
 void iniciarPulo();            // Dispara o pulo (se ja nao estiver pulando)
 void atualizarPulo();          // Avanca a animacao do pulo
 void atualizarBonusAtivos();   // Conta o tempo dos buffs (turbo e pulo reforcado)
-void drawRabbit();             // Desenha a esfera (origem = centro da esfera)
+void drawRabbit();             // Desenha o modelo 3D completo do coelho (corpo, patas, cabeca, orelhas, rabo)
 void drawSombraCoelho();       // Sombra circular no chao, sob o personagem

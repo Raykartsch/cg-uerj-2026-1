@@ -1,0 +1,159 @@
+RELATÓRIO DE ADAPTAÇÃO: MODELAGEM E ANIMAÇÃO DO COELHO 2D PARA 3D
+Disciplina: Computação Gráfica - UERJ (Trabalho - Etapa 2)
+
+===============================================================================
+1. INTRODUÇÃO
+===============================================================================
+Na primeira etapa do trabalho, o personagem principal foi desenvolvido em 2D,
+utilizando primitivas planas como discos, círculos, triângulos e retângulos.
+O objetivo desta etapa foi migrar o coelho para o ambiente tridimensional (3D),
+preservando rigorosamente a identidade visual, as cores originais e a dinâmica
+de movimentação e animação já criadas na Etapa 1.
+
+Para isso, toda a modelagem foi feita em C++ utilizando os sólidos disponibilizados
+pela biblioteca GLUT (principalmente glutSolidSphere e glutSolidCube), organizados
+em uma estrutura hierárquica de transformações (Scene Graph) com OpenGL clássico.
+
+===============================================================================
+2. ADAPTAÇÃO DA MODELAGEM GEOMÉTRICA (DE 2D PARA 3D)
+===============================================================================
+No jogo 2D, o coelho era desenhado de perfil. Ao passar para o 3D, precisávamos
+dar volume aos membros e adicionar profundidade (eixo Z), para que o personagem
+pudesse ser visualizado e rotacionado em qualquer ângulo de câmera.
+
+Abaixo está a correspondência direta entre as partes do modelo original e a versão 3D:
+
+a) Corpo (Tronco principal):
+   - No 2D: Era representado por um disco circular com raio 1.0.
+   - No 3D: Como a GLUT não possui uma função nativa para desenhar elipsoides,
+     utilizamos uma esfera sólida unitária (glutSolidSphere) combinada com a
+     função glScalef(0.42, 0.30, 0.28). Isso gerou um elipsoide roliço e fofo,
+     levemente alongado no eixo X (comprimento) e achatado na altura (eixo Y).
+   - Cor mantida: Creme claro (R: 0.96, G: 0.93, B: 0.89).
+
+b) Cabeça:
+   - No 2D: Era um disco menor de raio 0.6, posicionado à frente e acima do corpo.
+   - No 3D: Também foi modelada como um elipsoide com glScalef(0.24, 0.22, 0.21),
+     deslocada via glTranslatef(0.32, 0.18, 0.0) a partir do centro do corpo.
+     Ela atua como nó pai para todos os elementos faciais (olhos, bochechas,
+     nariz, dentes e orelhas).
+   - Cor mantida: Creme claro (R: 0.96, G: 0.93, B: 0.89).
+
+c) Focinho e Bochechas:
+   - No 2D: Era um único disco branco achatado na frente da cabeça.
+   - No 3D: Para dar volume tridimensional à face, criamos duas bochechas
+     esféricas brancas simétricas nos lados esquerdo (+Z) e direito (-Z), além de
+     um leve volume frontal.
+   - Cor mantida: Branco puro (R: 1.0, G: 1.0, B: 1.0).
+
+d) Nariz e Dentes:
+   - No 2D: O nariz era um triângulo rosa e não havia dentes destacados.
+   - No 3D: O nariz foi modelado como uma pequena esfera rosa pastel na ponta do
+     focinho. Logo abaixo dele, adicionamos dois dentinhos característicos de
+     coelho usando cubos escalados (glutSolidCube).
+   - Cores mantidas: Nariz em rosa (R: 0.90, G: 0.42, B: 0.54) e dentes em branco.
+
+e) Olhos:
+   - No 2D: Havia apenas um olho desenhado como círculo preto de perfil.
+   - No 3D: Agora temos dois olhos simétricos posicionados nas laterais da
+     cabeça (respeitando a anatomia dos coelhos). Cada olho é formado por uma
+     esfera preta brilhante e uma microesfera branca deslocada na frente da
+     pupila, simulando o reflexo de luz e dando mais expressividade ao olhar.
+
+f) Orelhas:
+   - No 2D: Eram desenhadas como triângulos longos e finos.
+   - No 3D: Cada orelha é um conjunto de dois elipsoides sobrepostos:
+     * Camada externa: Elipsoide alongado e vertical na cor creme do corpo.
+     * Camada interna: Elipsoide menor e mais fino na face frontal, na cor
+       rosa pastel, simulando a cavidade interna da orelha.
+     As orelhas têm uma inclinação base suave para os lados (+-Z) e para trás (-X),
+     além da articulação que oscila durante a caminhada.
+
+g) Patas e Coxas:
+   - No 2D: Eram retângulos verticais que subiam e desciam na lateral do corpo.
+   - No 3D: O coelho agora possui 4 patas completas (duas dianteiras e duas
+     traseiras), além de duas coxas laterais no quadril para dar sustentação.
+     A altura das patas foi calibrada de forma que, quando o coelho está no chão
+     (Y = 0.5), a sola de cada pé toca exatamente o plano da grama (Y = 0.0).
+   - Cor mantida: Bege macio (R: 0.90, G: 0.85, B: 0.79).
+
+h) Rabo:
+   - No 2D: Era um pequeno disco na parte de trás.
+   - No 3D: Foi modelado como uma esfera estilo "pom-pom" de algodão posicionada
+     na traseira do corpo (em -X).
+   - Cor mantida: Creme claro (R: 0.96, G: 0.93, B: 0.89).
+
+===============================================================================
+3. ADAPTAÇÃO DAS ANIMAÇÕES (MARCHA, CORRIDA E PULO)
+===============================================================================
+A lógica matemática que controlava as animações no Trabalho 1 foi totalmente
+reaproveitada e expandida para as 3 dimensões:
+
+a) Ciclo de Marcha e Balanço das Orelhas:
+   - Mantivemos a variável de controle "walkPhase", que avança a cada frame
+     em que o coelho está se movendo.
+   - O cálculo base utiliza a função senoidal:
+       phaseSin = sin(walkPhase);
+   - A sincronização cruzada original foi mantida:
+     * Quando phaseSin > 0: a orelha direita balança para frente e a pata
+       dianteira esquerda sobe (legLeftLift).
+     * Quando phaseSin < 0: a orelha esquerda balança para frente e a pata
+       dianteira direita sobe (legRightLift).
+   - As patas traseiras acompanham o ritmo de forma alternada, gerando um trote
+     natural no plano XZ.
+
+b) Efeito do Turbo (Cenoura):
+   - Quando o coelho come a cenoura e ativa o turbo, a velocidade de locomoção
+     aumenta de 0.05 para 0.20 por frame.
+   - Para que a animação acompanhasse essa velocidade, multiplicamos o avanço da
+     fase por 1.8x. Dessa forma, as perninhas e orelhas se movem muito mais
+     rápido durante o turbo, tornando a corrida perceptível visualmente.
+
+c) Parada Suave:
+   - Se o usuário soltar as setas, em vez de cortar o passo bruscamente, o código
+     suaviza o valor de walkPhase multiplicando-o por 0.8 até zerar. Isso faz com
+     que o coelho termine o passo e apoie todas as patinhas no chão de forma natural.
+
+d) Animação do Pulo (Barra de Espaço):
+   - O pulo desloca a coordenada coelhoY para cima até atingir jump_maximum_height
+     (2.5 normalmente, ou 3.5 com o bônus do rabanete).
+   - Durante o tempo em que o coelho está no ar (isJumping == true):
+     * As 4 patas recolhem ligeiramente em direção ao corpo (+0.10 no eixo Y).
+     * As orelhas recebem uma inclinação extra para trás (+10 graus), simulando
+       a resistência do ar durante o salto.
+
+e) Projeção da Sombra:
+   - A sombra circular colada ao chão (Y = 0.02) acompanha a posição X e Z do
+     personagem em tempo real.
+   - Quando o coelho pula, a sombra encolhe proporcionalmente à altura atingida.
+     Isso ajuda o jogador a perceber claramente em que altura o personagem está
+     e onde ele vai aterrissar.
+
+===============================================================================
+4. TÉCNICAS DE COMPUTAÇÃO GRÁFICA UTILIZADAS
+===============================================================================
+- Pilha de Matrizes (glPushMatrix e glPopMatrix):
+  Todas as partes do coelho foram modeladas em coordenadas locais relativas ao
+  seu elemento pai. Isso permitiu, por exemplo, que ao rotacionar ou transladar
+  a cabeça, os olhos, focinho, dentes e orelhas acompanhassem automaticamente
+  o movimento sem necessidade de recalcular posições absolutas no mundo.
+
+- Escala e Normais (glEnable(GL_NORMALIZE)):
+  O uso de glScalef para transformar esferas em elipsoides altera os vetores
+  normais das superfícies. Como a iluminação estava ativada, habilitamos o
+  GL_NORMALIZE no init(), garantindo que o OpenGL recalcule as normais
+  unitárias e evite manchas escuras ou iluminação incorreta sobre o modelo.
+
+- Iluminação e Materiais:
+  Aplicamos um brilho especular suave (GL_SPECULAR com GL_SHININESS = 25.0)
+  especificamente na pelagem do coelho, destacando o contorno e a curvatura do
+  corpo sob a luz solar direcional da cena. Ao final do desenho do coelho, o
+  material neutro é restaurado para não alterar os demais objetos do jogo.
+
+===============================================================================
+5. CONCLUSÃO
+===============================================================================
+A adaptação conseguiu manter a mesma simplicidade e charme do jogo 2D original,
+mas agora tirando proveito total do espaço tridimensional. O coelho possui volume
+consistente, articulações dinâmicas nas orelhas e patas, e responde perfeitamente
+às interações do jogador tanto no solo quanto durante os pulos e corridas com turbo.

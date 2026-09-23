@@ -1,0 +1,183 @@
+===============================================================================
+RELATÓRIO DEDICADO: ADAPTAÇÃO DA AVE DE RAPINA (2D PARA 3D)
+Disciplina: Computação Gráfica - UERJ (Trabalho - Etapa 2)
+===============================================================================
+
+1. INTRODUÇÃO E PAPEL DA AVE DE RAPINA NO JOGO
+-------------------------------------------------------------------------------
+No jogo 2D da Etapa 1, a Ave de Rapina desempenhava o papel de predador aéreo.
+Enquanto a raposa patrulhava a superfície do solo em linha reta, a ave surgia
+ocasionalmente no topo da tela e realizava um mergulho rasante em trajetória
+parabólica, tentando atingir o coelho e retornando rapidamente para o céu.
+
+O objetivo desta adaptação foi migrar o código de "AveRapina.cpp" e "AveRapina.hpp"
+para o ambiente tridimensional em "AveRapina3D.cpp" e "AveRapina3D.hpp",
+mantendo a física do mergulho parabólico, a paleta de cores original e o bater
+de asas, mas expandindo a geometria, a câmera e a interação para as 3 dimensões.
+
+
+===============================================================================
+2. ADAPTAÇÃO DA FÍSICA E TRAJETÓRIA DO MERGULHO 3D
+-------------------------------------------------------------------------------
+a) Entrada da Coordenada Z (Profundidade):
+   - No jogo 2D: A ave se movia apenas nos eixos X (horizontal) e Y (vertical).
+     Ela começava em X = 12.0 e Y = 7.0, mirando na coordenada X onde o coelho
+     estava no momento do spawn (aveAlvoX).
+   - No jogo 3D: O campo agora possui profundidade no eixo Z (de -6.0 a +6.0).
+     Quando a função spawnAve(coelhoX, coelhoZ) é acionada, ela registra tanto
+     aveAlvoX quanto aveAlvoZ. A ave é posicionada na mesma faixa de profundidade
+     do alvo (aveZ = aveAlvoZ), executando o mergulho alinhada com a posição em
+     que o coelho se encontrava quando ela iniciou o ataque.
+
+b) Curva Parabólica do Mergulho:
+   - A equação do mergulho Y(X) = a*(X - H)^2 + K foi adaptada com parâmetros 3D:
+       * H = aveAlvoX (vértice horizontal mais baixo).
+       * K = 0.55f (altura mínima no ponto de rasante, na mesma altura do coelho).
+       * a = (7.5f - 0.55f) / (distBase * distBase), onde distBase = 14.0f - aveAlvoX.
+   - A ave inicia em X = 14.0f e Y = 7.5f (alto no céu), desce velozmente até
+     atingir o rasante em (aveAlvoX, 0.55f, aveAlvoZ) e sobe novamente até sair
+     pelo lado esquerdo em X < -14.0f.
+
+c) Inclinação Dinâmica de Voo (Pitch acompanhando a Parábola):
+   - No jogo 2D: O sprite da ave transladava mantendo sempre a mesma inclinação
+     horizontal estática.
+   - No jogo 3D: Calculamos a derivada da parábola em cada frame para determinar
+     a inclinação instantânea da ave (ângulo de arfagem / pitch):
+       dY/dX = 2 * a * (aveX - aveAlvoX);
+       inclinacaoGraus = atan(dY/dX) * (180.0 / PI);
+   - Como a ave voa no sentido -X (yaw de 180 graus), essa rotação faz com que:
+       * Na descida (aveX > aveAlvoX): O bico aponte para baixo, mergulhando
+         de forma agressiva em direção à presa.
+       * No rasante (aveX == aveAlvoX): O corpo se nivele horizontalmente.
+       * Na subida (aveX < aveAlvoX): O bico aponte para cima, subindo de volta
+         ao céu com grande dinamismo visual.
+
+
+===============================================================================
+3. ADAPTAÇÃO DA MODELAGEM GEOMÉTRICA (DE 2D PARA SÓLIDOS GLUT 3D)
+-------------------------------------------------------------------------------
+No 2D, a ave era desenhada de perfil através de primitivas planas (discos,
+triângulos e retângulos). No 3D, ela foi remodelada como uma hierarquia
+tridimensional rica utilizando sólidos da GLUT e elipsoides escalonados:
+
+a) Corpo (Tronco Principal):
+   - No 2D: Disco marrom achatado (glScalef(0.6, 0.25)).
+   - No 3D: Elipsoide fusiforme aerodinâmico modelado com glutSolidSphere
+     escalonado para (0.52, 0.22, 0.20), na cor marrom escura original
+     (R: 0.411, G: 0.334, B: 0.20).
+   - Peito e Ventre: No 2D havia um disco claro sob a barriga. No 3D, criamos
+     um elipsoide ventral creme claro (R: 0.96, G: 0.93, B: 0.89) na face inferior
+     do tronco, recriando a plumagem clara do peitoral.
+
+b) Cabeça, Crista e Olhos:
+   - No 2D: Disco marrom com dois triângulos no topo (moicano de penas).
+   - No 3D:
+     * Crânio: Elipsoide marrom em (0.48, 0.10, 0.0) na frente do tronco.
+     * Crista / Moicano: Dois penachos alongados escuros (R: 0.27, G: 0.23, B: 0.13)
+       projetados para trás e para cima no topo da cabeça.
+     * Olhos: No 2D era um único círculo preto. No 3D, foram criados dois olhos
+       simétricos em +-Z com íris amarela/dourada (R: 1.0, G: 0.77, B: 0.10),
+       pupila preta e microesfera branca de reflexo, dando aspecto feroz de ave de caça.
+
+c) Bico Adunco de Rapina:
+   - No 2D: Dois triângulos amarelos sobrepostos.
+   - No 3D: Um cone tridimensional (glutSolidCone) na cor amarelo-ouro brilhante,
+     inclinado a -25 graus para baixo em formato de gancho afiado, com detalhe
+     da cera nasal na base.
+
+d) Asas Tridimensionais com Envergadura no Eixo Z:
+   - No 2D: Eram dois triângulos planos ("asa traseira" e "asa frontal") desenhados
+     em camadas no plano.
+   - No 3D: As asas agora possuem envergadura tridimensional real aberta nas
+     laterais do corpo:
+     * Asa Esquerda: Projeta-se para +Z.
+     * Asa Direita: Projeta-se para -Z.
+     Cada asa possui uma base muscular marrom e penas primárias alongadas e
+     escuras na ponta, ligeiramente arqueadas para trás para conferir aspecto veloz.
+
+e) Cauda (Uropígio):
+   - No 2D: Três retângulos inclinados a -80 graus.
+   - No 3D: Feixe de 3 penas em leque na traseira (-X), com uma pena central e
+     duas laterais ligeiramente abertas em +-Z.
+
+f) Garras de Predador:
+   - No 2D: Não eram modeladas.
+   - No 3D: Adicionamos duas patas amarelas com garras recurvadas recolhidas
+     sob o ventre durante o voo, prontas para atacar a presa no rasante.
+
+
+===============================================================================
+4. ADAPTAÇÃO DA ANIMAÇÃO DO BATER DE ASAS
+-------------------------------------------------------------------------------
+a) Equação e Frequência do Batimento:
+   - No 2D:
+       avePhase += 0.35f;
+       wingFlap = sin(avePhase);
+       glRotatef(wingFlap * 50.0f, 0, 0, 1); // Rotação no plano 2D
+   - No 3D:
+       A fase continua avançando a 0.35 radianos por frame.
+       O batimento agora ocorre no espaço 3D através de rotações em torno do
+       eixo longitudinal X:
+       * Asa Esquerda (+Z): glRotatef( wingAngle, 1.0, 0.0, 0.0);
+       * Asa Direita (-Z):  glRotatef(-wingAngle, 1.0, 0.0, 0.0);
+       onde wingAngle = sin(avePhase) * 38.0f.
+   - O movimento sincronizado faz com que as duas asas subam e desçam
+     simetricamente em relação ao dorso da ave, simulando com grande fidelidade
+     o voo de um falcão.
+
+
+===============================================================================
+5. SISTEMA DE SOMBRA DINÂMICA NO SOLO (DRAW SOMBRA AVE)
+-------------------------------------------------------------------------------
+Uma das adições mais importantes no 3D foi a projeção da sombra no gramado:
+- Em um jogo 3D de perspectiva, quando um inimigo aéreo desce do céu, o jogador
+  precisa de pistas visuais no chão para saber onde o ataque vai cair.
+- A função drawSombraAve desenha um disco escuro semitransparente em Y = 0.02
+  exatamente nas coordenadas horizontais da ave (aveX, aveZ).
+- Parâmetros Dinâmicos com a Altitude:
+  * Quando a ave está no alto do céu (Y = 7.5): A sombra fica ampla (raio = 0.70)
+    e muito clara/difusa (alfa = 0.12).
+  * Conforme a ave se aproxima do chão (Y = 0.55): A sombra encolhe (raio = 0.35)
+    e fica escura, nítida e focada (alfa = 0.40).
+- Esse efeito avisa visualmente o jogador de que a ave está caindo exatamente
+  sobre aquele ponto, permitindo que ele reaja a tempo.
+
+
+===============================================================================
+6. COLISÃO E MECÂNICA DE ESQUIVA EM 3D
+-------------------------------------------------------------------------------
+a) Distância Euclidiana Tridimensional:
+   - No 2D: dist = sqrt(dx*dx + dy*dy) < 1.0f.
+   - No 3D: dist = sqrt(dx*dx + dy*dy + dz*dz) < 0.95f.
+
+b) Esquiva do Jogador:
+   - Como a ave grava a coordenada (aveAlvoX, aveAlvoZ) no instante em que inicia
+     o mergulho, se o jogador continuar parado, será atingido no ponto mais
+     baixo da parábola.
+   - No entanto, se o jogador se deslocar para os lados no eixo Z (saindo da
+     linha do rasante) ou correr para frente/trás em X, a distância tridimensional
+     será superior ao raio de colisão e o ataque errará o alvo.
+   - A variável aveJaTirouVida impede que uma mesma passagem desconte mais de
+     uma vida por mergulho.
+
+
+===============================================================================
+7. CONTROLES DE TESTE E INTERFACE
+-------------------------------------------------------------------------------
+- Temporizador Aleatório: No modo normal de jogo, a ave surge automaticamente
+  a cada 12 a 22 segundos.
+- Tecla de Atalho: Adicionou-se a tecla 'A' / 'a' para invocar o mergulho da
+  ave imediatamente em direção ao coelho, facilitando a visualização e teste.
+- HUD Atualizado: O texto de rodapé no HUD foi atualizado para:
+  "Setas: mover | Espaco: pular | F: raposa | A: ave | ESC: sair".
+
+
+===============================================================================
+8. CONCLUSÃO
+===============================================================================
+A adaptação de AveRapina para o 3D preservou com exatidão todas as intenções e
+detalhes artísticos do Trabalho 1 (cores, formato do bico adunco, crista de penas,
+bater de asas e mergulho parabólico), ao mesmo tempo em que aproveitou plenamente
+os recursos tridimensionais (envergadura real das asas no eixo Z, inclinação de pitch
+acompanhando a derivada da trajetória, alinhamento no corredor Z e sombra indicadora
+de altitude no solo).

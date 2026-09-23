@@ -1,0 +1,256 @@
+===============================================================================
+RELATÓRIO COMPLETO DE ADAPTAÇÕES: TRANSIÇÃO DO JOGO 2D PARA O AMBIENTE 3D
+Disciplina: Computação Gráfica - UERJ (Trabalho - Etapa 2)
+===============================================================================
+
+1. INTRODUÇÃO E OBJETIVO DO TRABALHO
+-------------------------------------------------------------------------------
+Na primeira etapa da disciplina, foi desenvolvido um jogo bidimensional (2D) em
+OpenGL clássico, caracterizado pela rolagem lateral, onde o personagem principal
+(um coelho) corria em um campo, pulava obstáculos, esquivava-se de predadores
+(raposa e ave de rapina) e coletava vegetais para obter bonificações (turbo de
+velocidade, vida extra e pulo reforçado).
+
+O objetivo desta Etapa 2 foi realizar a migração completa do jogo para um
+ambiente tridimensional (3D). O desafio principal foi preservar todas as
+mecânicas, a identidade visual, a paleta de cores e o charme das animações
+originais, enquanto se adaptava a geometria, o sistema de coordenadas, a câmera,
+a iluminação e a detecção de colisões para o espaço 3D.
+
+Todo o desenvolvimento foi realizado em C++ com o pipeline clássico do OpenGL
+(bibliotecas GL, GLU e GLUT / FreeGLUT), mantendo a arquitetura modular com
+compilação unificada (Unity Build).
+
+
+===============================================================================
+2. SISTEMA DE COORDENADAS, CÂMERA E PIPELINE 3D
+-------------------------------------------------------------------------------
+A transição do plano 2D para o espaço 3D exigiu uma redefinição completa de como
+os objetos são projetados e visualizados na tela:
+
+a) Convenção de Eixos Tridimensionais:
+   - Eixo X (Largura): Corresponde ao antigo eixo X do jogo 2D. No 3D, define a
+     largura do campo (de -8.0 a +8.0) e a direção da corrida e da rolagem.
+   - Eixo Y (Altura): Corresponde à altura do mundo. O plano do chão fica fixo
+     em Y = 0.0. A gravidade, o pulo do coelho e os vegetais aéreos operam no eixo Y.
+   - Eixo Z (Profundidade): É a coordenada nova introduzida no 3D. Define a
+     profundidade do campo (de -6.0 a +6.0), onde +Z aponta em direção à câmera
+     e -Z aponta para o fundo da cena. O coelho e os inimigos agora têm liberdade
+     de movimentação em toda a área retangular XZ.
+
+b) Projeção em Perspectiva (gluPerspective):
+   - No 2D, a visualização usava glOrtho, onde objetos mantinham o mesmo tamanho
+     independentemente da distância.
+   - No 3D, adotou-se a projeção em perspectiva através de gluPerspective:
+       gluPerspective(55.0, (double)largura / (double)altura, 0.1, 100.0);
+     Isso cria a sensação realista de profundidade, onde objetos distantes
+     parecem menores que os próximos, com ângulo de visão (FOV) de 55 graus.
+
+c) Câmera 3D (gluLookAt):
+   - Implementou-se uma câmera externa elevada posicionada estrategicamente em
+     (0.0, 11.0, 12.0), mirando diretamente no centro do campo (0.0, 0.0, 0.0),
+     com o vetor "up" apontando para cima (0.0, 1.0, 0.0).
+   - Esse enquadramento permite enxergar simultaneamente o quadrilátero inteiro
+     do campo, a aproximação dos vegetais e a movimentação dos personagens.
+
+d) Buffer de Profundidade (Z-Buffer):
+   - No 2D, a ordem de desenho definia quem cobria quem (Painter's Algorithm).
+   - No 3D, ativou-se o teste de profundidade via glEnable(GL_DEPTH_TEST) e
+     GLUT_DEPTH no glutInitDisplayMode. A cada frame, tanto o buffer de cor quanto
+     o de profundidade são limpos (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT).
+
+e) Iluminação e Normais:
+   - Para que os sólidos não parecessem chapados ou figuras planas, ativou-se a
+     iluminação com glEnable(GL_LIGHTING) e glEnable(GL_LIGHT0).
+   - A fonte de luz direcional é posicionada após a câmera no display(), fixando-se
+     no mundo como a luz do sol vinda de cima e em ângulo (0.4, 1.0, 0.6, 0.0).
+   - Configurou-se glEnable(GL_COLOR_MATERIAL) para que as chamadas glColor3f
+     continuassem definindo as cores difusa e ambiente dos objetos.
+   - Ativou-se obrigatoriamente glEnable(GL_NORMALIZE): como usamos glScalef
+     intensamente para modelar elipsoides a partir de esferas, a normalização
+     evita distorções de luz decorrentes de escalas não uniformes.
+
+
+===============================================================================
+3. O CENÁRIO 3D: GRAMADO ROLANTE, CERCA E SOMBRAS
+-------------------------------------------------------------------------------
+a) Campo Quadriculado e Rolagem do Fundo:
+   - No 2D, o chão era uma faixa estática ou um retângulo repetitivo.
+   - No 3D, o gramado foi construído como uma malha de ladrilhos quadrados
+     (TAMANHO_LADRILHO = 1.0) no plano XZ (Y = 0.0), alternando dois tons de
+     verde (claro e escuro).
+   - A rolagem do cenário foi transposta para o 3D deslocando a posição X de cada
+     ladrilho em função de bgPos (que decrementa por bgSpeed a cada frame e dá
+     a volta com fmod). Dessa forma, o padrão quadriculado desliza suavemente
+     para -X, dando a nítida sensação visual de que o coelho está correndo para a frente.
+   - O gramado estende-se bem além da cerca (de -20 a +20 em X) para que os itens
+     não surjam flutuando no vazio.
+
+b) Cerca Limítrofe:
+   - Uma borda marrom espessa foi desenhada ao redor da área útil do campo
+     (X de -8 a +8, Z de -6 a +6) utilizando GL_LINE_LOOP em Y = 0.02,
+     delimitando o espaço em que o coelho pode transitar.
+
+c) Sistema de Projeção de Sombras no Solo:
+   - Em um ambiente 3D, sem sombras projetadas no chão, torna-se muito difícil
+     para o jogador estimar a coordenada Z e a altura de um objeto no ar.
+   - Criou-se a função drawDiscoNoChao, que renderiza um disco escuro
+     semitransparente usando blending alfa (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA).
+   - O disco é posicionado ligeiramente acima da grama em Y = 0.02, eliminando
+     completamente o problema de Z-fighting (cintilação entre polígonos sobrepostos).
+   - Coelho, raposa e vegetais possuem suas próprias sombras acompanhando sua
+     posição horizontal em tempo real.
+
+
+===============================================================================
+4. ADAPTAÇÃO COMPLETA DO COELHO (PERSONAGEM PRINCIPAL)
+-------------------------------------------------------------------------------
+O coelho deixou de ser um conjunto de discos 2D planos e tornou-se um modelo
+tridimensional hierárquico complexo, mantendo intacta sua paleta de cores:
+
+a) Modelagem Geométrica:
+   - Corpo: Elipsoide roliço com glScalef(0.42, 0.30, 0.28) sobre glutSolidSphere,
+     na cor creme claro (0.96, 0.93, 0.89). Fica no centro do sistema local.
+   - Cabeça: Elipsoide creme (0.24, 0.22, 0.21) posicionado à frente e acima do
+     corpo em (0.32, 0.18, 0.0), funcionando como nó pai para a face.
+   - Bochechas e Focinho: Duas bochechas brancas esféricas simétricas em +-Z,
+     dando o aspecto fofo e arredondado característico do desenho original.
+   - Nariz e Dentes: Esfera rosa pastel na ponta do focinho e dois dentinhos
+     brancos modelados com cubos escalados (glutSolidCube).
+   - Olhos: Dois olhos esféricos pretos nas laterais da cabeça, cada um com uma
+     microesfera branca simulando o reflexo especular de luz na pupila.
+   - Orelhas Articuladas: Cada orelha é formada por duas camadas (externa creme
+     e interior rosa pastel em elipsoide côncavo frontal). Possuem inclinações
+     base para fora (+-Z) e para trás (-X).
+   - 4 Patas no Solo: Duas dianteiras e duas traseiras (com coxas laterais no
+     quadril). A altura foi calculada para que a sola encoste exatamente em
+     Y = 0.0 quando o coelho está no chão (coelhoY = 0.5).
+   - Rabo Pom-pom: Esfera de algodão na traseira do corpo em -X.
+
+b) Animações e Dinâmicas Adaptadas:
+   - Marcha Cruzada: A equação original baseada em sin(walkPhase) foi mantida.
+     Quando o seno é positivo, a orelha direita balança para frente e a pata
+     dianteira esquerda sobe; quando é negativo, o movimento se inverte.
+   - Turbo da Cenoura: Ao consumir a cenoura, o coelho corre mais rápido e a
+     taxa de avanço da fase de marcha é multiplicada por 1.8x, acelerando as
+     passadas e o balanço das orelhas.
+   - Parada Suave: Ao soltar as teclas de movimento, a fase decai suavemente
+     multiplicando por 0.8 até zerar, pousando as patinhas no chão de forma natural.
+   - Pulo 3D: Ao pular com a barra de espaço, o coelho sobe no eixo Y, as 4
+     patinhas encolhem contra o corpo e as orelhas inclinam 10 graus extras
+     para trás. A sombra no solo encolhe com a altura.
+
+
+===============================================================================
+5. ADAPTAÇÃO DA RAPOSA (PREDADOR TERRESTRE - drawFox)
+-------------------------------------------------------------------------------
+A raposa, que no jogo 2D atravessava a tela correndo no chão, foi totalmente
+remodelada em 3D preservando seu design felpudo, esguio e agressivo:
+
+a) Modelagem Geométrica:
+   - Corpo (Tronco): Elipsoide aerodinâmico alongado (0.55, 0.26, 0.23) no tom
+     laranja vivo característico (0.95, 0.45, 0.10).
+   - Peito e Ventre Brancos: Elipsoide branco puro acoplado na parte inferior
+     frontal do tórax, recriando a mancha peitoral do 2D.
+   - Pescoço: Segmento inclinado a +30 graus ligando o tronco à cabeça.
+   - Cabeça Canina: Crânio laranja afilado com duas bochechas brancas nas laterais,
+     focinho pontudo com queixo branco e trufa do nariz preta na ponta.
+   - Olhos: Olhos amendoados pretos com reflexos brancos de luz.
+   - Orelhas Pontudas: Triangulares e alertas, com pelagem branca interna e
+     a pontinha superior escura.
+   - Cauda Articulada de 2 Segmentos:
+     * Segmento 1 (Base): Elipsoide felpudo laranja fixado na traseira.
+     * Segmento 2 (Ponta): Articulado na extremidade do primeiro, terminando na
+       famosa ponta branca pura.
+   - 4 Patas com Meias Pretas: Coxas musculosas laranjas no quadril e ombros, e
+     canelas/patas escuras apoiadas na grama.
+
+b) Animações e Comportamento:
+   - Trote Diagonal de Canídeo: Os pares diagonais se alternam subindo e descendo
+     com base em sin(foxWalkPhase): Grupo A (Dianteira Direita + Traseira Esquerda)
+     e Grupo B (Dianteira Esquerda + Traseira Direita).
+   - Cauda Fluida: A base e a ponta possuem fases e velocidades independentes
+     (foxTailPhase e foxTailTipPhase), gerando uma ondulação dupla muito realista.
+   - Corrida no Campo: A raposa surge periodicamente na borda esquerda (X = -13.0)
+     em uma faixa Z sorteada e corre para a direita (+X) a velocidade constante.
+   - Colisão e Mecânica de Esquiva: Distância euclidiana 3D com o coelho. Se o
+     coelho pular alto (coelhoY > 1.35), ele esquiva com sucesso saltando por
+     cima da raposa. Se colidir no chão, perde 1 vida (com proteção para não
+     perder vidas repetidas na mesma passagem).
+
+
+===============================================================================
+6. ADAPTAÇÃO DOS VEGETAIS DE BONIFICAÇÃO (POWER-UPS)
+-------------------------------------------------------------------------------
+Os três tipos de vegetais foram recriados com sólidos 3D da GLUT e rotação própria:
+
+a) Cenoura (Turbo de Velocidade):
+   - Raiz laranja modelada com cone invertido (glutSolidCone) inclinado a -45 graus,
+     com 3 anéis escuros finos de relevo feitos com toros (glutSolidTorus).
+   - Folhagem superior composta por 4 cones finos verdes abertos em leque.
+
+b) Alface (Vida Extra):
+   - Construída como uma roseta de folhas em camadas tridimensionais (formato
+     de tigela): 6 elipsoides externos verde-escuros, 5 elipsoides intermediários
+     mais claros e um miolo esférico claro no centro.
+
+c) Rabanete (Pulo Reforçado):
+   - Bulbo esférico avermelhado, raiz fina cônica branca voltada para baixo e
+     tufos de folhas verdes cônicas na parte superior.
+
+d) Dinâmica no Espaço 3D:
+   - Spawnam fora do campo à direita (X = 16.0 a 19.0) com profundidade Z sorteada.
+   - 70% de chance de surgirem no chão (Y de 0.2 a 0.8, pegos andando) e 30% no
+     alto (Y de 1.8 a 3.0, exigindo o pulo).
+   - Giram continuamente em torno do eixo Y (vegetalGiro) e deslizam para -X
+     junto com a rolagem do gramado.
+   - Cada vegetal projeta sua própria sombra no solo, diminuindo conforme a altura.
+
+
+===============================================================================
+7. SISTEMA DE COLISÕES TRIDIMENSIONAL
+-------------------------------------------------------------------------------
+- No jogo 2D, a colisão era calculada pela distância euclidiana circular em 2 eixos:
+    dist = sqrt(dx*dx + dy*dy)
+
+- No 3D, a colisão foi expandida para a distância euclidiana esférica em 3 eixos:
+    dist = sqrt(dx*dx + dy*dy + dz*dz)
+
+- Essa fórmula é aplicada de maneira desacoplada no SistemaColisao3D:
+  * Coleta de vegetais: captura o item e concede o buff quando a distância entre
+    o centro do coelho e o do vegetal for menor que raioDeCaptura (1.1).
+  * Colisão com a raposa: atinge o coelho quando a distância for menor que
+    RAIO_COLISAO_RAPOSA (1.0), respeitando a esquiva do salto no eixo Y.
+
+
+===============================================================================
+8. INTERFACE E HUD EM PROJEÇÃO ORTOGONAL 2D
+-------------------------------------------------------------------------------
+Para exibir a contagem de vidas, os avisos de bônus ativos e as instruções de
+teclas, preservou-se a mesma técnica da Etapa 1:
+- A cena 3D é renderizada normalmente com profundidade e iluminação.
+- Em seguida, a matriz de projeção é temporariamente chaveada para uma tela 2D
+  em pixels através de gluOrtho2D(0, largura, 0, altura).
+- Desativam-se GL_DEPTH_TEST e GL_LIGHTING para que o texto seja desenhado em
+  primeiro plano absoluto sem sofrer oclusão ou sombreamento.
+- Utiliza-se glutBitmapCharacter com a fonte GLUT_BITMAP_HELVETICA_18.
+- Ao final, as matrizes e estados 3D originais são restaurados com glPopMatrix.
+
+
+===============================================================================
+9. SÍNTESE DAS TRANSFORMAÇÕES E CONCLUSÃO
+-------------------------------------------------------------------------------
+A evolução do jogo 2D para o 3D não consistiu apenas em "adicionar profundidade",
+mas sim em repensar a hierarquia visual e física do jogo:
+
+1. Primitivas Planas $\to$ Sólidos GLUT: Discos e triângulos foram substituídos
+   por esferas unitárias escalonadas (elipsoides), cones e cubos devidamente
+   articulados em sistemas de coordenadas locais com glPushMatrix e glPopMatrix.
+2. Animações Paramétricas: As equações senoidais do Trabalho 1 ganharam novos
+   eixos de atuação, fazendo pernas trotarem em planos tridimensionais, caudas
+   ondularem lateralmente e orelhas balançarem com a marcha e o salto.
+3. Iluminação e Materiais: A inclusão de luz direcional e brilhos especulares
+   revela as curvaturas e os volumes dos corpos sob diferentes perspectivas.
+4. Fidelidade Absoluta: A paleta de cores original (creme, branco, rosa, bege,
+   laranja e verde) foi 100% mantida, garantindo que o jogo preserve sua
+   identidade e continue imediatamente reconhecível.
