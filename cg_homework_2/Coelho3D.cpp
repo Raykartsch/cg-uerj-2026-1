@@ -18,6 +18,9 @@ float anguloCoelho = 0.0f; // olhando para +X, como o coelho 2D (direcaoCoelho =
 const float VELOCIDADE_NORMAL = 0.05f;
 float characterSpeed = VELOCIDADE_NORMAL;
 
+// Velocidade de rotacao do coelho em torno do proprio eixo (graus por frame - Item 3 do Trabalho)
+const float VELOCIDADE_ROTACAO_COELHO = 3.5f;
+
 // Buff da cenoura (turbo): mesmos valores do 2D
 const float VELOCIDADE_TURBO = 0.20f;
 const int DURACAO_TURBO_EM_FRAMES = 150;
@@ -61,60 +64,97 @@ static float limitar(float valor, float minimo, float maximo) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*Move o coelho no plano XZ. Chamada uma vez por frame (a cada 24 ms).
-
-No 2D so existia esquerda/direita. Aqui as quatro setas controlam o plano XZ:
-   seta esquerda / direita -> -X / +X
-   seta cima / baixo       -> -Z / +Z  (cima = "para o fundo" da tela)
-(o pulo usa a barra de espaco; a toca, que usava a seta para baixo, ganhara outra tecla)
-
-O movimento e NORMALIZADO: em diagonal (ex.: cima + direita) o vetor
-(1, 1) tem comprimento 1.41, o que faria o coelho andar 41% mais rapido
-que em linha reta. Dividindo pelo comprimento, a velocidade fica sempre
-igual a characterSpeed, em qualquer direcao.*/
+/*
+================================================================================
+ MOVIMENTACAO DO PERSONAGEM (ITEM 3 DO TRABALHO)
+================================================================================
+ Regras oficiais do enunciado:
+   ● Seta para cima:     movimenta o personagem para FRENTE;
+   ● Seta para baixo:    movimenta o personagem para TRÁS;
+   ● Seta para esquerda: ROTACIONA o personagem em torno do seu próprio eixo;
+   ● Seta para direita:  ROTACIONA o personagem em torno do seu próprio eixo.
+ O deslocamento para frente e para trás deve respeitar a direção para a qual o
+ personagem está orientado.
+================================================================================
+*/
 void moverCoelho() {
-    float dirX = 0.0f;
-    float dirZ = 0.0f;
+    // -------------------------------------------------------------------------
+    // 1. ROTAÇÃO EM TORNO DO PRÓPRIO EIXO (SETAS ESQUERDA E DIREITA)
+    // -------------------------------------------------------------------------
+    // No plano XZ com Y para cima, aumentar o anguloCoelho gira o personagem
+    // para a esquerda (sentido anti-horario visto de cima).
+    bool girando = false;
+    if (leftArrowPressed) {
+        anguloCoelho += VELOCIDADE_ROTACAO_COELHO;
+        girando = true;
+    }
+    if (rightArrowPressed) {
+        anguloCoelho -= VELOCIDADE_ROTACAO_COELHO;
+        girando = true;
+    }
 
-    if (rightArrowPressed) dirX += 1.0f;
-    if (leftArrowPressed)  dirX -= 1.0f;
-    if (downArrowPressed)  dirZ += 1.0f;
-    if (upArrowPressed)    dirZ -= 1.0f;
+    // Mantem o angulo sempre normalizado no intervalo [0, 360)
+    if (anguloCoelho >= 360.0f) anguloCoelho -= 360.0f;
+    if (anguloCoelho < 0.0f)    anguloCoelho += 360.0f;
 
-    // Nenhuma seta (ou setas opostas se anulando): coelho parado
-    if (dirX == 0.0f && dirZ == 0.0f) {
-        // Suaviza a fase para que as patinhas e orelhas voltem ao repouso no chao
+    // -------------------------------------------------------------------------
+    // 2. CÁLCULO DO VETOR FRONTAL DE ORIENTAÇÃO (FORWARD VECTOR)
+    // -------------------------------------------------------------------------
+    // O personagem olha na direcao theta = anguloCoelho (em graus):
+    //   theta = 0 graus -> apontando para +X (como no modelo original)
+    // No espaco 3D com eixos (X, Y, Z):
+    //   fx =  cos(theta * PI / 180)
+    //   fz = -sin(theta * PI / 180)  (pois +Z vem para a camera e -Z vai para o fundo)
+    float rad = anguloCoelho * PI_F / 180.0f;
+    float fx = std::cos(rad);
+    float fz = -std::sin(rad);
+
+    // -------------------------------------------------------------------------
+    // 3. DESLOCAMENTO PARA FRENTE E PARA TRÁS (SETAS CIMA E BAIXO)
+    // -------------------------------------------------------------------------
+    float deslocamentoLinear = 0.0f;
+    if (upArrowPressed) {
+        deslocamentoLinear += 1.0f;  // Seta Cima: avanca na direcao frontal
+    }
+    if (downArrowPressed) {
+        deslocamentoLinear -= 0.75f; // Seta Baixo: recua na direcao oposta
+    }
+
+    bool andando = (deslocamentoLinear != 0.0f);
+
+    if (andando) {
+        // Desloca ao longo da orientacao atual do personagem
+        coelhoX += fx * (deslocamentoLinear * characterSpeed);
+        coelhoZ += fz * (deslocamentoLinear * characterSpeed);
+
+        // Avanca a animacao da marcha (com passo acelerado caso esteja com turbo)
+        float multiplicadorVelocidade = (characterSpeed > VELOCIDADE_NORMAL) ? 1.8f : 1.0f;
+        walkPhase += walkPhaseSpeed * multiplicadorVelocidade;
+        if (walkPhase > 2.0f * PI_F) {
+            walkPhase -= 2.0f * PI_F;
+        }
+    } else if (girando) {
+        // Se estiver apenas girando no proprio eixo, as patinhas dao pequenos passos
+        walkPhase += walkPhaseSpeed * 0.5f;
+        if (walkPhase > 2.0f * PI_F) {
+            walkPhase -= 2.0f * PI_F;
+        }
+    } else {
+        // Parado: decai suavemente a fase para que as patinhas pousem planas no chao
         if (std::abs(walkPhase) > 0.05f) {
             walkPhase *= 0.8f;
         } else {
             walkPhase = 0.0f;
         }
-        return;
     }
 
-    // Avanca a fase da caminhada: quando corre no turbo, o ciclo de passos e mais rapido
-    float multiplicadorVelocidade = (characterSpeed > VELOCIDADE_NORMAL) ? 1.8f : 1.0f;
-    walkPhase += walkPhaseSpeed * multiplicadorVelocidade;
-    if (walkPhase > 2.0f * PI_F) {
-        walkPhase -= 2.0f * PI_F; // Mantem a fase dentro de [0, 2*PI], sem crescer indefinidamente
-    }
-
-    float comprimento = std::sqrt(dirX * dirX + dirZ * dirZ);
-    dirX /= comprimento;
-    dirZ /= comprimento;
-
-    coelhoX += dirX * characterSpeed;
-    coelhoZ += dirZ * characterSpeed;
-
-    // O coelho nao pode sair do quadrilatero. Recuamos o limite em RAIO_ESFERA
-    // para que a BORDA da esfera (e nao o centro) pare na cerca.
+    // -------------------------------------------------------------------------
+    // 4. LIMITAÇÃO AO QUADRILÁTERO DO CAMPO
+    // -------------------------------------------------------------------------
+    // O coelho nao pode sair da cerca. Recuamos o limite pelo raio da esfera
+    // para que a borda externa pare na cerca.
     coelhoX = limitar(coelhoX, CAMPO_X_MIN + RAIO_ESFERA, CAMPO_X_MAX - RAIO_ESFERA);
     coelhoZ = limitar(coelhoZ, CAMPO_Z_MIN + RAIO_ESFERA, CAMPO_Z_MAX - RAIO_ESFERA);
-
-    /* Vira o coelho para onde ele anda. Uma rotacao de theta graus em torno do
-    eixo Y leva o eixo +X para (cos(theta), 0, -sin(theta)); queremos que ele
-    aponte para (dirX, 0, dirZ), logo theta = atan2(-dirZ, dirX).*/
-    anguloCoelho = std::atan2(-dirZ, dirX) * 180.0f / PI_F;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

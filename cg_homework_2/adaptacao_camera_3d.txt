@@ -1,0 +1,139 @@
+===============================================================================
+RELATÓRIO DEDICADO: ALTERNÂNCIA DE CÂMERAS 3D (TECLA "C")
+Disciplina: Computação Gráfica - UERJ (Trabalho - Etapa 2, Item 4)
+===============================================================================
+
+1. INTRODUÇÃO E REQUISITO DO ENUNCIADO
+-------------------------------------------------------------------------------
+No jogo 2D da Etapa 1, a visualização era bidimensional e estática, utilizando
+glOrtho. O jogador enxergava o cenário a partir de uma única perspectiva ortogonal
+lateral fixa, sem qualquer profundidade ou possibilidade de alterar o ponto de vista.
+
+Para a Etapa 2 (versão 3D), o enunciado exigiu a seguinte funcionalidade:
+"4. Alternância da câmera
+Permita que, ao pressionar a tecla 'c', a visualização da cena seja alternada entre:
+● uma visão geral da cena, posicionada, por exemplo, no ponto (0, 10, 10); e
+● uma visão em primeira pessoa, posicionada de acordo com a orientação e a posição
+do personagem principal."
+
+Este relatório detalha a fundamentação matemática, os conceitos de Computação
+Gráfica e a implementação prática realizada para atender a esse requisito.
+
+
+===============================================================================
+2. CONCEITO DE CÂMERA NO OPENGL (gluLookAt)
+-------------------------------------------------------------------------------
+No pipeline clássico do OpenGL, a "câmera" não é um objeto primitivo, mas sim uma
+matriz de visualização (ModelView Matrix) configurada no início de cada frame.
+A função gluLookAt recebe 9 parâmetros divididos em 3 vetores:
+  gluLookAt(eyeX, eyeY, eyeZ,       // 1. Onde a câmera está posicionada (olho)
+            targetX, targetY, targetZ,// 2. Para onde a câmera está olhando (alvo)
+            upX, upY, upZ);         // 3. Vetor que define a direção "para cima"
+
+A alternância foi implementada com a variável booleana "cameraPrimeiraPessoa",
+chaveada a cada pressionamento da tecla 'c' ou 'C' no teclado:
+
+    if (key == 'c' || key == 'C') {
+        cameraPrimeiraPessoa = !cameraPrimeiraPessoa;
+    }
+
+
+===============================================================================
+3. MODO 1: VISÃO GERAL DA CENA (TERCEIRA PESSOA PANORÂMICA)
+-------------------------------------------------------------------------------
+No modo de visão geral (!cameraPrimeiraPessoa):
+- A câmera é posicionada exatamente no ponto (0.0, 10.0, 10.0) recomendado no enunciado.
+- O ponto de foco mira no centro exato do campo (origem do mundo: 0.0, 0.0, 0.0).
+- O vetor vertical aponta para cima no eixo Y (0.0, 1.0, 0.0).
+
+Chamada correspondente:
+    gluLookAt(0.0f, 10.0f, 10.0f,
+              0.0f,  0.0f,  0.0f,
+              0.0f,  1.0f,  0.0f);
+
+Vantagens e dinâmica de jogo:
+- Proporciona uma visão panorâmica e ampla de todo o quadrilátero do campo.
+- Permite que o jogador visualize a cerca limítrofe, o coelho em terceira pessoa,
+  o surgimento da raposa na esquerda, da ave mergulhando pelo topo e dos vegetais
+  vindo pela direita.
+
+
+===============================================================================
+4. MODO 2: VISÃO EM PRIMEIRA PESSOA (OLHOS DO COELHO)
+-------------------------------------------------------------------------------
+No modo de primeira pessoa (cameraPrimeiraPessoa == true), o jogador assume a
+visão pelos olhos do coelho. A câmera precisa:
+1. Seguir a posição tridimensional do coelho (coelhoX, coelhoY, coelhoZ) em tempo real.
+2. Acompanhar a altura da cabeça do coelho, inclusive durante os pulos.
+3. Rotacionar a direção de visada para coincidir com a orientação angular (anguloCoelho).
+
+a) Cálculo Trigonométrico da Orientação (Vetor Frontal):
+   No modelo adotado, anguloCoelho mede o ângulo em graus no plano XZ em torno do eixo Y:
+     - angulo = 0 graus: o coelho olha para o eixo +X.
+   O vetor unitário frontal (forward vector) no plano XZ é calculado por:
+     float rad = anguloCoelho * PI / 180.0f;
+     float dirOlharX = cos(rad);
+     float dirOlharZ = -sin(rad);
+
+b) Posição dos Olhos (Eye Position):
+   O centro de massa do coelho fica em (coelhoX, coelhoY, coelhoZ).
+   Anatomicamente, a cabeça do modelo fica a uma altura de +0.26 acima do centro
+   e projetada +0.35 para a frente na direção do olhar:
+     float camOlhoX = coelhoX + 0.35f * dirOlharX;
+     float camOlhoY = coelhoY + 0.26f;
+     float camOlhoZ = coelhoZ + 0.35f * dirOlharZ;
+
+c) Ponto de Foco (Target Position):
+   Para que a câmera olhe diretamente para onde o coelho está virado, projetamos
+   um ponto de mira 5 unidades à frente na mesma direção do vetor unitário:
+     float alvoOlharX = camOlhoX + dirOlharX * 5.0f;
+     float alvoOlharY = camOlhoY;
+     float alvoOlharZ = camOlhoZ + dirOlharZ * 5.0f;
+
+d) Chamada Final do gluLookAt em 1ª Pessoa:
+     gluLookAt(camOlhoX, camOlhoY, camOlhoZ,
+               alvoOlharX, alvoOlharY, alvoOlharZ,
+               0.0f, 1.0f, 0.0f);
+
+
+===============================================================================
+5. AJUSTES GRÁFICOS ESSENCIAIS PARA A PRIMEIRA PESSOA
+-------------------------------------------------------------------------------
+a) Ocultação do Modelo do Coelho:
+   - Em terceira pessoa, o modelo do coelho é desenhado via drawRabbit().
+   - Em primeira pessoa, se desenhássemos o coelho, a câmera estaria posicionada
+     exatamente no interior da sua cabeça. Os polígonos das bochechas, nariz e
+     orelhas estariam a distâncias menores que o plano de corte próximo (near plane: 0.1),
+     causando artefatos visuais graves e bloqueando completamente a visão do jogador.
+   - Solução adotada no display():
+       if (!cameraPrimeiraPessoa) {
+           drawSombraCoelho();
+           glPushMatrix();
+               glTranslatef(coelhoX, coelhoY, coelhoZ);
+               glRotatef(anguloCoelho, 0.0f, 1.0f, 0.0f);
+               drawRabbit();
+           glPopMatrix();
+       }
+   - Isso garante uma visão frontal limpa, fluida e imersiva do campo de jogo.
+
+b) Projeção de Luz Fixa no Mundo:
+   - A chamada glLight da lâmpada direcional do sol é executada imediatamente
+     DEPOIS do gluLookAt. Isso garante que a iluminação da cena permaneça fixa
+     no espaço do mundo, independentemente se a câmera está estática em (0, 10, 10)
+     ou se movimentando e girando em primeira pessoa com o coelho.
+
+c) Indicador em Tempo Real no HUD:
+   - No canto superior direito da tela, adicionou-se uma indicação textual clara:
+     "Camera: Geral (0,10,10) [C]"  ou  "Camera: 1a Pessoa [C]".
+   - A instrução de controle no rodapé também foi atualizada para indicar a tecla C.
+
+
+===============================================================================
+6. CONCLUSÃO
+===============================================================================
+A implementação da alternância de câmera atendeu rigorosamente ao Item 4 do
+enunciado do trabalho. A transição entre a visão geral em (0, 10, 10) e a visão
+em primeira pessoa nos olhos do coelho oferece ao usuário duas experiências
+completamente distintas: a visão tática panorâmica para antecipar perigos e a
+visão imersiva no nível do gramado, valorizando a modelagem tridimensional de
+todos os elementos do jogo.

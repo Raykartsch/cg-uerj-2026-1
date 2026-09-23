@@ -46,14 +46,36 @@ b) Projeção em Perspectiva (gluPerspective):
      Isso cria a sensação realista de profundidade, onde objetos distantes
      parecem menores que os próximos, com ângulo de visão (FOV) de 55 graus.
 
-c) Câmera 3D (gluLookAt):
-   - Implementou-se uma câmera externa elevada posicionada estrategicamente em
-     (0.0, 11.0, 12.0), mirando diretamente no centro do campo (0.0, 0.0, 0.0),
-     com o vetor "up" apontando para cima (0.0, 1.0, 0.0).
-   - Esse enquadramento permite enxergar simultaneamente o quadrilátero inteiro
-     do campo, a aproximação dos vegetais e a movimentação dos personagens.
+c) Câmera Dinâmica 3D (gluLookAt) e Alternância de Visualização (Item 4 do Trabalho):
+   - No 2D, não existia o conceito de ponto de vista móvel ou câmeras múltiplas.
+   - No 3D, implementou-se a alternância em tempo real na tecla 'C' entre dois modos:
+     1. MODO VISÃO GERAL (0, 10, 10): Câmera elevada posicionada exatamente no ponto
+        (0.0, 10.0, 10.0), mirando na origem (0.0, 0.0, 0.0) com vetor para cima (0.0, 1.0, 0.0).
+        Oferece uma perspectiva panorâmica ampla de todo o campo de jogo, da aproximação dos
+        vegetais e dos predadores.
+     2. MODO PRIMEIRA PESSOA (Olhos do Coelho): Posiciona o observador diretamente
+        na altura da cabeça do coelho (camOlhoY = coelhoY + 0.26) e ligeiramente projetada
+        à frente (+0.35). A orientação acompanha exatamente o ângulo yaw (anguloCoelho)
+        para onde o coelho está virado, através do vetor unitário de mira:
+          dirX = cos(angulo * PI / 180)
+          dirZ = -sin(angulo * PI / 180)
+        O ponto de foco mira 5 unidades à frente na linha de visada.
+   - Ocultação do Modelo em 1ª Pessoa: Quando a primeira pessoa está ativa, o desenho
+     do coelho é omitido para que a geometria da própria cabeça não oclua a tela do jogador.
 
-d) Buffer de Profundidade (Z-Buffer):
+d) Rotação da Câmera na Visão Geral (Item 5 do Trabalho):
+   - O enunciado estabelece que, na visão geral, a tecla 'r' deve rotacionar a câmera
+     em torno do eixo Y da cena, permitindo observar o jogo sob múltiplos ângulos.
+   - A câmera descreve uma órbita circular de raio R = 10.0 a uma altura fixa Y = 10.0:
+       camX = 10.0 * sin(anguloCameraGeral * PI / 180)
+       camY = 10.0
+       camZ = 10.0 * cos(anguloCameraGeral * PI / 180)
+   - Quando angulo = 0, a posição é exatamente (0, 10, 10), idêntica ao Item 4.
+   - A cada toque na tecla 'r', o ângulo é incrementado em 5 graus (com ciclo de 0 a 360).
+   - O comando gluLookAt mantém a mira no centro (0, 0, 0) com o vetor vertical (0, 1, 0).
+   - Quando em 1ª pessoa, a tecla 'r' não produz efeito, respeitando o enunciado.
+
+e) Buffer de Profundidade (Z-Buffer):
    - No 2D, a ordem de desenho definia quem cobria quem (Painter's Algorithm).
    - No 3D, ativou-se o teste de profundidade via glEnable(GL_DEPTH_TEST) e
      GLUT_DEPTH no glutInitDisplayMode. A cada frame, tanto o buffer de cor quanto
@@ -139,6 +161,25 @@ b) Animações e Dinâmicas Adaptadas:
    - Pulo 3D: Ao pular com a barra de espaço, o coelho sobe no eixo Y, as 4
      patinhas encolhem contra o corpo e as orelhas inclinam 10 graus extras
      para trás. A sombra no solo encolhe com a altura.
+
+c) Sistema de Controle e Movimentação Tipo Tanque (Item 3 do Trabalho):
+   - No jogo 2D: As setas controlavam apenas o deslocamento horizontal no eixo X
+     (esquerda/direita), com a seta para cima disparando o pulo.
+   - No jogo 3D: Implementou-se o sistema de pilotagem direcional exigido no Item 3:
+     * Seta para Cima: Desloca o coelho para FRENTE, na direção para a qual ele está
+       virado, usando o vetor frontal trigonométrico:
+         fx =  cos(anguloCoelho * PI / 180)
+         fz = -sin(anguloCoelho * PI / 180)
+         coelhoX += fx * characterSpeed;
+         coelhoZ += fz * characterSpeed;
+     * Seta para Baixo: Desloca o coelho para TRÁS (marcha à ré no sentido oposto a fx, fz).
+     * Seta para Esquerda: ROTACIONA o coelho no próprio eixo Y no sentido anti-horário
+       (anguloCoelho += VELOCIDADE_ROTACAO_COELHO).
+     * Seta para Direita: ROTACIONA o coelho no próprio eixo Y no sentido horário
+       (anguloCoelho -= VELOCIDADE_ROTACAO_COELHO).
+   - Essa mecânica permite navegar com precisão por todo o plano XZ, desviar de
+     obstáculos em curvas suaves e proporciona controle em 360 graus quando
+     a câmera em primeira pessoa (tecla 'C') estiver acionada.
 
 
 ===============================================================================

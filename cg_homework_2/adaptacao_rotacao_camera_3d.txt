@@ -1,0 +1,203 @@
+===============================================================================
+RELATÓRIO DEDICADO: ROTAÇÃO DA CÂMERA NA VISÃO GERAL (ITEM 5)
+Disciplina: Computação Gráfica - UERJ (Trabalho - Etapa 2, Item 5)
+===============================================================================
+
+1. INTRODUÇÃO E REQUISITO DO ENUNCIADO
+-------------------------------------------------------------------------------
+No desenvolvimento de aplicações gráficas 3D, a possibilidade de orbitar a câmera
+ao redor do cenário é fundamental para a percepção de volume, profundidade e
+iluminação dos modelos tridimensionais.
+
+O enunciado do Trabalho 2 (Etapa 2) estabelece a seguinte regra no Item 5:
+"5. Rotação da câmera
+Quando a visão geral estiver acionada, permita que, ao pressionar a tecla “r”,
+a posição da câmera seja rotacionada em relação ao eixo Y, possibilitando
+observar a cena a partir de diferentes ângulos."
+
+Este relatório detalha a fundamentação matemática, a lógica de implementação em
+C++ e a integração dessa funcionalidade no arquivo principal "main.cpp".
+
+
+==============================================================================
+2. FUNDAMENTAÇÃO GEOMÉTRICA E MATEMÁTICA
+-------------------------------------------------------------------------------
+a) Posição Original de Referência:
+   No Item 4 do trabalho, a câmera de visão geral foi configurada inicialmente
+   no ponto fixo (0, 10, 10), olhando diretamente para o centro do campo (0, 0, 0)
+   com o vetor vertical "up" apontando para cima (0, 1, 0).
+   
+   Analisando as coordenadas desse ponto inicial:
+   - Coordenada X = 0.0
+   - Coordenada Y = 10.0 (altura da câmera acima do plano do chão)
+   - Coordenada Z = 10.0 (afastamento frontal da câmera)
+
+b) Translação para Órbita Circular em Torno do Eixo Y:
+   Rotacionar uma câmera ao redor do eixo Y mantendo o foco fixo no centro do
+   cenário (0, 0, 0) equivale a descrever uma órbita circular contida em um
+   plano horizontal na altura constante Y = 10.0.
+
+   O raio R dessa órbita no plano horizontal XZ é a distância entre o ponto e o
+   eixo Y (origem do plano XZ):
+     R = sqrt(X^2 + Z^2) = sqrt(0^2 + 10^2) = 10.0
+
+   Para um ângulo de rotação theta (em graus), calculamos a conversão para
+   radianos:
+     theta_rad = theta * PI / 180.0
+
+   Pela matriz clássica de rotação 3D em torno do eixo Y:
+     [ X' ]   [  cos(theta)   0   sin(theta) ] [  0  ]   [  10 * sin(theta) ]
+     [ Y' ] = [      0        1       0      ] [ 10  ] = [        10        ]
+     [ Z' ]   [ -sin(theta)   0   cos(theta) ] [ 10  ]   [  10 * cos(theta) ]
+
+   Portanto, as coordenadas da câmera para qualquer ângulo theta são dadas por:
+     camX = R * sin(theta_rad)
+     camY = 10.0
+     camZ = R * cos(theta_rad)
+
+c) Comportamento dos Ângulos Notáveis:
+   - Para theta = 0 graus:
+       camX = 10 * sin(0) = 0.0
+       camY = 10.0
+       camZ = 10 * cos(0) = 10.0
+       -> Coincide exatamente com a posição inicial (0, 10, 10) do Item 4.
+   
+   - Para theta = 90 graus:
+       camX = 10 * 1 = 10.0
+       camY = 10.0
+       camZ = 10 * 0 = 0.0
+       -> Visão lateral direita do campo.
+
+   - Para theta = 180 graus:
+       camX = 10 * 0 = 0.0
+       camY = 10.0
+       camZ = 10 * (-1) = -10.0
+       -> Visão traseira da cena (oposta à inicial).
+
+   - Para theta = 270 graus:
+       camX = 10 * (-1) = -10.0
+       camY = 10.0
+       camZ = 10 * 0 = 0.0
+       -> Visão lateral esquerda do campo.
+
+   - Para theta = 360 graus:
+       Retorna a 0 graus (ciclo completo).
+
+d) Vetores de Mira e "Up":
+   - Ponto de mira (Target): permanece fixo em (0.0, 0.0, 0.0), que é o centro
+     do gramado e do mundo do jogo.
+   - Vetor vertical (Up Vector): permanece (0.0, 1.0, 0.0). Como a câmera mantém
+     uma inclinação constante de 45 graus em relação ao chão (pois altura = 10
+     e raio = 10), o vetor de visada nunca se torna colinear com o vetor Up,
+     evitando qualquer anomalia de Gimbal Lock ou indefinição matemática.
+
+
+==============================================================================
+3. IMPLEMENTAÇÃO EM C++ (ARQUIVO main.cpp)
+-------------------------------------------------------------------------------
+A implementação foi realizada de forma direta e limpa no arquivo "main.cpp",
+dividida em quatro etapas principais:
+
+1) Declaração de Constantes e Variáveis de Estado:
+   Definiu-se o raio, a altura, o passo de rotação e a variável acumuladora do ângulo:
+   
+   const float RAIO_CAMERA_GERAL   = 10.0f; // Distancia do eixo Y no plano XZ
+   const float ALTURA_CAMERA_GERAL = 10.0f; // Altura constante Y
+   const float PASSO_ROTACAO_CAM   = 5.0f;  // Incremento por aperto de tecla (5 graus)
+   float anguloCameraGeral = 0.0f;          // Angulo atual da orbita em graus
+
+2) Tratamento da Tecla 'r' / 'R' na Função de Teclado (keyboard_callback):
+   Seguindo estritamente a exigência do enunciado ("Quando a visão geral estiver
+   acionada..."), o incremento angular só ocorre se a câmera estiver no modo geral
+   (!cameraPrimeiraPessoa):
+
+   if (key == 'r' || key == 'R') {
+       if (!cameraPrimeiraPessoa) {
+           anguloCameraGeral += PASSO_ROTACAO_CAM;
+           if (anguloCameraGeral >= 360.0f) {
+               anguloCameraGeral -= 360.0f;
+           }
+       }
+   }
+
+   O incremento de 5 graus proporciona uma transição suave tanto para toques
+   rápidos quanto ao segurar a tecla pressionada. O operador de reinício mantém o
+   valor sempre no intervalo [0, 360).
+
+3) Aplicação da Matriz de Visualização na Função display():
+   No bloco dedicado à visão geral, substituiu-se o ponto estático pelo cálculo
+   dinâmico da posição orbital:
+
+   if (!cameraPrimeiraPessoa) {
+       float radGeral = anguloCameraGeral * PI_F / 180.0f;
+       float camGeralX = RAIO_CAMERA_GERAL * std::sin(radGeral);
+       float camGeralY = ALTURA_CAMERA_GERAL;
+       float camGeralZ = RAIO_CAMERA_GERAL * std::cos(radGeral);
+
+       gluLookAt(camGeralX, camGeralY, camGeralZ, // Posicao orbital dinâmica
+                 0.0, 0.0, 0.0,                  // Ponto de mira (origem)
+                 0.0, 1.0, 0.0);                 // Vetor para cima
+   }
+
+4) Informação Visual no HUD (drawHUD):
+   A interface gráfica 2D sobreposta na tela foi atualizada para exibir o ângulo
+   atual de rotação da câmera quando em visão geral:
+     "Camera: Geral (XX deg) [C] [R: girar]"
+   E a barra inferior de instruções ganhou o atalho documentado:
+     "Setas: mover | Espaco: pular | C: alternar camera | R: girar visao geral | ..."
+
+
+==============================================================================
+4. INTERAÇÃO COM A ILUMINAÇÃO FIXA NO MUNDO
+-------------------------------------------------------------------------------
+Um aspecto técnico importante de Computação Gráfica envolvido nesta adaptação
+é o posicionamento da fonte de luz (GL_LIGHT0).
+
+No pipeline de funções fixas do OpenGL, as coordenadas passadas para glLightfv()
+com GL_POSITION são transformadas pela matriz MODELVIEW ativa no momento da chamada.
+
+Ao definir a posição da luz no display() DEPOIS do comando gluLookAt():
+   GLfloat luzDirecao[] = { 0.4f, 1.0f, 0.6f, 0.0f };
+   glLightfv(GL_LIGHT0, GL_POSITION, luzDirecao);
+
+A luz permanece fixa no sistema de coordenadas do mundo (como a luz solar real).
+Como consequência direta, quando o jogador rotaciona a câmera ao redor da cena com
+a tecla 'r', ele pode observar claramente as sombras, o gradiente das normais e o
+brilho especular mudando de face nos modelos 3D do coelho, da raposa, da ave e
+dos vegetais, comprovando a volumetria e a tridimensionalidade dos sólidos GLUT.
+
+
+==============================================================================
+5. COMPARAÇÃO ENTRE 2D E 3D
+-------------------------------------------------------------------------------
+- No Jogo 2D (Etapa 1):
+  * A visão era plana, paralela ao plano XY (usando glOrtho).
+  * Não existia o conceito de rotação do ponto de vista, pois qualquer rotação
+    fora do plano quebraria a perspectiva 2D dos sprites/primitivas planas.
+
+- No Jogo 3D (Etapa 2 - Item 5):
+  * A projeção é em perspectiva (gluPerspective), com profundidade real.
+  * O jogador tem total liberdade para orbitar a cena 360 graus em torno do eixo Y.
+  * Todos os quatro quadrantes do campo quadriculado e das cercas podem ser inspecionados.
+  * O estado angular é preservado se o jogador alternar para a primeira pessoa ('c')
+    e retornar posteriormente para a visão geral.
+
+
+==============================================================================
+6. PROCEDIMENTO DE COMPILAÇÃO E TESTES
+-------------------------------------------------------------------------------
+1) Compilação:
+   g++ main.cpp -o main.exe -lfreeglut -lglu32 -lopengl32
+
+2) Verificação dos Comportamentos:
+   a) Iniciar o jogo: a câmera começa na posição (0, 10, 10) olhando para a origem.
+   b) Pressionar a tecla 'r': a câmera gira suavemente ao redor do campo no sentido
+      anti-horário (visto de cima), revelando a cena por novos ângulos.
+   c) Segurar a tecla 'r': a câmera orbita continuamente 360 graus de forma fluida.
+   d) O HUD no topo direito atualiza o valor angular (ex.: 45 deg, 90 deg, etc.).
+   e) Pressionar a tecla 'c': alterna para a visão em primeira pessoa nos olhos do coelho.
+   f) Enquanto em primeira pessoa, pressionar 'r': a câmera NÃO gira (respeitando
+      a regra do enunciado de que a rotação só opera na visão geral).
+   g) Pressionar 'c' novamente: retorna para a visão geral no ângulo exato em que
+      havia sido deixada.
+===============================================================================

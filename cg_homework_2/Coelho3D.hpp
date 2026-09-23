@@ -17,11 +17,15 @@ extern float anguloCoelho;  // Direcao que o coelho olha (yaw, em graus). 0 = +X
 
 extern const float RAIO_ESFERA;
 
-// Velocidade (mesmos valores do jogo 2D, em unidades de mundo por frame)
+// Velocidade de deslocamento linear (unidades de mundo por frame)
 extern float characterSpeed;
 extern const float VELOCIDADE_NORMAL;
 
-// Estado das setas do teclado (mesmos nomes do jogo 2D)
+// Velocidade de rotacao em torno do proprio eixo (graus por frame - Item 3 do Trabalho)
+extern const float VELOCIDADE_ROTACAO_COELHO;
+
+// Estado das setas do teclado (Regras do Item 3):
+// Seta Cima: frente | Seta Baixo: tras | Seta Esquerda/Direita: rotacao no proprio eixo
 extern bool rightArrowPressed;
 extern bool leftArrowPressed;
 extern bool upArrowPressed;

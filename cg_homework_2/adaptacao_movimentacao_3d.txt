@@ -1,0 +1,138 @@
+===============================================================================
+RELATÓRIO DEDICADO: CONTROLE E MOVIMENTAÇÃO DO PERSONAGEM EM 3D (ITEM 3)
+Disciplina: Computação Gráfica - UERJ (Trabalho - Etapa 2, Item 3)
+===============================================================================
+
+1. INTRODUÇÃO E REQUISITO DO ENUNCIADO
+-------------------------------------------------------------------------------
+No jogo 2D da Etapa 1, a movimentação do personagem principal era puramente
+linear e restrita a um único eixo horizontal:
+- Seta para a esquerda: movia o coelho para a esquerda (-X);
+- Seta para a direita: movia o coelho para a direita (+X);
+- Seta para cima: disparava o pulo (eixo Y);
+- Seta para baixo: escondia o coelho na toca (quando sobreposta).
+
+Para a versão 3D da Etapa 2, o enunciado estabeleceu regras específicas para o
+controle por setas:
+"3. Movimentação do personagem
+Permita que o personagem principal seja controlado por meio das setas do teclado,
+de acordo com as seguintes regras:
+● Seta para cima: movimenta o personagem para frente;
+● Seta para baixo: movimenta o personagem para trás;
+● Seta para esquerda: rotaciona o personagem em torno do seu próprio eixo;
+● Seta para direita: rotaciona o personagem em torno do seu próprio eixo.
+O deslocamento para frente e para trás deve respeitar a direção para a qual o
+personagem está orientado."
+
+Este documento descreve a fundamentação matemática, a implementação em C++ e a
+integração desse sistema no arquivo "Coelho3D.cpp".
+
+
+===============================================================================
+2. ROTAÇÃO NO PRÓPRIO EIXO (SETAS ESQUERDA E DIREITA)
+-------------------------------------------------------------------------------
+A rotação do personagem em torno do seu próprio eixo vertical (eixo Y do mundo)
+é conhecida em computação gráfica e robótica como ângulo de "Yaw" (guinada).
+
+a) Variável de Estado:
+   - "anguloCoelho": armazena o ângulo em graus para onde o coelho está apontando.
+   - Convenção adotada: 0 graus corresponde a olhar no sentido do semi-eixo +X
+     (exatamente como o modelo original de perfil do coelho 2D).
+   - "VELOCIDADE_ROTACAO_COELHO = 3.5f" graus por frame (~145 graus por segundo
+     a 41.6 frames por segundo).
+
+b) Atualização nos Frames:
+   - Seta Esquerda: gira o coelho no sentido anti-horário (visto de cima),
+     aumentando o valor angular:
+       anguloCoelho += VELOCIDADE_ROTACAO_COELHO;
+   - Seta Direita: gira o coelho no sentido horário (visto de cima),
+     diminuindo o valor angular:
+       anguloCoelho -= VELOCIDADE_ROTACAO_COELHO;
+
+c) Normalização Angular no Intervalo [0, 360):
+   Para evitar estouro de ponto flutuante após longos períodos de rotação:
+     if (anguloCoelho >= 360.0f) anguloCoelho -= 360.0f;
+     if (anguloCoelho < 0.0f)    anguloCoelho += 360.0f;
+
+
+===============================================================================
+3. VETOR DIRECIONAL E DESLOCAMENTO (SETAS CIMA E BAIXO)
+-------------------------------------------------------------------------------
+Para que o personagem se mova "para frente" e "para trás" respeitando para onde
+ele está virado, é necessário converter o ângulo escalar em um vetor unitário
+direcional no plano XZ (forward vector).
+
+a) Dedução Trigonométrica:
+   Seja theta = anguloCoelho em radianos (theta = angulo * PI / 180).
+   - No eixo X: fx = cos(theta)
+   - No eixo Z: como o OpenGL adota um sistema de coordenadas onde +Z aponta em
+     direção ao observador (fora da tela) e -Z aponta para o fundo da cena,
+     girar no sentido anti-horário leva o vetor +X (0 graus) para -Z (90 graus).
+     Portanto:
+       fz = -sin(theta)
+
+   O vetor resultante f = (fx, 0, fz) possui comprimento unitário:
+     ||f|| = sqrt(cos^2(theta) + (-sin(theta))^2) = 1.0
+
+b) Deslocamento Linear:
+   - Seta para Cima (Avançar para frente):
+       coelhoX += fx * characterSpeed;
+       coelhoZ += fz * characterSpeed;
+
+   - Seta para Baixo (Recuar de marcha à ré):
+       coelhoX -= fx * (characterSpeed * 0.75f);
+       coelhoZ -= fz * (characterSpeed * 0.75f);
+     (O recuo para trás é ligeiramente mais cadenciado para conferir realismo).
+
+
+===============================================================================
+4. ANIMAÇÃO DA MARCHA E PARADA SUAVE
+-------------------------------------------------------------------------------
+O ciclo de caminhada das 4 patinhas e o balanço das orelhas foi integrado às
+novas regras:
+- Quando o jogador pressiona Seta Cima ou Seta Baixo:
+  A variável "walkPhase" avança proporcionalmente à velocidade de locomoção
+  (multiplicada por 1.8x se o turbo da cenoura estiver ativo), gerando o trote
+  das patinhas sincronizado com a velocidade real de avanço.
+- Quando o jogador gira parado (apenas Seta Esquerda ou Direita):
+  As patinhas dão pequenos passos rotacionais no lugar (walkPhase avança a 0.5x).
+- Quando nenhuma tecla está pressionada:
+  walkPhase é amortecido suavemente multiplicando por 0.8 até zerar, garantindo
+  que as 4 patinhas pousem planas no chão da grama.
+
+
+===============================================================================
+5. LIMITAÇÃO AOS LIMITES DO CAMPO (CERCA)
+-------------------------------------------------------------------------------
+Mesmo se movimentando em diagonais e curvas livres, o personagem não pode sair
+do quadrilátero delimitado pela cerca. A posição é restrita usando a função limitar():
+    coelhoX = limitar(coelhoX, CAMPO_X_MIN + RAIO_ESFERA, CAMPO_X_MAX - RAIO_ESFERA);
+    coelhoZ = limitar(coelhoZ, CAMPO_Z_MIN + RAIO_ESFERA, CAMPO_Z_MAX - RAIO_ESFERA);
+O raio da esfera (0.5) é descontado para que a colisão ocorra na borda do coelho,
+evitando que o corpo atravesse a cerca.
+
+
+===============================================================================
+6. INTEGRAÇÃO E SINERGIA COM OS MODOS DE CÂMERA
+-------------------------------------------------------------------------------
+Esse modelo de controle ("tank controls") é o padrão da indústria para jogos 3D
+e produz resultados imediatos nos dois modos de câmera:
+
+1. Na Visão Geral em (0, 10, 10):
+   - O jogador vê o coelho girar no próprio eixo e manobrar em curvas pelo campo,
+     facilitando esquivar-se de predadores e recolher vegetais em qualquer ponto.
+
+2. Na Visão em Primeira Pessoa (Tecla 'C'):
+   - Pressionar Seta Esquerda ou Seta Direita faz o jogador "girar a cabeça" em
+     360 graus para inspecionar o horizonte.
+   - Pressionar Seta Cima faz o jogador avançar diretamente na direção para onde
+     está olhando, proporcionando uma navegação em primeira pessoa intuitiva.
+
+
+===============================================================================
+7. CONCLUSÃO
+===============================================================================
+A adequação de "Coelho3D.cpp" cumpriu integralmente todos os requisitos do
+Item 3 do enunciado. O controle bidimensional simplificado da Etapa 1 foi
+substituído por um sistema de direção e locomoção tridimensional robusto,
+suave e totalmente integrado às físicas de colisão e aos modos de visualização.
