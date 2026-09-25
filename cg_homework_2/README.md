@@ -103,15 +103,16 @@ Para conferir volume, realce e contraste aos sólidos da GLUT, o pipeline de ilu
 
 ---
 
-## 4. Cenário Tridimensional: Gramado, Rolagem e Sombras
+## 4. Cenário Tridimensional: Plateau Fixo, Borda e Sombras
 
-### 4.1. Gramado Quadriculado e Rolagem Suave
-O chão do cenário foi construído como uma malha de ladrilhos quadrados de $1.0 \times 1.0$ unidades no plano $XZ$ ($Y = 0.0$), alternando dois tons de verde (claro e escuro).
-- A rolagem do cenário foi adaptada do 2D somando o deslocamento da variável `bgPos` (que decrementa por `bgSpeed` a cada frame com retorno cíclico via `std::fmod`).
-- O gramado se estende além da cerca delimitadora (de $-20.0$ a $+20.0$ em $X$) para que o surgimento de vegetais e predadores no horizonte não ocorra sobre o vazio.
+### 4.1. Plateau Fixo no Plano XZ
+O mundo do jogo é modelado como um plateau tridimensional fixo contido no plano $XZ$ ($Y = 0.0$), centrado na origem, delimitado por $X \in [-8.0, 8.0]$ e $Z \in [-6.0, 6.0]$:
+- **Superfície Quadriculada:** O topo do plateau é formado por ladrilhos quadrados de $1.0 \times 1.0$ unidades, alternando dois tons de verde, oferecendo excelente referência visual de profundidade e escala espacial.
+- **Paredes Laterais do Plateau:** Para reforçar a volumetria tridimensional de uma plataforma suspensa no espaço, foram modeladas quatro faces verticais descendo de $Y = 0.0$ até $Y = -0.5$ em tom de terra/rocha com normais voltadas para fora.
+- **Mundo Estático:** O cenário não simula rolagem de runner 2D; trata-se de uma arena tridimensional fixa na qual o coelho manobra livremente, desvia da raposa e da ave de rapina e recolhe os vegetais.
 
 ### 4.2. Cerca Delimitadora
-Ao redor do quadrilátero de movimentação ($X \in [-8.0, 8.0]$, $Z \in [-6.0, 6.0]$), uma moldura de madeira marrom espessa foi desenhada em $Y = 0.02$, visualizando com clareza os limites do campo.
+Ao redor do quadrilátero de movimentação ($X \in [-8.0, 8.0]$, $Z \in [-6.0, 6.0]$), uma moldura de madeira marrom espessa foi desenhada em $Y = 0.02$, visualizando com clareza os limites da arena.
 
 ### 4.3. Sistema de Projeção de Sombras no Solo
 Em um ambiente 3D, a ausência de sombras dificulta a percepção de altura e de alinhamento em profundidade. Para solucionar isso:
@@ -316,7 +317,12 @@ Os três vegetais foram construídos combinando sólidos GLUT e mantendo uma rot
 2. **Alface (Recuperação de Vida):** Modelada em roseta côncava com 6 folhas externas verde-escuras, 5 intermediárias mais claras e miolo esférico. Recupera 1 vida do coelho (máximo de 3).
 3. **Rabanete (Super Pulo):** Bulbo esférico carmim brilhante, raiz cônica fina branca voltada para baixo e folhas verdes no topo. Concede pulo elevado de até $Y = 3.5$.
 
-Os vegetais surgem na borda direita do mundo com $Z$ aleatório, divididos probabilisticamente entre vegetais no solo ($70\%$) e vegetais aéreos flutuantes ($30\%$), exigindo o salto para coleta.
+### 10.1. Dinâmica de Aparecimento e Tempo de Permanência no Plateau
+- **Surgimento Aleatório no Plateau:** Os itens surgem em posições $(X, Z)$ distribuídas aleatoriamente sobre o quadrilátero do plateau, com margem de segurança de 1.0 unidade em relação à cerca.
+- **Divisão de Alturas:** 70% dos vegetais surgem no nível do solo ($Y = 0.35$, coletáveis caminhando) e 30% surgem em suspensão aérea ($Y = 2.0$, exigindo o pulo com barra de espaço).
+- **Tempo de Vida de 5 Segundos:** Cada vegetal permanece ativo no plateau por exatamente 5 segundos (~208 frames a 24ms). Caso o jogador não o alcance nesse período, o item expira e desaparece da cena.
+- **Efeito Visual de Alerta:** Nos últimos 1.5 segundos de validade (~60 frames), o vegetal e sua respectiva sombra piscam na tela, avisando ao jogador que o tempo de coleta está terminando.
+- **Intervalo de Spawn (3 a 15 Segundos):** Após cada aparecimento de um vegetal, o próximo item é sorteado para surgir em um intervalo aleatório entre 3 e 15 segundos.
 
 ---
 

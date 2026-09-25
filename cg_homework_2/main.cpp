@@ -178,12 +178,15 @@ void anim(int valor) {
         moverCoelho();
         atualizarPulo();
 
-        // Rolagem do fundo, surgimento/movimento/captura dos vegetais e contagem dos bonus
-        rolarCenario();
+        // Gerenciamento dos vegetais no plateau (surgimento, permanencia de 5s e colisoes)
         controlarSurgimentoDeVegetais();
         moverVegetais();
         verificarColisaoComVegetais(coelhoX, coelhoY, coelhoZ, coelhoEscondido, vegetais);
         atualizarBonusAtivos();
+
+        // Buracos ficticios no plateau (max 2 ativos, 6s duracao, respawn 3 a 15s)
+        controlarBuracos();
+        verificarColisaoComBuracos();
 
         // Raposa (predador terrestre): surgimento aleatorio, corrida no campo e colisao
         controlarSurgimentoDaRaposa();
@@ -327,12 +330,16 @@ void display() {
                   0.0, 1.0, 0.0);                      // vetor "para cima"
     }
 
-    // Luz direcional (w = 0) vinda de cima. Deve ser posicionada DEPOIS do gluLookAt para ficar fixa no mundo.
-    GLfloat luzDirecao[] = { 0.4f, 1.0f, 0.6f, 0.0f };
+    // Duas fontes de iluminacao no referencial do mundo (Item 6 do Trabalho)
+    GLfloat luzDirecao[] = { 0.4f, 1.0f, 0.6f, 0.0f }; // Luz solar principal direcional
     glLightfv(GL_LIGHT0, GL_POSITION, luzDirecao);
 
-    // Chao e sombras primeiro (as sombras sao semitransparentes e ficam sobre o gramado)
+    GLfloat luz1Pos[] = { -6.0f, 6.0f, -5.0f, 1.0f };  // Luz pontual de preenchimento
+    glLightfv(GL_LIGHT1, GL_POSITION, luz1Pos);
+
+    // Chao, buracos e sombras primeiro (as sombras sao semitransparentes e ficam sobre o gramado)
     drawCampo();
+    drawBuracos();
     drawSombrasVegetais();
     if (!cameraPrimeiraPessoa) {
         drawSombraCoelho();
@@ -348,6 +355,7 @@ void display() {
         glPushMatrix();
             glTranslatef(foxX, foxY, foxZ);
             glRotatef(foxDirecao, 0.0f, 1.0f, 0.0f);
+            glScalef(2.0, 1.5, 2.0);
             drawFox();
         glPopMatrix();
     }
@@ -416,6 +424,7 @@ void init(void) {
     glEnable(GL_COLOR_MATERIAL); // glColor passa a definir a cor do material (ambiente + difusa)
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
+    // Fonte 0: luz principal direcional vinda de cima
     GLfloat luzAmbiente[]  = { 0.35f, 0.35f, 0.35f, 1.0f };
     GLfloat luzDifusa[]    = { 0.85f, 0.85f, 0.85f, 1.0f };
     GLfloat luzEspecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -423,9 +432,21 @@ void init(void) {
     glLightfv(GL_LIGHT0, GL_DIFFUSE,  luzDifusa);
     glLightfv(GL_LIGHT0, GL_SPECULAR, luzEspecular);
 
+    // Fonte 1: segunda fonte de iluminacao (Item 6) - luz pontual de preenchimento
+    glEnable(GL_LIGHT1);
+    GLfloat luz1Ambiente[]  = { 0.10f, 0.10f, 0.12f, 1.0f };
+    GLfloat luz1Difusa[]    = { 0.35f, 0.35f, 0.40f, 1.0f };
+    GLfloat luz1Especular[] = { 0.40f, 0.40f, 0.40f, 1.0f };
+    glLightfv(GL_LIGHT1, GL_AMBIENT,  luz1Ambiente);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE,  luz1Difusa);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, luz1Especular);
+
     // Transparencia (usada nas sombras), igual ao init do jogo 2D
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Inicializacao dos buracos no plateau
+    inicializarBuracos();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -7,18 +7,19 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::vector<Vegetal> vegetais;
 const int MAX_VEGETAIS = 15;
-int framesAteProximoVegetal = 60; // primeiro vegetal apos 60 frames, como no 2D
 
-/*No 2D os vegetais surgiam em x = 9 a 12 (logo depois da borda da tela, que ia
-ate 8) e eram descartados em x < -10. Em 3D, com perspectiva, o fundo do campo
-aparece MAIS LARGO que a frente (da para ver ate x ~ +-15 la atras), entao
-usamos uma margem maior: surgem em X = 16 a 19 e saem em X < -16. Assim eles
-nunca "aparecem do nada" dentro da area visivel.*/
-const float VEGETAL_SPAWN_X = 16.0f;
-const float VEGETAL_SAIDA_X = -16.0f;
+// Sorteia o intervalo de tempo ate o proximo vegetal (entre 3 e 15 segundos)
+// Com base em 24ms por frame: 3s = 125 frames, 15s = 625 frames
+static int sortearTempoProximoSpawn() {
+    float segundos = 3.0f + (float)(rand() % 1201) / 100.0f; // Sorteia entre 3.00s e 15.00s
+    return (int)(segundos * (1000.0f / 24.0f));
+}
+
+// O primeiro vegetal surge apos ~3 segundos do inicio
+int framesAteProximoVegetal = (int)(3.0f * (1000.0f / 24.0f));
 
 float vegetalGiro = 0.0f;
-const float VEGETAL_GIRO_POR_FRAME = 2.0f; // ~83 graus/s: giro lento, so para valorizar o 3D
+const float VEGETAL_GIRO_POR_FRAME = 2.0f; // Giro continuo sobre o proprio eixo
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Cenoura: raiz laranja (cone com a ponta para baixo) + folhas verdes (cones finos). Inclinada -45 graus, como no 2D.
@@ -153,10 +154,17 @@ void drawVegetable(TipoVegetal tipo) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Desenha cada vegetal ativo na sua posicao, girando lentamente em torno do eixo Y
+// Desenha cada vegetal ativo na sua posicao, girando no proprio eixo Y
 void drawVegetais() {
     for (const Vegetal &veg : vegetais) {
         if (!veg.ativo) continue;
+
+        // Efeito de alerta: nos ultimos 1.5 segundos (~60 frames), pisca suavemente
+        // avisando ao jogador que o item esta prestes a expirar e desaparecer
+        if (veg.tempoRestante < 60 && (veg.tempoRestante / 6) % 2 == 0) {
+            continue;
+        }
+
         glPushMatrix();
             glTranslatef(veg.x, veg.y, veg.z);
             glRotatef(vegetalGiro, 0.0f, 1.0f, 0.0f);
@@ -169,6 +177,12 @@ void drawVegetais() {
 void drawSombrasVegetais() {
     for (const Vegetal &veg : vegetais) {
         if (!veg.ativo) continue;
+
+        // Se estiver piscando perto de expirar, a sombra acompanha o efeito
+        if (veg.tempoRestante < 60 && (veg.tempoRestante / 6) % 2 == 0) {
+            continue;
+        }
+
         float raio = 0.32f - 0.04f * veg.y;
         if (raio < 0.12f) raio = 0.12f;
         drawDiscoNoChao(veg.x, veg.z, raio, 0.25f);
@@ -176,31 +190,32 @@ void drawSombrasVegetais() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*Spawn (criacao) de um novo vegetal. Mesma logica do 2D:
-1) Sorteia o tipo (0, 1 ou 2 -> CENOURA/ALFACE/RABANETE).
-2) Sorteia a altura (y): 70% de chance de faixa "baixa" (0.2 a 0.8, alcancavel
-   andando) e 30% de faixa "alta" (1.8 a 3.0, so alcancavel pulando).
-3) Sorteia o x a direita, fora da area visivel (16 a 19); o cenario rolando o
-   traz para dentro do campo.
-4) NOVO no 3D: sorteia o z dentro da largura do campo (com 0.8 de folga para
-   nao nascer colado na cerca).
-5) Reaproveita um slot inativo do pool se houver; senao cria um novo, ate MAX_VEGETAIS.*/
+/* Spawn de um novo vegetal no plateau fixo:
+   1) Sorteia o tipo (CENOURA, ALFACE ou RABANETE).
+   2) Sorteia a altura: 70% no solo (Y = 0.35, alcancavel andando) e 30% aereo (Y = 2.0, exigindo pulo).
+   3) Sorteia coordenadas (X, Z) aleatorias contidas dentro dos limites do plateau com folga da cerca.
+   4) Define o tempo de vida como 5 segundos (TEMPO_VIDA_VEGETAL_FRAMES).
+   5) Ativa no pool de vegetais. */
 void spawnVegetable() {
     TipoVegetal tipoSorteado = static_cast<TipoVegetal>(rand() % 3);
 
-    float y;
-    if (rand() % 100 < 70) {
-        y = 0.2f + (rand() % 60) / 100.0f;
-    } else {
-        y = 1.8f + (rand() % 120) / 100.0f;
+    float y = 0.35f;
+    if (rand() % 100 < 30) {
+        y = 2.0f; // Vegetal aereo: exige pulo do coelho para alcancar
     }
 
-    float x = VEGETAL_SPAWN_X + (rand() % 300) / 100.0f;
+    // Folga de 1.0 unidade para nao nascer colado na borda ou cerca do plateau
+    float folgaX = 1.0f;
+    float folgaZ = 1.0f;
+    float minX = CAMPO_X_MIN + folgaX;
+    float maxX = CAMPO_X_MAX - folgaX;
+    float minZ = CAMPO_Z_MIN + folgaZ;
+    float maxZ = CAMPO_Z_MAX - folgaZ;
 
-    float folgaZ = 0.8f;
-    float z = CAMPO_Z_MIN + folgaZ + ((rand() % 1000) / 1000.0f) * (CAMPO_Z_MAX - CAMPO_Z_MIN - 2.0f * folgaZ);
+    float x = minX + ((rand() % 1000) / 1000.0f) * (maxX - minX);
+    float z = minZ + ((rand() % 1000) / 1000.0f) * (maxZ - minZ);
 
-    // Procura um slot desativado no pool para reciclar (evita realocar memoria)
+    // Procura um slot desativado no pool para reciclar
     for (Vegetal &veg : vegetais) {
         if (!veg.ativo) {
             veg.tipo = tipoSorteado;
@@ -208,19 +223,23 @@ void spawnVegetable() {
             veg.y = y;
             veg.z = z;
             veg.ativo = true;
+            veg.tempoRestante = TEMPO_VIDA_VEGETAL_FRAMES; // 5 segundos
             return;
         }
     }
 
     // Se nao achou slot livre e ainda ha espaco no limite, cria um novo
     if ((int)vegetais.size() < MAX_VEGETAIS) {
-        Vegetal novoVegetal = { tipoSorteado, x, y, z, true };
+        Vegetal novoVegetal = { tipoSorteado, x, y, z, true, TEMPO_VIDA_VEGETAL_FRAMES };
         vegetais.push_back(novoVegetal);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Movimentacao dos vegetais ativos a cada frame: acompanham a rolagem do cenario (para -X)
+/* Atualizacao dos vegetais no plateau:
+   - Gira os vegetais sobre o proprio eixo Y para dar volume tridimensional.
+   - Decrementa o tempo de vida de cada vegetal no campo.
+   - Apos 5 segundos sem coleta, o vegetal expira e desaparece do plateau. */
 void moverVegetais() {
     vegetalGiro += VEGETAL_GIRO_POR_FRAME;
     if (vegetalGiro >= 360.0f) {
@@ -228,23 +247,25 @@ void moverVegetais() {
     }
 
     for (Vegetal &veg : vegetais) {
-        if (!veg.ativo) {
-            continue;
-        }
-        veg.x -= bgSpeed;
-        if (veg.x < VEGETAL_SAIDA_X) {
-            veg.ativo = false;
+        if (!veg.ativo) continue;
+
+        veg.tempoRestante--;
+        if (veg.tempoRestante <= 0) {
+            veg.ativo = false; // Expirou os 5 segundos sem ser coletado
         }
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Controla o tempo de spawn: primeiro apos 60 frames, depois a cada 120 a 199 frames (como no 2D)
+/* Controla o surgimento dos vegetais:
+   O tempo entre cada item de bonificacao varia de 3 a 15 segundos apos o
+   ultimo aparecimento de um vegetal. */
 void controlarSurgimentoDeVegetais() {
     framesAteProximoVegetal--;
     if (framesAteProximoVegetal <= 0) {
         spawnVegetable();
-        framesAteProximoVegetal = 120 + (rand() % 80);
+        // Sorteia novo intervalo de 3 a 15 segundos a partir deste instante
+        framesAteProximoVegetal = sortearTempoProximoSpawn();
     }
 }
 

@@ -1,38 +1,50 @@
 #pragma once
 
 // ---------------------------------------------------------------------------
-// Cenario 3D: o "campo" (quadrilatero no plano XZ) e o gramado que rola.
+// Cenario 3D: o "plateau" (quadrilatero fixo no plano XZ centrado na origem).
 //
 // Convencao de eixos adotada em todo o projeto 3D:
-//   X -> esquerda / direita   (era o X do jogo 2D)
-//   Y -> altura               (era o Y do jogo 2D; usado pelo pulo e pelos vegetais)
-//   Z -> profundidade         (eixo NOVO: +Z vem em direcao a camera)
-// O chao fica no plano Y = 0.
+//   X -> largura do plateau (-8 a +8)
+//   Y -> altura (chao do plateau em Y = 0; pulo e ave em +Y)
+//   Z -> profundidade (-6 a +6; +Z vem em direcao a camera)
 // ---------------------------------------------------------------------------
 
-const float PI_F = 3.14159265f; // (const em header: cada .cpp enxerga a sua copia, sem conflito)
+const float PI_F = 3.14159265f;
 
-// Limites do quadrilatero (retangulo) do campo, no plano XZ.
-// Em X mantemos os mesmos +-8 do glOrtho do jogo 2D.
+// Limites do quadrilatero do plateau no plano XZ
 extern const float CAMPO_X_MIN;
 extern const float CAMPO_X_MAX;
 extern const float CAMPO_Z_MIN;
 extern const float CAMPO_Z_MAX;
 
-extern const float TAMANHO_LADRILHO;  // lado de cada ladrilho do gramado
-extern const float GRAMADO_X_EXT;     // o gramado se estende de -EXT a +EXT em X (bem alem da cerca)
+extern const float TAMANHO_LADRILHO;  // Lado de cada ladrilho do gramado
 
-// Rolagem do cenario (igual ao jogo 2D): o mundo desliza para -X, dando a
-// impressao de que o coelho corre para +X.
-extern float bgSpeed;   // deslocamento por frame
-extern float bgWidth;   // periodo do deslocamento (multiplo de 2 ladrilhos, para o padrao nao "pular")
-extern float bgPos;     // deslocamento acumulado
-
-// Ceu (reaproveita a cor de "dia" do ciclo dia/noite original)
+// Ceu
 extern float skyR, skyG, skyB;
 
-void drawCampo();       // gramado (ladrilhos rolando) + cerca (borda) do quadrilatero
-void rolarCenario();    // avanca bgPos (chamada a cada frame)
+// Buracos ficticios no chao do plateau (obstaculos temporarios no solo)
+// Regras:
+//   - Maximo 2 buracos ativos simultaneamente
+//   - Cada buraco permanece ativo por ate 6 segundos
+//   - Apos fechar, um novo buraco pode surgir em um periodo de 3 a 15 segundos
+struct Buraco {
+    float x;
+    float z;
+    float raioBase;
+    bool ativo;
+    int tempoRestante; // Tempo restante ativo em frames (ate 6s = 250 frames)
+    int timerSpawn;    // Contagem regressiva ate surgir (entre 3s e 15s)
+};
+
+const int MAX_BURACOS = 2;
+extern Buraco buracos[MAX_BURACOS];
+
+void inicializarBuracos();         // Inicializa timers e estados dos buracos
+void controlarBuracos();           // Gerencia tempo de vida (6s) e novos spawns (3 a 15s)
+void drawCampo();                  // Desenha o plateau 3D (gramado quadriculado, borda e laterais)
+void drawBuracos();                // Desenha os buracos ficticios ativos no chao do plateau
+void verificarColisaoComBuracos(); // Verifica se o coelho pisou num buraco
+void rolarCenario();               // Funcao mantida por compatibilidade (sem rolagem)
 
 // Disco escuro semitransparente colado ao chao (usado nas sombras)
 void drawDiscoNoChao(float cx, float cz, float raio, float alpha);
