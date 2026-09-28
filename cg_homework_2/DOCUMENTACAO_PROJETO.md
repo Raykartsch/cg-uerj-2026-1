@@ -312,10 +312,11 @@ A ave de rapina ataca descendo velozmente dos céus em um mergulho calculado:
 
 ## 10. Vegetais de Bonificação (Power-Ups 3D)
 
-Os três vegetais foram construídos combinando sólidos GLUT e mantendo uma rotação contínua sobre o eixo vertical $Y$ (`vegetalGiro`):
-1. **Cenoura (Turbo de Velocidade):** Corpo cônico laranja (`glutSolidCone`) invertido com três anéis de relevo escuros (`glutSolidTorus`) e ramagem de quatro cones verdes abertos em leque. Concede velocidade $4\times$ maior e trote acelerado por tempo limitado.
-2. **Alface (Recuperação de Vida):** Modelada em roseta côncava com 6 folhas externas verde-escuras, 5 intermediárias mais claras e miolo esférico. Recupera 1 vida do coelho (máximo de 3).
-3. **Rabanete (Super Pulo):** Bulbo esférico carmim brilhante, raiz cônica fina branca voltada para baixo e folhas verdes no topo. Concede pulo elevado de até $Y = 3.5$.
+Os três vegetais foram construídos combinando sólidos GLUT com mapeamento de texturas UV (atendendo ao Item 2 do Trabalho) e rotação contínua sobre o eixo vertical $Y$ (`vegetalGiro`):
+1. **Cenoura (Turbo de Velocidade):** Raiz cônica revestida com a textura `textures/cenoura.bmp` via coordenadas UV paramétricas (`drawTexturedCone`), anéis escuros de relevo (`glutSolidTorus`) e ramagem de quatro cones verdes abertos em leque. Concede velocidade $4\times$ maior e trote acelerado por tempo limitado.
+2. **Alface (Recuperação de Vida):** Modelada em roseta côncava com 6 folhas externas, 5 intermediárias e miolo esférico central, todas mapeadas com a textura orgânica `textures/alface.bmp` sobre elipsoides tridimensionais (`drawElipsoide` com `drawTexturedSphere`). Recupera 1 vida do coelho (máximo de 3).
+3. **Rabanete (Super Pulo):** Bulbo esférico revestido com a textura `textures/rabanete.bmp` (`drawTexturedSphere`), raiz cônica fina branca voltada para baixo e folhagem verde no topo. Concede pulo elevado de até $Y = 3.5$.
+
 
 ### 10.1. Dinâmica de Aparecimento e Tempo de Permanência no Plateau
 - **Surgimento Aleatório no Plateau:** Os itens surgem em posições $(X, Z)$ distribuídas aleatoriamente sobre o quadrilátero do plateau, com margem de segurança de 1.0 unidade em relação à cerca.

@@ -1,6 +1,7 @@
 #include "Vegetais3D.hpp"
 #include "Cenario3D.hpp"
 #include "Coelho3D.hpp"
+#include "Texturas.hpp"
 #include <GL/glut.h>
 #include <cstdlib>
 
@@ -22,12 +23,13 @@ float vegetalGiro = 0.0f;
 const float VEGETAL_GIRO_POR_FRAME = 2.0f; // Giro continuo sobre o proprio eixo
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Cenoura: raiz laranja (cone com a ponta para baixo) + folhas verdes (cones finos). Inclinada -45 graus, como no 2D.
+// Cenoura: raiz revestida com textura (cone com a ponta para baixo) + folhas verdes (cones finos). Inclinada -45 graus, como no 2D.
 void drawCarrot() {
     glPushMatrix();
         glRotatef(-45.0f, 0, 0, 1); // Inclina toda a cenoura
 
         // Folhas: 3 folhas abertas em leque em volta do eixo vertical...
+        glDisable(GL_TEXTURE_2D);
         glColor3f(0.243f, 0.556f, 0.180f);
         for (int i = 0; i < 3; i++) {
             glPushMatrix();
@@ -42,13 +44,16 @@ void drawCarrot() {
             glutSolidCone(0.06, 0.75, 10, 2);
         glPopMatrix();
 
-        // Raiz: cone com a ponta para baixo (rotacao de +90 em X leva +Z para -Y)
-        glColor3f(0.95f, 0.52f, 0.13f);
+        // Raiz: cone com a ponta para baixo revestido com a textura da cenoura
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, texCenoura);
+        glColor3f(1.0f, 1.0f, 1.0f);
         glPushMatrix();
             glRotatef(90.0f, 1, 0, 0);
-            glutSolidCone(0.16, 1.1, 24, 6);
+            drawTexturedCone(0.16f, 1.1f, 24, 8);
 
             // Sulcos da cenoura: aneis finos, mais escuros, cujo raio acompanha o afilamento do cone
+            glDisable(GL_TEXTURE_2D);
             glColor3f(0.80f, 0.40f, 0.08f);
             for (int i = 0; i < 3; i++) {
                 float profundidade = 0.25f + 0.25f * i;              // distancia da base do cone
@@ -59,30 +64,36 @@ void drawCarrot() {
                 glPopMatrix();
             }
         glPopMatrix();
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_TEXTURE_2D);
     glPopMatrix();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Elipsoide = esfera unitaria esticada. E a "folha" da alface e do rabanete.
+// Elipsoide com coordenadas de textura UV. E a "folha" da alface e o bulbo do rabanete.
 static void drawElipsoide(float rx, float ry, float rz) {
     glPushMatrix();
         glScalef(rx, ry, rz);
-        glutSolidSphere(1.0, 16, 12);
+        drawTexturedSphere(1.0f, 16, 12);
     glPopMatrix();
 }
 
-/*Alface: uma roseta de folhas em camadas, como o 2D (discos escuros por fora,
-intermediarios, e um miolo claro), agora em volume: 6 folhas externas
-escuras, 5 folhas intermediarias mais claras e o miolo. As folhas sao
-elipsoides achatados, inclinados para cima nas pontas (formato de tigela).*/
+/* Alface: uma roseta de folhas em camadas revestidas com a textura texAlface,
+agora em volume tridimensional: 6 folhas externas escuras, 5 folhas intermediarias
+mais claras e o miolo esferico central. As folhas sao elipsoides achatados
+inclinados para cima nas pontas (formato de tigela). */
 void drawLettuce() {
-    glPushMatrix();
-        glTranslatef(0.0f, -0.10f, 0.0f); // centraliza a cabeca de alface na origem (como o centro do 2D)
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texAlface);
 
-        // Camada externa (escura)
+    glPushMatrix();
+        glTranslatef(0.0f, -0.10f, 0.0f); // centraliza a cabeca de alface na origem
+
+        // Camada externa (folhas externas com tom verde de base sob a textura)
         for (int i = 0; i < 6; i++) {
-            if (i % 2 == 0) glColor3f(0.25f, 0.55f, 0.15f);
-            else            glColor3f(0.30f, 0.60f, 0.18f);
+            if (i % 2 == 0) glColor3f(0.80f, 0.95f, 0.75f);
+            else            glColor3f(0.85f, 1.00f, 0.80f);
             glPushMatrix();
                 glRotatef(i * 60.0f, 0, 1, 0);
                 glTranslatef(0.18f, 0.06f, 0.0f);
@@ -91,8 +102,8 @@ void drawLettuce() {
             glPopMatrix();
         }
 
-        // Camada intermediaria
-        glColor3f(0.40f, 0.70f, 0.20f);
+        // Camada intermediaria (folhas intermediarias mais claras)
+        glColor3f(0.90f, 1.00f, 0.85f);
         for (int i = 0; i < 5; i++) {
             glPushMatrix();
                 glRotatef(30.0f + i * 72.0f, 0, 1, 0);
@@ -102,19 +113,23 @@ void drawLettuce() {
             glPopMatrix();
         }
 
-        // Miolo claro
-        glColor3f(0.60f, 0.85f, 0.25f);
+        // Miolo claro texturizado
+        glColor3f(1.0f, 1.0f, 1.0f);
         glPushMatrix();
             glTranslatef(0.0f, 0.15f, 0.0f);
-            glutSolidSphere(0.18, 16, 16);
+            drawTexturedSphere(0.18f, 16, 16);
         glPopMatrix();
     glPopMatrix();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Rabanete: bulbo vermelho (esfera), ponta branca (cone com a ponta para baixo) e folhas verdes no topo.
+// Rabanete: bulbo texturizado (esfera com texRabanete), ponta branca (cone para baixo) e folhas verdes no topo.
 void drawRadish() {
-    // Folhas: 3 abertas em leque + 1 central
+    // Folhas: 3 abertas em leque + 1 central (cones verdes sem textura)
+    glDisable(GL_TEXTURE_2D);
     glColor3f(0.243f, 0.556f, 0.180f);
     for (int i = 0; i < 3; i++) {
         glPushMatrix();
@@ -130,18 +145,25 @@ void drawRadish() {
         glutSolidCone(0.05, 0.45, 10, 2);
     glPopMatrix();
 
-    // Bulbo vermelho
-    glColor3f(0.86f, 0.24f, 0.35f);
+    // Bulbo avermelhado com textura de rabanete
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texRabanete);
+    glColor3f(1.0f, 1.0f, 1.0f);
     drawElipsoide(0.22f, 0.24f, 0.22f);
 
     // Ponta branca (raiz fina)
+    glDisable(GL_TEXTURE_2D);
     glColor3f(1.0f, 1.0f, 1.0f);
     glPushMatrix();
         glTranslatef(0.0f, -0.19f, 0.0f);
         glRotatef(90.0f, 1, 0, 0);
         glutSolidCone(0.09, 0.22, 16, 2);
     glPopMatrix();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Centraliza a escolha de qual modelo desenhar de acordo com o tipo do vegetal

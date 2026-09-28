@@ -1,6 +1,7 @@
 #include "Raposa3D.hpp"
 #include "Cenario3D.hpp"
 #include "Coelho3D.hpp"
+#include "Texturas.hpp"
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>
@@ -45,7 +46,7 @@ int framesAteProximaRaposa = 180;        // Primeira raposa surge apos alguns se
 static void drawElipsoideRaposa(float rx, float ry, float rz, int fatias = 18, int pilhas = 18) {
     glPushMatrix();
         glScalef(rx, ry, rz);
-        glutSolidSphere(1.0, fatias, pilhas);
+        drawTexturedSphere(1.0f, fatias, pilhas);
     glPopMatrix();
 }
 
@@ -53,6 +54,9 @@ static void drawElipsoideRaposa(float rx, float ry, float rz, int fatias = 18, i
 // Desenha um olho da raposa (globo amendoado preto + reflexo branco)
 static void desenharOlhoRaposa(bool olhoEsquerdo) {
     float sinalZ = olhoEsquerdo ? 1.0f : -1.0f;
+
+    // Desativa a textura para o olho (globo preto puro com brilho branco)
+    glDisable(GL_TEXTURE_2D);
 
     glPushMatrix();
         // Posiciona o olho na lateral superior da cabeca
@@ -69,6 +73,8 @@ static void desenharOlhoRaposa(bool olhoEsquerdo) {
             glutSolidSphere(0.014, 8, 8);
         glPopMatrix();
     glPopMatrix();
+
+    glEnable(GL_TEXTURE_2D);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -218,12 +224,14 @@ static void desenharCabecaRaposa(float earLeftSwing, float earRightSwing) {
             drawElipsoideRaposa(0.16f, 0.06f, 0.09f, 14, 14);
         glPopMatrix();
 
-        // 5. Trufa preta do focinho (nariz)
+        // 5. Trufa preta do focinho (nariz sem textura)
+        glDisable(GL_TEXTURE_2D);
         glColor3f(0.05f, 0.05f, 0.05f);
         glPushMatrix();
             glTranslatef(0.38f, -0.02f, 0.0f);
             glutSolidSphere(0.042, 12, 12);
         glPopMatrix();
+        glEnable(GL_TEXTURE_2D);
 
         // 6. Olhos amendoados
         desenharOlhoRaposa(true);   // Olho esquerdo (+Z)
@@ -282,6 +290,10 @@ void drawFox() {
     GLfloat semBrilho[]     = { 0.0f,  0.0f,  0.0f,  1.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, especularPelo);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0f);
+
+    // Habilita a textura de pelagem da raposa
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texRaposa);
 
     // =========================================================================
     // 1. CORPO PRINCIPAL (TRONCO - NO RAIZ DA HIERARQUIA)
@@ -356,7 +368,9 @@ void drawFox() {
     // =========================================================================
     desenharCabecaRaposa(earLeftSwing, earRightSwing);
 
-    // Restaura material padrao sem brilho
+    // Desativa a textura e restaura material padrao sem brilho
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, semBrilho);
 }
 

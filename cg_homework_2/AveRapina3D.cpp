@@ -1,6 +1,7 @@
 #include "AveRapina3D.hpp"
 #include "Cenario3D.hpp"
 #include "Coelho3D.hpp"
+#include "Texturas.hpp"
 #include <GL/glut.h>
 #include <cmath>
 #include <cstdlib>
@@ -26,7 +27,7 @@ int framesAteProximaAve = 300; // Primeira ave surge apos cerca de 7 segundos
 static void drawElipsoideAve(float rx, float ry, float rz, int fatias = 16, int pilhas = 16) {
     glPushMatrix();
         glScalef(rx, ry, rz);
-        glutSolidSphere(1.0, fatias, pilhas);
+        drawTexturedSphere(1.0f, fatias, pilhas);
     glPopMatrix();
 }
 
@@ -34,6 +35,9 @@ static void drawElipsoideAve(float rx, float ry, float rz, int fatias = 16, int 
 // Desenha um olho feroz de ave de rapina (iris dourada + pupila preta + reflexo branco)
 static void desenharOlhoAve(bool olhoEsquerdo) {
     float sinalZ = olhoEsquerdo ? 1.0f : -1.0f;
+
+    // Desativa a textura para o olho (iris dourada brilhante, pupila preta e reflexo branco)
+    glDisable(GL_TEXTURE_2D);
 
     glPushMatrix();
         // Posicionado na lateral superior da cabeca
@@ -57,6 +61,8 @@ static void desenharOlhoAve(bool olhoEsquerdo) {
             glutSolidSphere(0.010, 8, 8);
         glPopMatrix();
     glPopMatrix();
+
+    glEnable(GL_TEXTURE_2D);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +169,8 @@ static void desenharCabecaAve() {
         desenharOlhoAve(true);   // Olho esquerdo (+Z)
         desenharOlhoAve(false);  // Olho direito (-Z)
 
-        // 4. Bico Curvo de Rapina (Amarelo / Dourado brilhante)
+        // 4. Bico Curvo de Rapina (Amarelo / Dourado brilhante liso sem textura)
+        glDisable(GL_TEXTURE_2D);
         glColor3f(1.0f, 0.77f, 0.10f);
         glPushMatrix();
             glTranslatef(0.16f, -0.02f, 0.0f);
@@ -180,6 +187,7 @@ static void desenharCabecaAve() {
             glTranslatef(0.14f, 0.01f, 0.0f);
             drawElipsoideAve(0.06f, 0.07f, 0.08f, 10, 10);
         glPopMatrix();
+        glEnable(GL_TEXTURE_2D);
 
     glPopMatrix(); // Fim da Cabeca
 }
@@ -187,6 +195,7 @@ static void desenharCabecaAve() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Desenha as garras da ave recolhidas sob o ventre
 static void desenharGarrasAve() {
+    glDisable(GL_TEXTURE_2D); // Garras douradas sem textura
     glColor3f(1.0f, 0.77f, 0.10f); // Amarelo/dourado
     for (int i = -1; i <= 1; i += 2) {
         glPushMatrix();
@@ -201,6 +210,7 @@ static void desenharGarrasAve() {
             glPopMatrix();
         glPopMatrix();
     }
+    glEnable(GL_TEXTURE_2D);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,6 +253,10 @@ void drawBird() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, especular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 25.0f);
 
+    // Habilita a textura de penas na ave de rapina
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texAve);
+
     // =========================================================================
     // 1. CORPO (TRONCO PRINCIPAL - NO RAIZ DA HIERARQUIA)
     // Elipsoide fusiforme aerodinamico.
@@ -278,7 +292,9 @@ void drawBird() {
     desenharAsaAve(wingAngle, true);   // Asa esquerda (+Z)
     desenharAsaAve(wingAngle, false);  // Asa direita (-Z)
 
-    // Restaura material padrao sem brilho
+    // Desativa a textura e restaura material padrao sem brilho
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, semBrilho);
 }
 

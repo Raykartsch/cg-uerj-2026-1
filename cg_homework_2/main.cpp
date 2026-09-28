@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
+#include "Texturas.hpp"
 #include "Coelho3D.hpp"
 #include "Cenario3D.hpp"
 #include "Vegetais3D.hpp"
@@ -29,6 +30,7 @@
 incluidos diretamente aqui, formando uma unica unidade de compilacao. Por
 isso basta compilar o main.cpp; NAO passe os outros .cpp ao g++, senao
 havera erro de "multiple definition".*/
+#include "Texturas.cpp"
 #include "Cenario3D.cpp"
 #include "Coelho3D.cpp"
 #include "Vegetais3D.cpp"
@@ -216,6 +218,7 @@ void drawText(float x, float y, const char *texto) {
 /*HUD (mesmos avisos do 2D): vidas e status dos bonus. Texto e feito numa
 projecao 2D (em pixels) sobreposta a cena 3D, sem iluminacao nem z-buffer.*/
 void drawHUD() {
+    glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
 
@@ -444,6 +447,14 @@ void init(void) {
     // Transparencia (usada nas sombras), igual ao init do jogo 2D
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Habilita o uso de texturas 2D e define o modo de combinacao:
+    // GL_MODULATE multiplica a cor do material/iluminacao pela cor
+    // do texel, preservando o efeito da iluminacao sobre a textura.
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+    carregarTodasTexturas();
 
     // Inicializacao dos buracos no plateau
     inicializarBuracos();

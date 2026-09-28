@@ -42,6 +42,7 @@ extern Buraco buracos[MAX_BURACOS];
 void inicializarBuracos();         // Inicializa timers e estados dos buracos
 void controlarBuracos();           // Gerencia tempo de vida (6s) e novos spawns (3 a 15s)
 void drawCampo();                  // Desenha o plateau 3D (gramado quadriculado, borda e laterais)
+void drawCerca();                  // Desenha as cercas 3D de madeira texturizada ao redor do plateau
 void drawBuracos();                // Desenha os buracos ficticios ativos no chao do plateau
 void verificarColisaoComBuracos(); // Verifica se o coelho pisou num buraco
 void rolarCenario();               // Funcao mantida por compatibilidade (sem rolagem)

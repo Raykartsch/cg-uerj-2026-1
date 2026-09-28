@@ -1,5 +1,6 @@
 #include "Coelho3D.hpp"
 #include "Cenario3D.hpp"
+#include "Texturas.hpp"
 #include <GL/glut.h>
 #include <cmath>
 
@@ -244,13 +245,16 @@ void atualizarBonusAtivos() {
 static void drawElipsoideCoelho(float rx, float ry, float rz, int fatias = 20, int pilhas = 20) {
     glPushMatrix();
         glScalef(rx, ry, rz);
-        glutSolidSphere(1.0, fatias, pilhas);
+        drawTexturedSphere(1.0f, fatias, pilhas);
     glPopMatrix();
 }
 
 // Desenha um olho completo (globo ocular preto brilhante + pontinho reflexivo de luz branca)
 static void desenharOlho(bool olhoEsquerdo) {
     float sinalZ = olhoEsquerdo ? 1.0f : -1.0f;
+
+    // Desativa a textura para o olho (globo preto puro com brilho especular branco)
+    glDisable(GL_TEXTURE_2D);
 
     glPushMatrix();
         // Posiciona o olho na lateral da cabeca (visao panoramica natural de presas)
@@ -267,6 +271,8 @@ static void desenharOlho(bool olhoEsquerdo) {
             glutSolidSphere(0.016, 8, 8);
         glPopMatrix();
     glPopMatrix();
+
+    glEnable(GL_TEXTURE_2D);
 }
 
 // Desenha uma orelha completa: parte externa (creme) + parte interna rosada (cavidade)
@@ -337,10 +343,11 @@ static void desenharCabeca(float earLeftSwing, float earRightSwing) {
         glColor3f(0.90f, 0.42f, 0.54f);
         glPushMatrix();
             glTranslatef(0.25f, -0.02f, 0.0f);
-            glutSolidSphere(0.042, 12, 12);
+            drawTexturedSphere(0.042f, 12, 12);
         glPopMatrix();
 
-        // 4. Dentinhos brancos de coelho logo abaixo do nariz
+        // 4. Dentinhos brancos lisos de coelho logo abaixo do nariz (sem textura)
+        glDisable(GL_TEXTURE_2D);
         glColor3f(1.0f, 1.0f, 1.0f);
         // Dente esquerdo
         glPushMatrix();
@@ -354,6 +361,7 @@ static void desenharCabeca(float earLeftSwing, float earRightSwing) {
             glScalef(0.025f, 0.045f, 0.022f);
             glutSolidCube(1.0);
         glPopMatrix();
+        glEnable(GL_TEXTURE_2D);
 
         // 5. Olhos esquerdo e direito (com reflexos de luz)
         desenharOlho(true);   // Olho esquerdo (+Z)
@@ -396,6 +404,10 @@ void drawRabbit() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, especularPelo);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 25.0f);
 
+    // Habilita a textura de tecido/pelagem no coelho
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texCoelho);
+
     // =========================================================================
     // 1. CORPO (TRONCO PRINCIPAL - NO RAIZ DA HIERARQUIA)
     // Origem (0, 0, 0) no centro de gravidade do coelho.
@@ -410,7 +422,7 @@ void drawRabbit() {
     glPushMatrix();
         glTranslatef(-0.43f, 0.06f + (legRightLift * 0.12f), 0.0f);
         glColor3f(0.96f, 0.93f, 0.89f);
-        glutSolidSphere(0.11, 16, 16);
+        drawTexturedSphere(0.11f, 16, 16);
     glPopMatrix();
 
     // =========================================================================
@@ -447,7 +459,9 @@ void drawRabbit() {
     // =========================================================================
     desenharCabeca(earLeftSwing, earRightSwing);
 
-    // Restaura o material padrao sem brilho para os proximos objetos da cena
+    // Desativa a textura e restaura o material padrao sem brilho para os proximos objetos
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, semBrilho);
 }
 

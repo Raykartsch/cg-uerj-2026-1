@@ -1,5 +1,6 @@
 #include "Cenario3D.hpp"
 #include "Coelho3D.hpp"
+#include "Texturas.hpp"
 #include <GL/glut.h>
 #include <cmath>
 
@@ -31,37 +32,199 @@ void rolarCenario() {
    2. Laterais do plateau: paredes verticais descendo de Y = 0.0 ate Y = -0.5 em tom
       de terra/rocha, dando a sensacao de uma plataforma suspensa no cenario.
    3. Borda perimetral: moldura de madeira marrom delimitando a area jogavel. */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/* Desenha a cerca 3D de madeira ao redor de todo o perimetro do plateau (X_MIN, X_MAX, Z_MIN, Z_MAX).
+   Modelada com base na cerca do cg_homework_1:
+   - Mourões verticais (pés da cerca): postes retangulares verticais em tom de madeira escura
+     (cor 0.662, 0.443, 0.247 de cg_homework_1).
+   - Travessões horizontais (pedaços deitados da cerca): duas ripas paralelas (inferior e superior)
+     em tom de madeira mais clara (cor 0.752, 0.541, 0.321 de cg_homework_1).
+   - Texturizada com texMadeira (textures/madeira.bmp) via drawTexturedCube. */
+void drawCerca() {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texMadeira);
+
+    const int numIntervalosX = 10;
+    const float passoX = (CAMPO_X_MAX - CAMPO_X_MIN) / numIntervalosX; // 1.6f
+
+    const int numIntervalosZ = 8;
+    const float passoZ = (CAMPO_Z_MAX - CAMPO_Z_MIN) / numIntervalosZ; // 1.5f
+
+    const float altPoste = 0.70f;
+    const float largPoste = 0.12f;
+    const float yCentroPoste = altPoste / 2.0f; // 0.35f
+
+    const float altBarraInf = 0.22f;
+    const float altBarraSup = 0.50f;
+    const float espessuraBarra = 0.05f;
+    const float alturaBarra = 0.08f;
+
+    // -------------------------------------------------------------------------
+    // 1. Mourões verticais (pés da cerca - cor marrom mais escura como em cg_homework_1)
+    // -------------------------------------------------------------------------
+    glColor3f(0.662f, 0.443f, 0.247f);
+
+    // Mourões dos lados Norte (Z_MIN) e Sul (Z_MAX), incluindo os 4 cantos
+    for (int i = 0; i <= numIntervalosX; i++) {
+        float x = CAMPO_X_MIN + i * passoX;
+
+        // Mourão Norte (Z_MIN)
+        glPushMatrix();
+        glTranslatef(x, yCentroPoste, CAMPO_Z_MIN);
+        glScalef(largPoste, altPoste, largPoste);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Mourão Sul (Z_MAX)
+        glPushMatrix();
+        glTranslatef(x, yCentroPoste, CAMPO_Z_MAX);
+        glScalef(largPoste, altPoste, largPoste);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+    }
+
+    // Mourões intermediarios dos lados Oeste (X_MIN) e Leste (X_MAX) (evita duplicar os cantos)
+    for (int j = 1; j < numIntervalosZ; j++) {
+        float z = CAMPO_Z_MIN + j * passoZ;
+
+        // Mourão Oeste (X_MIN)
+        glPushMatrix();
+        glTranslatef(CAMPO_X_MIN, yCentroPoste, z);
+        glScalef(largPoste, altPoste, largPoste);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Mourão Leste (X_MAX)
+        glPushMatrix();
+        glTranslatef(CAMPO_X_MAX, yCentroPoste, z);
+        glScalef(largPoste, altPoste, largPoste);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. Travessões horizontais (pedaços deitados da cerca - cor marrom mais clara como em cg_homework_1)
+    // -------------------------------------------------------------------------
+    glColor3f(0.752f, 0.541f, 0.321f);
+
+    // Barras horizontais ao longo do eixo X (Norte e Sul)
+    for (int i = 0; i < numIntervalosX; i++) {
+        float xCentro = CAMPO_X_MIN + (i + 0.5f) * passoX;
+
+        // Barra inferior Norte
+        glPushMatrix();
+        glTranslatef(xCentro, altBarraInf, CAMPO_Z_MIN);
+        glScalef(passoX, alturaBarra, espessuraBarra);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Barra superior Norte
+        glPushMatrix();
+        glTranslatef(xCentro, altBarraSup, CAMPO_Z_MIN);
+        glScalef(passoX, alturaBarra, espessuraBarra);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Barra inferior Sul
+        glPushMatrix();
+        glTranslatef(xCentro, altBarraInf, CAMPO_Z_MAX);
+        glScalef(passoX, alturaBarra, espessuraBarra);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Barra superior Sul
+        glPushMatrix();
+        glTranslatef(xCentro, altBarraSup, CAMPO_Z_MAX);
+        glScalef(passoX, alturaBarra, espessuraBarra);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+    }
+
+    // Barras horizontais ao longo do eixo Z (Oeste e Leste)
+    for (int j = 0; j < numIntervalosZ; j++) {
+        float zCentro = CAMPO_Z_MIN + (j + 0.5f) * passoZ;
+
+        // Barra inferior Oeste
+        glPushMatrix();
+        glTranslatef(CAMPO_X_MIN, altBarraInf, zCentro);
+        glScalef(espessuraBarra, alturaBarra, passoZ);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Barra superior Oeste
+        glPushMatrix();
+        glTranslatef(CAMPO_X_MIN, altBarraSup, zCentro);
+        glScalef(espessuraBarra, alturaBarra, passoZ);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Barra inferior Leste
+        glPushMatrix();
+        glTranslatef(CAMPO_X_MAX, altBarraInf, zCentro);
+        glScalef(espessuraBarra, alturaBarra, passoZ);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+
+        // Barra superior Leste
+        glPushMatrix();
+        glTranslatef(CAMPO_X_MAX, altBarraSup, zCentro);
+        glScalef(espessuraBarra, alturaBarra, passoZ);
+        drawTexturedCube(1.0f);
+        glPopMatrix();
+    }
+
+    // Restaura cor padrao e desativa textura
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+}
+
 void drawCampo() {
     int qtdX = (int)((CAMPO_X_MAX - CAMPO_X_MIN) / TAMANHO_LADRILHO);
     int qtdZ = (int)((CAMPO_Z_MAX - CAMPO_Z_MIN) / TAMANHO_LADRILHO);
 
     // -------------------------------------------------------------------------
-    // 1. Superficie superior do plateau (Y = 0.0)
+    // 1. Superficie superior do plateau (Y = 0.0) com textura de gramado/chao
     // -------------------------------------------------------------------------
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texChao);
+
     glNormal3f(0.0f, 1.0f, 0.0f);
+    // Cor branca uniforme para que a textura seja exibida com suas cores reais e de forma homogenea
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    // Fator de repeticao da textura ao longo de todo o plateau (como no drawFloor da aula)
+    float repX = 4.0f; // Repete 4 vezes na largura X
+    float repZ = 3.0f; // Repete 3 vezes na profundidade Z
+
     glBegin(GL_QUADS);
     for (int i = 0; i < qtdX; i++) {
         float x0 = CAMPO_X_MIN + i * TAMANHO_LADRILHO;
         float x1 = x0 + TAMANHO_LADRILHO;
 
+        // Coordenadas U continuas ao longo de X
+        float u0 = ((x0 - CAMPO_X_MIN) / (CAMPO_X_MAX - CAMPO_X_MIN)) * repX;
+        float u1 = ((x1 - CAMPO_X_MIN) / (CAMPO_X_MAX - CAMPO_X_MIN)) * repX;
+
         for (int j = 0; j < qtdZ; j++) {
             float z0 = CAMPO_Z_MIN + j * TAMANHO_LADRILHO;
             float z1 = z0 + TAMANHO_LADRILHO;
 
-            if ((i + j) % 2 == 0) {
-                glColor3f(0.549f, 0.776f, 0.247f); // Verde claro da grama
-            } else {
-                glColor3f(0.490f, 0.700f, 0.210f); // Tom de verde ligeiramente mais escuro
-            }
+            // Coordenadas V continuas ao longo de Z
+            float v0 = ((z0 - CAMPO_Z_MIN) / (CAMPO_Z_MAX - CAMPO_Z_MIN)) * repZ;
+            float v1 = ((z1 - CAMPO_Z_MIN) / (CAMPO_Z_MAX - CAMPO_Z_MIN)) * repZ;
 
-            // Ordem anti-horaria vista de cima (+Y)
-            glVertex3f(x0, 0.0f, z0);
-            glVertex3f(x0, 0.0f, z1);
-            glVertex3f(x1, 0.0f, z1);
-            glVertex3f(x1, 0.0f, z0);
+            // Mapeamento continuo e uniforme: a textura flui pelo campo sem cortes
+            glTexCoord2f(u0, v0); glVertex3f(x0, 0.0f, z0);
+            glTexCoord2f(u0, v1); glVertex3f(x0, 0.0f, z1);
+            glTexCoord2f(u1, v1); glVertex3f(x1, 0.0f, z1);
+            glTexCoord2f(u1, v0); glVertex3f(x1, 0.0f, z0);
         }
     }
     glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
 
     // -------------------------------------------------------------------------
     // 2. Laterais do plateau (paredes de terra de Y = 0.0 ate Y = -0.5)
@@ -100,19 +263,9 @@ void drawCampo() {
     glEnd();
 
     // -------------------------------------------------------------------------
-    // 3. Moldura de madeira (cerca do quadrilatero)
+    // 3. Cerca 3D de madeira texturizada ao redor de todo o perimetro do plateau
     // -------------------------------------------------------------------------
-    glDisable(GL_LIGHTING);
-    glColor3f(0.662f, 0.443f, 0.247f);
-    glLineWidth(4.0f);
-    glBegin(GL_LINE_LOOP);
-        glVertex3f(CAMPO_X_MIN, 0.02f, CAMPO_Z_MIN);
-        glVertex3f(CAMPO_X_MIN, 0.02f, CAMPO_Z_MAX);
-        glVertex3f(CAMPO_X_MAX, 0.02f, CAMPO_Z_MAX);
-        glVertex3f(CAMPO_X_MAX, 0.02f, CAMPO_Z_MIN);
-    glEnd();
-    glLineWidth(1.0f);
-    glEnable(GL_LIGHTING);
+    drawCerca();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
