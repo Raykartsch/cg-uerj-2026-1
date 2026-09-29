@@ -47,4 +47,4 @@ void drawSombraRaposa();                // Sombra eliptica projetada no chao sob
 void spawnRaposa();                     // Spawna a raposa na borda do campo
 void controlarSurgimentoDaRaposa();     // Controla o intervalo aleatorio entre passagens
 void moverRaposa();                     // Atualiza a posicao e as fases de animacao
-void verificarColisaoComRaposa();       // Verifica colisao 3D com o coelho
+// Obs: verificarColisaoComRaposa() foi migrada para SistemaColisao3D.hpp/cpp

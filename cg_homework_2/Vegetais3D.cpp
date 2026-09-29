@@ -221,7 +221,7 @@ void drawSombrasVegetais() {
 void spawnVegetable() {
     TipoVegetal tipoSorteado = static_cast<TipoVegetal>(rand() % 3);
 
-    float y = 0.35f;
+    float y = 0.5f;
     if (rand() % 100 < 30) {
         y = 2.0f; // Vegetal aereo: exige pulo do coelho para alcancar
     }

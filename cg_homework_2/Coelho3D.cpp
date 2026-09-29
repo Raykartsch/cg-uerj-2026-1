@@ -16,11 +16,11 @@ float coelhoZ = 0.0f;
 float anguloCoelho = 0.0f; // olhando para +X, como o coelho 2D (direcaoCoelho = 1)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const float VELOCIDADE_NORMAL = 0.05f;
+const float VELOCIDADE_NORMAL = 0.1f;
 float characterSpeed = VELOCIDADE_NORMAL;
 
 // Velocidade de rotacao do coelho em torno do proprio eixo (graus por frame - Item 3 do Trabalho)
-const float VELOCIDADE_ROTACAO_COELHO = 3.5f;
+const float VELOCIDADE_ROTACAO_COELHO = 4.5f;
 
 // Buff da cenoura (turbo): mesmos valores do 2D
 const float VELOCIDADE_TURBO = 0.20f;

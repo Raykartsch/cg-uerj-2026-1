@@ -8,7 +8,7 @@
 //
 // Windows (terminal MSYS2 UCRT64):
 //   g++ main.cpp -o main -lfreeglut -lglu32 -lopengl32
-//   ./main.exe
+//   .\main.exe
 //
 // Controles: setas = mover no plano XZ | ESPACO = pular | ESC = sair
 //            V = (TESTE) tira uma vida, para poder testar a alface
@@ -88,10 +88,18 @@ const float PITCH_MAX           = 85.0f;  // Limite superior (olhar para o ceu, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Chamada quando uma tecla de seta e pressionada
 void arrowKeysDown(int key, int x, int y) {
-    if (key == GLUT_KEY_RIGHT)     rightArrowPressed = true;
-    if (key == GLUT_KEY_LEFT)      leftArrowPressed = true;
-    if (key == GLUT_KEY_UP)        upArrowPressed = true;
-    if (key == GLUT_KEY_DOWN)      downArrowPressed = true;
+    if (key == GLUT_KEY_RIGHT) {
+        rightArrowPressed = true;
+    }
+    if (key == GLUT_KEY_LEFT) {
+        leftArrowPressed = true;
+    }         
+    if (key == GLUT_KEY_UP) {        
+        upArrowPressed = true;
+    }
+    if (key == GLUT_KEY_DOWN){ 
+        downArrowPressed = true;
+    }
     if (key == GLUT_KEY_PAGE_UP) {
         // Item 8: Olhar para cima na visao em 1ª pessoa
         if (cameraPrimeiraPessoa) {

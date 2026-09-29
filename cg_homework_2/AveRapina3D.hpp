@@ -38,4 +38,4 @@ void drawSombraAve();                   // Sombra dinamica no chao (varia com a 
 void spawnAve(float targetX, float targetZ); // Inicia o mergulho aereo mirando no alvo
 void controlarSurgimentoDaAve(float coelhoX, float coelhoZ); // Temporizador de ataque
 void moverAve();                        // Atualiza a trajetoria parabolica e o bater de asas
-void verificarColisaoComAve();          // Colisao esferica 3D com o coelho
+// Obs: verificarColisaoComAve() foi migrada para SistemaColisao3D.hpp/cpp

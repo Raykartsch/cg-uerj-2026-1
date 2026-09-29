@@ -364,22 +364,3 @@ void moverAve() {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Verifica colisao 3D por distancia esferica euclidiana entre a ave e o coelho
-void verificarColisaoComAve() {
-    if (!aveActive || aveJaTirouVida || coelhoEscondido) return;
-
-    float dx = aveX - coelhoX;
-    float dy = aveY - coelhoY;
-    float dz = aveZ - coelhoZ;
-    float distancia = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-    float raioColisao = 0.95f;
-
-    if (distancia < raioColisao) {
-        if (rabbitLives > 0) {
-            rabbitLives--;
-        }
-        aveJaTirouVida = true; // Trava para tirar no maximo uma vida por mergulho
-    }
-}

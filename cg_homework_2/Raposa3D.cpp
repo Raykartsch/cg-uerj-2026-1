@@ -433,25 +433,3 @@ void moverRaposa() {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Verifica colisao 3D entre a raposa e o coelho
-void verificarColisaoComRaposa() {
-    if (!foxActive || foxJaTirouVidaNestaPassagem || coelhoEscondido) return;
-
-    float dx = foxX - coelhoX;
-    float dy = foxY - coelhoY;
-    float dz = foxZ - coelhoZ;
-    float distancia = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-    // Se o coelho pulou alto por cima da raposa, ele se esquiva com sucesso!
-    if (coelhoY > 1.35f && std::abs(dz) < 0.8f) {
-        return; // Esquivou do ataque
-    }
-
-    if (distancia < RAIO_COLISAO_RAPOSA) {
-        if (rabbitLives > 0) {
-            rabbitLives--;
-        }
-        foxJaTirouVidaNestaPassagem = true; // Uma vida por passagem
-    }
-}
