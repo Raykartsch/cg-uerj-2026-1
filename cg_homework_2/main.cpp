@@ -112,9 +112,13 @@ void arrowKeysDown(int key, int x, int y) {
         // Item 8: Olhar para cima na visao em 1ª pessoa (ou Zoom-in na visao geral)
         if (cameraPrimeiraPessoa) {
             pitchOlharPrimeiraPessoa += PITCH_PASSO;
-            if (pitchOlharPrimeiraPessoa > PITCH_MAX) pitchOlharPrimeiraPessoa = PITCH_MAX;
+            if (pitchOlharPrimeiraPessoa > PITCH_MAX) {
+                pitchOlharPrimeiraPessoa = PITCH_MAX
+            };
         } else {
-            if (cameraFOV - PASSO_ZOOM >= FOV_MIN) cameraFOV -= PASSO_ZOOM;
+            if (cameraFOV - PASSO_ZOOM >= FOV_MIN) {
+                cameraFOV -= PASSO_ZOOM;
+            }
             atualizarProjecao();
             glutPostRedisplay();
         }
