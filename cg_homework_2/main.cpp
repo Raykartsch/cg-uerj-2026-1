@@ -134,11 +134,18 @@ void arrowKeysDown(int key, int x, int y) {
 
 // Chamada quando uma tecla de seta e solta
 void arrowKeysUp(int key, int x, int y) {
-    if (key == GLUT_KEY_RIGHT) rightArrowPressed = false;
-    if (key == GLUT_KEY_LEFT)  leftArrowPressed = false;
-    if (key == GLUT_KEY_UP)    upArrowPressed = false;
-    if (key == GLUT_KEY_DOWN)  downArrowPressed = false;
-}
+    if (key == GLUT_KEY_RIGHT) {
+        rightArrowPressed = false;
+    }
+    if (key == GLUT_KEY_LEFT) {
+        leftArrowPressed = false;
+    }
+    if (key == GLUT_KEY_UP) {
+        upArrowPressed = false;
+    }
+    if (key == GLUT_KEY_DOWN) {
+        downArrowPressed = false;
+    }
 
 // Teclas normais
 void keyboard_callback(unsigned char key, int x, int y) {
@@ -175,14 +182,18 @@ void keyboard_callback(unsigned char key, int x, int y) {
         // Item 8: Olhar para cima na visao em 1ª pessoa
         if (cameraPrimeiraPessoa) {
             pitchOlharPrimeiraPessoa += PITCH_PASSO;
-            if (pitchOlharPrimeiraPessoa > PITCH_MAX) pitchOlharPrimeiraPessoa = PITCH_MAX;
+            if (pitchOlharPrimeiraPessoa > PITCH_MAX) {
+                    pitchOlharPrimeiraPessoa = PITCH_MAX;
+            }
         }
     }
     if (key == 's' || key == 'S') {
         // Item 8: Olhar para baixo na visao em 1ª pessoa
         if (cameraPrimeiraPessoa) {
             pitchOlharPrimeiraPessoa -= PITCH_PASSO;
-            if (pitchOlharPrimeiraPessoa < PITCH_MIN) pitchOlharPrimeiraPessoa = PITCH_MIN;
+            if (pitchOlharPrimeiraPessoa < PITCH_MIN) {
+                    pitchOlharPrimeiraPessoa = PITCH_MIN;
+            }
         }
     }
     if (key == 'x' || key == 'X') {
@@ -214,9 +225,7 @@ void keyboard_callback(unsigned char key, int x, int y) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*Loop de atualizacao logica (igual ao do jogo 2D): o GLUT chama anim() a
 cada "msecs" ms e ela se reagenda no final com glutTimerFunc.
-
-Como no 2D, enquanto o coelho esta escondido o cenario e os vegetais ficam
-congelados. (Ainda nao existe toca no 3D, entao coelhoEscondido e sempre false.)*/
+*/
 void anim(int valor) {
     if (!coelhoEscondido) {
         moverCoelho();
@@ -386,6 +395,18 @@ void display() {
     drawCampo();
     drawBuracos();
     drawSombrasVegetais();
+
+    // Coelho: desenhado apenas no modo de visao geral.
+    // Em primeira pessoa, a camera esta na posicao dos proprios olhos do personagem;
+    // ocultar o modelo evita que a parte interna da cabeca obstrua o campo de visao do jogador.
+    if (!cameraPrimeiraPessoa) {
+        glPushMatrix();
+            glTranslatef(coelhoX, coelhoY, coelhoZ);
+            glRotatef(anguloCoelho, 0.0f, 1.0f, 0.0f);
+            drawRabbit();
+        glPopMatrix();
+    }
+
     if (!cameraPrimeiraPessoa) {
         drawSombraCoelho();
     }
@@ -424,17 +445,7 @@ void display() {
         glPopMatrix();
     }
 
-    // Coelho: desenhado apenas no modo de visao geral.
-    // Em primeira pessoa, a camera esta na posicao dos proprios olhos do personagem;
-    // ocultar o modelo evita que a parte interna da cabeca obstrua o campo de visao do jogador.
-    if (!cameraPrimeiraPessoa) {
-        glPushMatrix();
-            glTranslatef(coelhoX, coelhoY, coelhoZ);
-            glRotatef(anguloCoelho, 0.0f, 1.0f, 0.0f);
-            drawRabbit();
-        glPopMatrix();
-    }
-
+   
     drawHUD();
 
     glutSwapBuffers();

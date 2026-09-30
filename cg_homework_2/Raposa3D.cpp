@@ -277,8 +277,9 @@ void drawFox() {
     float earRightSwing = (foxPhaseSin > 0.0f) ?  foxPhaseSin * foxEarSwingAmount : 0.0f;
     float earLeftSwing  = (foxPhaseSin < 0.0f) ? -foxPhaseSin * foxEarSwingAmount : 0.0f;
 
-    // Patas: revezamento dos pares diagonais (trote de canideo real)
+    // Quando o seno é positivo (0 a PI): Grupo A levanta e o Grupo B fica 100% apoiado no chão
     float legGroupALift = (foxPhaseSin > 0.0f) ?  foxPhaseSin * foxLegLiftAmount : 0.0f;
+    // Quando o seno é negativo (PI a 2*PI): Grupo B levanta e o Grupo A fica 100% apoiado no chão
     float legGroupBLift = (foxPhaseSin < 0.0f) ? -foxPhaseSin * foxLegLiftAmount : 0.0f;
 
     // Cauda: duas oscilacoes senoidais com frequencias diferentes
@@ -409,32 +410,45 @@ void controlarSurgimentoDaRaposa() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Movimenta a raposa em linha reta para +X e avanca suas animacoes
+// Movimenta a raposa em linha reta para +X e avanca suas animacoes procedurais
 void moverRaposa() {
+    // 1. Ignora atualizacao se a raposa nao estiver em cena
     if (!foxActive) {
         return;
     }
 
-    // Deslocamento para a frente no eixo X
+    // 2. Deslocamento Linear no Mundo 3D:
+    // Faz a raposa correr da esquerda (-X) para a direita (+X) com velocidade constante a cada frame.
     foxX += VELOCIDADE_RAPOSA;
 
-    // Avanca as fases de animacao
+    // 3. Animacao Procedural do Trote (Patas e Orelhas):
+    // Incrementa o angulo de fase (em radianos) que dita o ciclo da passada.
     foxWalkPhase += foxWalkPhaseSpeed;
+    // Normalizacao modular (wrap-around):
+    // Ao ultrapassar uma volta completa (2*PI radianos), subtrai 2*PI em vez de zerar.
+    // Isso preserva a fracao excedente (evitando micro-travamentos/stuttering)
+    // e impede a perda de precisao decimal dos numeros de ponto flutuante (float).
     if (foxWalkPhase > 2.0f * PI_F) {
         foxWalkPhase -= 2.0f * PI_F;
     }
 
+    // 4. Balanco da Base da Cauda (1º segmento):
+    // Oscila de forma senoidal com velocidade e amplitude moderadas.
     foxTailPhase += foxTailPhaseSpeed;
     if (foxTailPhase > 2.0f * PI_F) {
         foxTailPhase -= 2.0f * PI_F;
     }
 
+    // 5. Balanco da Ponta Branca da Cauda (2º segmento):
+    // Oscila com frequencia maior, gerando um efeito ondulante organico e chicoteante.
     foxTailTipPhase += foxTailTipPhaseSpeed;
     if (foxTailTipPhase > 2.0f * PI_F) {
         foxTailTipPhase -= 2.0f * PI_F;
     }
 
-    // Saiu pela borda direita do campo (fora da area visivel)
+    // 6. Condicao de Saida / Despawn:
+    // Quando a raposa ultrapassa a cerca e os limites visiveis a direita (+X > 14.0),
+    // desativa sua presenca e sorteia o tempo de espera (10 a 20s) para o proximo surgimento.
     if (foxX > 14.0f) {
         foxActive = false;
         framesAteProximaRaposa = (10 + (rand() % 11)) * FOX_FPS;

@@ -234,6 +234,7 @@ void drawSombrasVegetais() {
 void spawnVegetable() {
     TipoVegetal tipoSorteado = static_cast<TipoVegetal>(rand() % 3);
 
+    //Define se o vegetal irá aparecer no chão ou no ar
     float y = 0.5f;
     if (rand() % 100 < 30) {
         y = 2.0f; // Vegetal aereo: exige pulo do coelho para alcancar
@@ -281,10 +282,15 @@ void moverVegetais() {
         vegetalGiro -= 360.0f;
     }
 
+    // Slot vazio dentro do vetor ou vegetal expirado
     for (Vegetal &veg : vegetais) {
-        if (!veg.ativo) continue;
+
+        if (!veg.ativo) {
+            continue;
+        }
 
         veg.tempoRestante--;
+        
         if (veg.tempoRestante <= 0) {
             veg.ativo = false; // Expirou os 5 segundos sem ser coletado
         }
