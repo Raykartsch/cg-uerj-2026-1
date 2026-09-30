@@ -113,8 +113,8 @@ void arrowKeysDown(int key, int x, int y) {
         if (cameraPrimeiraPessoa) {
             pitchOlharPrimeiraPessoa += PITCH_PASSO;
             if (pitchOlharPrimeiraPessoa > PITCH_MAX) {
-                pitchOlharPrimeiraPessoa = PITCH_MAX
-            };
+                pitchOlharPrimeiraPessoa = PITCH_MAX;
+            }
         } else {
             if (cameraFOV - PASSO_ZOOM >= FOV_MIN) {
                 cameraFOV -= PASSO_ZOOM;
