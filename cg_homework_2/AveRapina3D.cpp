@@ -11,13 +11,13 @@
 bool aveActive = false;       // True enquanto a ave estiver executando o ataque
 float aveX = 14.0f;           // Posicao X (inicia fora da tela a direita)
 float aveY = 7.5f;            // Altura Y (inicia no alto do ceu)
-float aveZ = 0.0f;            // Profundidade Z (faixa do ataque)
+float aveZ = 0.5f;            // Profundidade Z (faixa do ataque)
 float avePhase = 0.0f;        // Fase do bater de asas (em radianos)
 bool aveJaTirouVida = false;  // Trava para evitar perder multiplas vidas no mesmo ataque
 
 float aveAlvoX = 0.0f;        // Ponto X do vertice mais baixo do mergulho
 float aveAlvoZ = 0.0f;        // Ponto Z registrado no momento do ataque
-float aveVelocidadeX = 0.16f; // Velocidade horizontal do deslocamento
+float aveVelocidadeX = 0.1f; // Velocidade horizontal do deslocamento
 
 const int AVE_FPS = 1000 / 24;
 int framesAteProximaAve = 300; // Primeira ave surge apos cerca de 7 segundos
@@ -300,19 +300,19 @@ void drawBird() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Sombra no solo: acompanha (aveX, aveZ) e fica mais nitida/escura a medida que a ave atinge o rasante
-void drawSombraAve() {
-    if (!aveActive) return;
+// void drawSombraAve() {
+//     if (!aveActive) return;
 
-    // Quanto mais baixa a ave, menor e mais escura a sombra (aviso visual de perigo!)
-    float t = (aveY - 0.55f) / (7.5f - 0.55f);
-    if (t < 0.0f) t = 0.0f;
-    if (t > 1.0f) t = 1.0f;
+//     // Quanto mais baixa a ave, menor e mais escura a sombra (aviso visual de perigo!)
+//     float t = (aveY - 0.55f) / (7.5f - 0.55f);
+//     if (t < 0.0f) t = 0.0f;
+//     if (t > 1.0f) t = 1.0f;
 
-    float raio = 0.35f + 0.35f * t;   // Menor no rasante (0.35) e mais difusa no alto (0.70)
-    float alpha = 0.40f - 0.28f * t;  // Muito mais escura e nítida no rasante (0.40)
+//     float raio = 0.35f + 0.35f * t;   // Menor no rasante (0.35) e mais difusa no alto (0.70)
+//     float alpha = 0.40f - 0.28f * t;  // Muito mais escura e nítida no rasante (0.40)
 
-    drawDiscoNoChao(aveX, aveZ, raio, alpha);
-}
+//     drawDiscoNoChao(aveX, aveZ, raio, alpha);
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Inicia o ataque aereo: a ave comeca fora da tela em X = 14 e desce mirando em (targetX, targetZ)

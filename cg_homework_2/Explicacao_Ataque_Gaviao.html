@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Computação Gráfica - Guia do Ataque do Gavião 3D</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 14mm 16mm 14mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.55;
+      font-size: 13.5px;
+      padding: 0;
+    }
+    
+    .header {
+      border-bottom: 2px solid #ea580c;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .badge {
+      display: inline-block;
+      background: #fff7ed;
+      color: #c2410c;
+      font-weight: 600;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      border: 1px solid #fed7aa;
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #0f172a;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+    }
+    
+    h2 {
+      font-size: 16.5px;
+      color: #9a3412;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #fed7aa;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    h3 {
+      font-size: 14px;
+      color: #0f172a;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+    
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+    
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+    
+    li {
+      margin-bottom: 5px;
+    }
+    
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    pre {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+      overflow-x: auto;
+    }
+    
+    .code-comment { color: #94a3b8; }
+    .code-keyword { color: #38bdf8; font-weight: bold; }
+    .code-fn { color: #facc15; }
+    .code-num { color: #fb923c; }
+    
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #ea580c;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      margin: 12px 0;
+      page-break-inside: avoid;
+    }
+    
+    .card.tip {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      border-left-color: #16a34a;
+    }
+    
+    .card.math {
+      background: #faf5ff;
+      border-color: #e9d5ff;
+      border-left-color: #9333ea;
+    }
+    
+    .card.warning {
+      background: #fffbeb;
+      border-color: #fef3c7;
+      border-left-color: #d97706;
+    }
+    
+    .card-title {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px 0;
+      font-size: 12px;
+      page-break-inside: avoid;
+    }
+    
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      text-align: left;
+    }
+    
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 600;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    
+    .formula {
+      font-family: 'Cambria Math', 'Times New Roman', serif;
+      font-size: 14.5px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      border-radius: 5px;
+      display: inline-block;
+      margin: 6px 0;
+      color: #1e1b4b;
+      font-weight: 500;
+    }
+    
+    .diagram-box {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.35;
+      margin: 10px 0;
+      white-space: pre;
+    }
+    
+    .avoid-break {
+      page-break-inside: avoid;
+    }
+    
+    .page-break {
+      page-break-before: always;
+    }
+    
+    .footer {
+      margin-top: 25px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="badge">UERJ • Computação Gráfica • Predador Aéreo 3D</div>
+    <h1>O Ataque do Gavião (Ave de Rapina 3D)</h1>
+    <div class="subtitle">Guia Didático: Equação da Parábola, Física de Mergulho, Inclinação Dinâmica (Pitch), Sombra com Altitude e Colisão Esférica</div>
+  </div>
+
+  <h2>1. Visão Geral: O Predador que Desce dos Céus</h2>
+  <p>
+    Enquanto a Raposa é uma ameaça terrestre que patrulha a grama em velocidade constante, o <strong>Gavião (Ave de Rapina)</strong> funciona como uma ameaça aérea dinâmica. Ele surge a grandes altitudes fora do campo, executa um mergulho rasante veloz e curvado mirando na posição onde o coelho estava, e imediatamente retorna às nuvens pelo outro lado da arena.
+  </p>
+  <p>
+    Para testar o mergulho a qualquer momento durante o jogo, o usuário pode simplesmente pressionar a tecla <strong>'A'</strong>.
+  </p>
+
+  <h2>2. Dicionário de Variáveis do Gavião</h2>
+  <p>As seguintes variáveis em <code>AveRapina3D.hpp</code> e <code>AveRapina3D.cpp</code> controlam todo o estado do predador aéreo:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Variável</th>
+        <th>Tipo</th>
+        <th>Valor Padrão</th>
+        <th>Função no Jogo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>aveActive</code></td>
+        <td><code>bool</code></td>
+        <td><code>false</code></td>
+        <td>Indica se o gavião está ativo e executando a passagem de ataque.</td>
+      </tr>
+      <tr>
+        <td><code>aveX, aveY, aveZ</code></td>
+        <td><code>float</code></td>
+        <td>Início: <code>(14.0, 7.5, alvoZ)</code></td>
+        <td>Coordenadas tridimensionais em tempo real. X é o deslocamento, Y é a altitude e Z é a profundidade.</td>
+      </tr>
+      <tr>
+        <td><code>aveAlvoX, aveAlvoZ</code></td>
+        <td><code>float</code></td>
+        <td>Coelho no spawn</td>
+        <td>Ponto registrado no chão onde o coelho estava quando o gavião iniciou o mergulho.</td>
+      </tr>
+      <tr>
+        <td><code>aveVelocidadeX</code></td>
+        <td><code>const float</code></td>
+        <td><code>0.16f</code></td>
+        <td>Passo de deslocamento horizontal para a esquerda (sentido <code>-X</code>) a cada frame.</td>
+      </tr>
+      <tr>
+        <td><code>avePhase</code></td>
+        <td><code>float</code></td>
+        <td>Incremento <code>0.35 rad</code></td>
+        <td>Fase angular periódica da animação do bater sincronizado das asas.</td>
+      </tr>
+      <tr>
+        <td><code>aveJaTirouVida</code></td>
+        <td><code>bool</code></td>
+        <td><code>false</code></td>
+        <td>Trava de segurança: garante que a ave desconte no máximo 1 vida por mergulho.</td>
+      </tr>
+      <tr>
+        <td><code>framesAteProximaAve</code></td>
+        <td><code>int</code></td>
+        <td>12 a 22 segundos</td>
+        <td>Temporizador aleatório para agendar os ataques aéreos surpresa.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. A Física do Mergulho: A Equação da Parábola 3D</h2>
+  <p>
+    No espaço 3D, a trajetória de mergulho e escape do gavião é modelada por uma <strong>função quadrática (parábola com vértice no ponto mais baixo)</strong> no plano XY, fixando a profundidade Z no corredor de ataque:
+  </p>
+
+  <div class="card math avoid-break">
+    <div class="card-title">📐 Equação da Trajetória:</div>
+    <div class="formula">
+      Y(X) = a &times; (X - aveAlvoX)&sup2; + 0.55
+    </div>
+    <p style="margin-top: 6px;">Onde os termos significam:</p>
+    <ul>
+      <li><strong>aveAlvoX:</strong> A coordenada horizontal do vértice da parábola (onde o rasante acontece).</li>
+      <li><strong>K = 0.55f:</strong> A altitude mínima da ave no rasante (exatamente a altura do corpo do coelho!).</li>
+      <li><strong>Coeficiente de Abertura (a):</strong> Calculado dinamicamente para que a ave sempre comece no céu em <code>Y = 7.5</code> no ponto de entrada <code>X = 14.0</code>:
+        <br>
+        <span class="formula" style="font-size:12px; margin-top:4px;">a = (7.5 - 0.55) / (14.0 - aveAlvoX)&sup2;</span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="diagram-box avoid-break">
+    (X=14, Y=7.5) [Céu]                                     (X=-14, Y=7.5) [Céu]
+          \                                                     /
+           \  DESCIDA ACELERADA                                /  SUBIDA DE RETORNO
+            \                                                 /
+             \               (aveAlvoX, Y=0.55)              /
+              \_______                ▼               ______/
+                      \_________ [O RASANTE] ________/
+  ══════════════════════════════════════════════════════════════════════ [Gramado: Y=0.0]
+  </div>
+
+  <div class="page-break"></div>
+
+  <h2>4. Dinâmica de Rotação (Pitch): O Bico que Mira na Presa</h2>
+  <p>
+    Se a ave apenas seguisse a parábola com a inclinação fixa, pareceria um objeto rígido e estático flutuando no ar. Para criar realismo orgânico, o código calcula a <strong>derivada instantânea da parábola</strong> a cada frame no <code>main.cpp</code>:
+  </p>
+
+  <pre><code><span class="code-comment">// Derivada de Y em relacao a X: dY/dX = 2 * a * (X - aveAlvoX)</span>
+<span class="code-keyword">float</span> dx = aveX - aveAlvoX;
+<span class="code-keyword">float</span> inclinacaoGraus = std::<span class="code-fn">atan</span>(<span class="code-num">2.0f</span> * a * dx) * <span class="code-num">180.0f</span> / PI_F;
+
+<span class="code-comment">// Aplica a rotacao em torno do eixo Z:</span>
+glRotatef(-inclinacaoGraus, <span class="code-num">0.0f</span>, <span class="code-num">0.0f</span>, <span class="code-num">1.0f</span>);</code></pre>
+
+  <div class="card avoid-break">
+    <div class="card-title">🦅 Como essa rotação se comporta durante o voo?</div>
+    <ol>
+      <li><strong>Na Descida (aveX &gt; aveAlvoX):</strong> O valor da inclinação é positivo, fazendo o bico e as garras apontarem agressivamente para baixo, em ângulo de ataque direto na presa.</li>
+      <li><strong>No Rasante (aveX == aveAlvoX):</strong> A derivada é zero! O corpo da ave se nivela horizontalmente com o gramado.</li>
+      <li><strong>Na Subida (aveX &lt; aveAlvoX):</strong> A derivada inverte o sinal, fazendo o bico apontar para o céu enquanto o gavião ganha altitude e foge.</li>
+    </ol>
+  </div>
+
+  <h2>5. Animação Orgânica: O Bater de Asas 3D</h2>
+  <p>
+    Ao contrário do jogo 2D onde as asas eram triângulos planos, no 3D as asas possuem envergadura física aberta ao longo do eixo Z.
+  </p>
+  <ul>
+    <li>A fase do bater de asas avança continuamente: <code>avePhase += 0.35f;</code></li>
+    <li>O ângulo instantâneo da asa é gerado por uma onda senoidal:
+      <br>
+      <span class="formula">wingAngle = sin(avePhase) &times; 38.0&deg;</span>
+    </li>
+    <li>As asas são articuladas em torno do eixo longitudinal X:
+      <ul>
+        <li><strong>Asa Esquerda (+Z):</strong> <code>glRotatef(wingAngle, 1.0, 0.0, 0.0);</code></li>
+        <li><strong>Asa Direita (-Z):</strong> <code>glRotatef(-wingAngle, 1.0, 0.0, 0.0);</code></li>
+      </ul>
+    </li>
+  </ul>
+  <p>
+    O sinal oposto (<code>+wingAngle</code> e <code>-wingAngle</code>) garante que ambas as asas subam e desçam juntas e simetricamente em relação ao dorso do gavião.
+  </p>
+
+  <h2>6. Pista Visual de Perigo: A Sombra Dinâmica no Solo</h2>
+  <p>
+    Em um ambiente 3D sob projeção de perspectiva, quando um predador desce das alturas, o jogador tem dificuldade de saber sua posição exata no chão apenas olhando para cima. A função <code>drawSombraAve()</code> resolve isso projetando um disco escuro no gramado em <code>(aveX, aveZ)</code> que reage à altitude:
+  </p>
+
+  <div class="card tip avoid-break">
+    <div class="card-title">💡 Indicador Visual de Proximidade (Feedback ao Jogador)</div>
+    <ul>
+      <li><strong>Gavião Alto no Céu (Y = 7.5):</strong> A sombra fica <strong>grande</strong> (raio = <code>0.70</code>) e <strong>muito clara/difusa</strong> (alfa = <code>0.12</code>). O jogador percebe que há algo sobrevoando.</li>
+      <li><strong>Gavião Próximo ao Chão (Y = 0.55):</strong> A sombra <strong>encolhe</strong> (raio = <code>0.35</code>) e fica <strong>escura e nítida</strong> (alfa = <code>0.40</code>). Isso funciona como uma mira laser avisando: <em>"Saia daqui imediatamente!"</em>.</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <h2>7. O Sistema de Colisão e a Mecânica de Esquiva</h2>
+  <p>
+    No arquivo <code>SistemaColisao3D.cpp</code>, a função <code>verificarColisaoComAve()</code> roda a cada frame e calcula a distância euclidiana tridimensional entre o gavião e o coelho:
+  </p>
+
+  <div class="formula" style="display:block; text-align:center;">
+    distancia = &radic;((aveX - coelhoX)&sup2; + (aveY - coelhoY)&sup2; + (aveZ - coelhoZ)&sup2;)
+  </div>
+
+  <pre><code><span class="code-keyword">void</span> <span class="code-fn">verificarColisaoComAve</span>() {
+    <span class="code-keyword">if</span> (!aveActive || aveJaTirouVida || coelhoEscondido) <span class="code-keyword">return</span>;
+
+    <span class="code-keyword">float</span> dx = aveX - coelhoX;
+    <span class="code-keyword">float</span> dy = aveY - coelhoY;
+    <span class="code-keyword">float</span> dz = aveZ - coelhoZ;
+    <span class="code-keyword">float</span> distancia = std::<span class="code-fn">sqrt</span>(dx * dx + dy * dy + dz * dz);
+
+    <span class="code-keyword">float</span> raioColisao = <span class="code-num">0.95f</span>;
+
+    <span class="code-keyword">if</span> (distancia &lt; raioColisao) {
+        <span class="code-keyword">if</span> (rabbitLives &gt; <span class="code-num">0</span>) rabbitLives--;
+        aveJaTirouVida = <span class="code-keyword">true</span>; <span class="code-comment">// Trava: tira no maximo uma vida por passagem</span>
+    }
+}</code></pre>
+
+  <div class="card warning avoid-break">
+    <div class="card-title">⚠️ Como o Jogador se Esquiva com Sucesso?</div>
+    <p>
+      O gavião não possui mira teleguiada em tempo real. No momento em que surge (<code>spawnAve</code>), ele memoriza <code>(aveAlvoX, aveAlvoZ)</code>.
+    </p>
+    <p>
+      Isso cria a oportunidade de gameplay:
+    </p>
+    <ul>
+      <li>Se o jogador ficar <strong>parado</strong>, ele certamente será atingido no rasante em <code>Y = 0.55</code>.</li>
+      <li>Se o jogador <strong>correr para os lados</strong> (alterando seu Z) ou <strong>avançar/recuar</strong> (alterando seu X), ele sai do cone de impacto de 0.95 unidades e o gavião mergulhará atingindo apenas o ar vazio!</li>
+      <li>Se o jogador estiver na <strong>Câmera em 1ª Pessoa</strong>, ele pode usar as teclas <strong>W / S</strong> para inclinar a visão para cima e assistir ao gavião mergulhando em sua direção antes de se esquivar!</li>
+    </ul>
+  </div>
+
+  <h2>8. Ciclo Completo de Vida do Ataque</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Fase</th>
+        <th>Posição X</th>
+        <th>Comportamento Físico e Gráfico</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Spawn</strong></td>
+        <td><code>X = 14.0</code></td>
+        <td>Trava as coordenadas do coelho <code>(aveAlvoX, aveAlvoZ)</code>. Começa em <code>Y = 7.5</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>2. Mergulho</strong></td>
+        <td><code>14.0 &gt; X &gt; alvoX</code></td>
+        <td>Desce velozmente seguindo a parábola. O bico inclina para baixo. Sombra encolhe e escurece.</td>
+      </tr>
+      <tr>
+        <td><strong>3. O Rasante</strong></td>
+        <td><code>X == alvoX</code></td>
+        <td>Ponto mais baixo da trajetória (<code>Y = 0.55</code>). Checa colisão com o coelho (< 0.95).</td>
+      </tr>
+      <tr>
+        <td><strong>4. Subida</strong></td>
+        <td><code>alvoX &gt; X &gt; -14.0</code></td>
+        <td>Ganha altitude em direção ao céu. Bico inclina para cima. Sombra clareia e se expande.</td>
+      </tr>
+      <tr>
+        <td><strong>5. Despawn</strong></td>
+        <td><code>X &lt; -14.0</code></td>
+        <td>Sai do campo pelo lado esquerdo. <code>aveActive = false</code>. Sorteia novo ataque em 12 a 22s.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    Universidade do Estado do Rio de Janeiro (UERJ) • Departamento de Informática e Ciência da Computação • 2026
+  </div>
+
+</body>
+</html>

@@ -169,9 +169,15 @@ void drawRadish() {
 // Centraliza a escolha de qual modelo desenhar de acordo com o tipo do vegetal
 void drawVegetable(TipoVegetal tipo) {
     switch (tipo) {
-        case CENOURA:  drawCarrot();  break;
-        case ALFACE:   drawLettuce(); break;
-        case RABANETE: drawRadish();  break;
+        case CENOURA:  
+            drawCarrot();  
+            break;
+        case ALFACE:   
+            drawLettuce(); 
+            break;
+        case RABANETE: 
+            drawRadish();  
+            break;
     }
 }
 
@@ -181,8 +187,11 @@ void drawVegetais() {
     for (const Vegetal &veg : vegetais) {
         if (!veg.ativo) continue;
 
-        // Efeito de alerta: nos ultimos 1.5 segundos (~60 frames), pisca suavemente
-        // avisando ao jogador que o item esta prestes a expirar e desaparecer
+        // Efeito de alerta (piscar):
+        // Quando restam menos de 60 frames (~1.5 segundos a 24ms/frame), alternamos a visibilidade:
+        // (veg.tempoRestante / 6) divide o tempo em blocos de 6 frames (~144ms).
+        // O operador '% 2 == 0' alterna ciclicamente entre verdadeiro (invisivel via continue) e falso (visivel),
+        // fazendo o vegetal piscar na tela para avisar ao jogador que esta prestes a expirar e desaparecer.
         if (veg.tempoRestante < 60 && (veg.tempoRestante / 6) % 2 == 0) {
             continue;
         }
@@ -200,7 +209,11 @@ void drawSombrasVegetais() {
     for (const Vegetal &veg : vegetais) {
         if (!veg.ativo) continue;
 
-        // Se estiver piscando perto de expirar, a sombra acompanha o efeito
+        // Efeito de alerta (piscar):
+        // Quando restam menos de 60 frames (~1.5 segundos a 24ms/frame), alternamos a visibilidade:
+        // (veg.tempoRestante / 6) divide o tempo em blocos de 6 frames (~144ms).
+        // O operador '% 2 == 0' alterna ciclicamente entre verdadeiro (invisivel via continue) e falso (visivel),
+        // fazendo o vegetal piscar na tela para avisar ao jogador que esta prestes a expirar e desaparecer.
         if (veg.tempoRestante < 60 && (veg.tempoRestante / 6) % 2 == 0) {
             continue;
         }

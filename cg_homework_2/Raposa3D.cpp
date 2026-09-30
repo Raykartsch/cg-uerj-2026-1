@@ -29,7 +29,7 @@ float foxTailTipSwingAmount = 14.0f;
 // ---- Estado e Posicao da Raposa no Mundo 3D ----
 bool foxActive = false;      // True enquanto a raposa estiver atravessando o campo
 float foxX = -13.0f;         // Posicao no eixo X (surge fora do campo a esquerda)
-float foxY = 0.52f;          // Altura fixa (apoiada no chao)
+float foxY = 1.0f;          // Altura fixa (apoiada no chao)
 float foxZ = 0.0f;           // Profundidade Z (faixa do campo onde ela passa)
 float foxDirecao = 0.0f;     // Angulo de orientacao (0 graus = correndo para +X)
 
@@ -411,20 +411,28 @@ void controlarSurgimentoDaRaposa() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Movimenta a raposa em linha reta para +X e avanca suas animacoes
 void moverRaposa() {
-    if (!foxActive) return;
+    if (!foxActive) {
+        return;
+    }
 
     // Deslocamento para a frente no eixo X
     foxX += VELOCIDADE_RAPOSA;
 
     // Avanca as fases de animacao
     foxWalkPhase += foxWalkPhaseSpeed;
-    if (foxWalkPhase > 2.0f * PI_F) foxWalkPhase -= 2.0f * PI_F;
+    if (foxWalkPhase > 2.0f * PI_F) {
+        foxWalkPhase -= 2.0f * PI_F;
+    }
 
     foxTailPhase += foxTailPhaseSpeed;
-    if (foxTailPhase > 2.0f * PI_F) foxTailPhase -= 2.0f * PI_F;
+    if (foxTailPhase > 2.0f * PI_F) {
+        foxTailPhase -= 2.0f * PI_F;
+    }
 
     foxTailTipPhase += foxTailTipPhaseSpeed;
-    if (foxTailTipPhase > 2.0f * PI_F) foxTailTipPhase -= 2.0f * PI_F;
+    if (foxTailTipPhase > 2.0f * PI_F) {
+        foxTailTipPhase -= 2.0f * PI_F;
+    }
 
     // Saiu pela borda direita do campo (fora da area visivel)
     if (foxX > 14.0f) {

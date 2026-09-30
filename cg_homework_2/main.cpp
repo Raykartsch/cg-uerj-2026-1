@@ -64,7 +64,15 @@ int janelaAltura = 700;
 const float RAIO_CAMERA_GERAL   = 10.0f; // Distancia do eixo Y no plano XZ
 const float ALTURA_CAMERA_GERAL = 10.0f; // Altura constante Y da camera geral
 const float PASSO_ROTACAO_CAM   = 5.0f;  // Incremento angular por pressao da tecla 'r' (em graus)
-const double CAMERA_FOV         = 55.0;  // Campo de visao vertical (FOV)
+
+// Parametros de Zoom (baseado na aula de 15/09/2026 - controle de FOV no gluPerspective):
+const double FOV_PADRAO          = 55.0;  // Campo de visao vertical inicial (FOV padrao)
+const double FOV_MIN             = 15.0;  // Limite maximo de aproximacao (Zoom-in)
+const double FOV_MAX             = 100.0; // Limite maximo de afastamento (Zoom-out)
+const double PASSO_ZOOM          = 5.0;   // Variacao angular por clique do mouse
+double cameraFOV                 = FOV_PADRAO; // Campo de visao vertical dinamico
+
+void atualizarProjecao(); // Prototipo da funcao que atualiza gluPerspective com o cameraFOV
 
 // Angulo de rotacao da camera geral em torno do eixo Y (em graus).
 // Em 0 graus: posicao = (0, 10, 10), exatamente como estabelecido no Item 4.
@@ -101,17 +109,25 @@ void arrowKeysDown(int key, int x, int y) {
         downArrowPressed = true;
     }
     if (key == GLUT_KEY_PAGE_UP) {
-        // Item 8: Olhar para cima na visao em 1ª pessoa
+        // Item 8: Olhar para cima na visao em 1ª pessoa (ou Zoom-in na visao geral)
         if (cameraPrimeiraPessoa) {
             pitchOlharPrimeiraPessoa += PITCH_PASSO;
             if (pitchOlharPrimeiraPessoa > PITCH_MAX) pitchOlharPrimeiraPessoa = PITCH_MAX;
+        } else {
+            if (cameraFOV - PASSO_ZOOM >= FOV_MIN) cameraFOV -= PASSO_ZOOM;
+            atualizarProjecao();
+            glutPostRedisplay();
         }
     }
     if (key == GLUT_KEY_PAGE_DOWN) {
-        // Item 8: Olhar para baixo na visao em 1ª pessoa
+        // Item 8: Olhar para baixo na visao em 1ª pessoa (ou Zoom-out na visao geral)
         if (cameraPrimeiraPessoa) {
             pitchOlharPrimeiraPessoa -= PITCH_PASSO;
             if (pitchOlharPrimeiraPessoa < PITCH_MIN) pitchOlharPrimeiraPessoa = PITCH_MIN;
+        } else {
+            if (cameraFOV + PASSO_ZOOM <= FOV_MAX) cameraFOV += PASSO_ZOOM;
+            atualizarProjecao();
+            glutPostRedisplay();
         }
     }
 }
@@ -174,6 +190,24 @@ void keyboard_callback(unsigned char key, int x, int y) {
         if (cameraPrimeiraPessoa) {
             pitchOlharPrimeiraPessoa = 0.0f;
         }
+    }
+    if (key == 'z' || key == 'Z') {
+        // Reseta o zoom para o valor padrao (55 graus)
+        cameraFOV = FOV_PADRAO;
+        atualizarProjecao();
+        glutPostRedisplay();
+    }
+    if (key == '+' || key == '=') {
+        // Zoom-in via teclado
+        if (cameraFOV - PASSO_ZOOM >= FOV_MIN) cameraFOV -= PASSO_ZOOM;
+        atualizarProjecao();
+        glutPostRedisplay();
+    }
+    if (key == '-' || key == '_') {
+        // Zoom-out via teclado
+        if (cameraFOV + PASSO_ZOOM <= FOV_MAX) cameraFOV += PASSO_ZOOM;
+        atualizarProjecao();
+        glutPostRedisplay();
     }
 }
 
@@ -252,19 +286,19 @@ void drawHUD() {
     }
 
     // Indicador do modo atual de camera no topo direito da tela
-    char textoCamera[80];
+    char textoCamera[96];
     if (cameraPrimeiraPessoa) {
-        snprintf(textoCamera, sizeof(textoCamera), "Camera: 1a Pessoa (Olhar: %+.0f deg) [C] [W/S: olhar]", pitchOlharPrimeiraPessoa);
-        drawText(janelaLargura - 450, janelaAltura - 30, textoCamera);
+        snprintf(textoCamera, sizeof(textoCamera), "Camera: 1a Pessoa (Olhar: %+.0f deg | Zoom: %.0f) [C] [W/S: olhar]", pitchOlharPrimeiraPessoa, cameraFOV);
+        drawText(janelaLargura - 500, janelaAltura - 30, textoCamera);
     } else {
-        snprintf(textoCamera, sizeof(textoCamera), "Camera: Geral (%.0f deg) [C] [R: girar]", anguloCameraGeral);
-        drawText(janelaLargura - 330, janelaAltura - 30, textoCamera);
+        snprintf(textoCamera, sizeof(textoCamera), "Camera: Geral (%.0f deg | Zoom: %.0f) [C] [R: girar]", anguloCameraGeral, cameraFOV);
+        drawText(janelaLargura - 390, janelaAltura - 30, textoCamera);
     }
 
     if (cameraPrimeiraPessoa) {
-        drawText(20, 20, "Setas: mover/girar | W/S ou PgUp/PgDn: olhar cima/baixo | X: nivelar | Espaco: pular | C: alternar camera");
+        drawText(20, 20, "Mouse: Zoom in/out | Setas: mover/girar | W/S ou PgUp/PgDn: olhar cima/baixo | X: nivelar | Espaco: pular | C: camera");
     } else {
-        drawText(20, 20, "Setas: mover | Espaco: pular | C: alternar camera | R: girar visao geral | F: raposa | A: ave | ESC: sair");
+        drawText(20, 20, "Mouse: Zoom in/out | Setas: mover | Espaco: pular | C: alternar camera | R: girar visao | ESC: sair");
     }
 
     glPopMatrix();
@@ -356,7 +390,7 @@ void display() {
         drawSombraCoelho();
     }
     drawSombraRaposa();
-    drawSombraAve();
+    // drawSombraAve();
 
     // Vegetais ativos (cada um em sua posicao, girando)
     drawVegetais();
@@ -407,6 +441,14 @@ void display() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Atualiza a projecao em perspectiva aplicando o FOV atual (zoom) e a proporcao da janela
+void atualizarProjecao() {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(cameraFOV, (double)janelaLargura / (double)janelaAltura, 0.1, 100.0);
+    glMatrixMode(GL_MODELVIEW);
+}
+
 // Substitui o glOrtho do 2D por uma projecao em perspectiva, ajustada a proporcao da janela
 void reshape(int w, int h) {
     if (h == 0) h = 1;
@@ -414,16 +456,52 @@ void reshape(int w, int h) {
     janelaAltura = h;
     glViewport(0, 0, w, h);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(CAMERA_FOV, (double)w / (double)h, 0.1, 100.0);
+    atualizarProjecao();
+}
 
-    glMatrixMode(GL_MODELVIEW);
+// Callback para gerenciar cliques e scroll do mouse (Zoom-in e Zoom-out - baseado na aula de 15/09/2026)
+void mouse_callback(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        // Zoom-in: reduz o angulo de abertura (FOV), aproximando a cena
+        if (cameraFOV - PASSO_ZOOM >= FOV_MIN) {
+            cameraFOV -= PASSO_ZOOM;
+        } else {
+            cameraFOV = FOV_MIN;
+        }
+    }
+    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+        // Zoom-out: aumenta o angulo de abertura (FOV), ampliando a visao da cena
+        if (cameraFOV + PASSO_ZOOM <= FOV_MAX) {
+            cameraFOV += PASSO_ZOOM;
+        } else {
+            cameraFOV = FOV_MAX;
+        }
+    }
+    // Suporte ao scroll da rodinha do mouse no FreeGLUT
+    // Botao 3 = girar para cima (Zoom-in)
+    // Botao 4 = girar para baixo (Zoom-out)
+    if (button == 3) {
+        if (cameraFOV - PASSO_ZOOM >= FOV_MIN) {
+            cameraFOV -= PASSO_ZOOM;
+        } else {
+            cameraFOV = FOV_MIN;
+        }
+    }
+    if (button == 4) {
+        if (cameraFOV + PASSO_ZOOM <= FOV_MAX) {
+            cameraFOV += PASSO_ZOOM;
+        } else {
+            cameraFOV = FOV_MAX;
+        }
+    }
+
+    atualizarProjecao();
+    glutPostRedisplay();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void init(void) {
-    glClearColor(skyR, skyG, skyB, 1.0f); // ceu de "dia"
+    glClearColor(skyR, skyG, skyB, 1.0f);
 
     glEnable(GL_DEPTH_TEST);  // z-buffer: objetos mais proximos escondem os mais distantes
     glShadeModel(GL_SMOOTH);
@@ -487,6 +565,7 @@ int main(int argc, char** argv) {
     glutKeyboardFunc(keyboard_callback);
     glutSpecialFunc(arrowKeysDown);
     glutSpecialUpFunc(arrowKeysUp);
+    glutMouseFunc(mouse_callback);
 
     glutMainLoop();
     return 0;

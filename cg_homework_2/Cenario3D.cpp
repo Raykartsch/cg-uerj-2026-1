@@ -19,13 +19,6 @@ const float TAMANHO_LADRILHO = 1.0f;
 float skyR = 0.68f, skyG = 0.81f, skyB = 0.98f;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Como o jogo agora se passa em um plateau fixo (nao e um runner com rolagem infinita),
-// esta funcao nao precisa deslocar o mundo, mantendo-se apenas para compatibilidade.
-void rolarCenario() {
-    // Mundo fixo: sem rolagem
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Desenha o plateau fixo no plano XZ:
    1. Superficie superior de grama: ladrilhos quadriculados que alternam dois tons
       de verde, oferecendo excelente nocao de profundidade e escala espacial.
