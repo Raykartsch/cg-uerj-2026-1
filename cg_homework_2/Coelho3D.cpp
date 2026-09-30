@@ -152,8 +152,7 @@ void moverCoelho() {
     // -------------------------------------------------------------------------
     // 4. LIMITAÇÃO AO QUADRILÁTERO DO CAMPO
     // -------------------------------------------------------------------------
-    // O coelho nao pode sair da cerca. Recuamos o limite pelo raio da esfera
-    // para que a borda externa pare na cerca.
+    // O coelho nao pode sair da cerca.
     coelhoX = limitar(coelhoX, CAMPO_X_MIN + RAIO_ESFERA, CAMPO_X_MAX - RAIO_ESFERA);
     coelhoZ = limitar(coelhoZ, CAMPO_Z_MIN + RAIO_ESFERA, CAMPO_Z_MAX - RAIO_ESFERA);
 }
@@ -380,9 +379,10 @@ void drawRabbit() {
       Calcula o ciclo de marcha a partir de walkPhase (identico ao Trabalho 1 2D):
       - Quando a orelha direita vai para frente (seno positivo), a pata esquerda sobe.
       - Quando a orelha esquerda vai para frente (seno negativo), a pata direita sobe.
-      - No pulo, as patinhas encolhem graciosamente contra o corpo.
+      - No pulo, as patinhas encolhem contra o corpo.
     */
     float phaseSin = std::sin(walkPhase);
+
 
     float earRightSwing = (phaseSin > 0.0f) ?  phaseSin * earSwingAmount : 0.0f;
     float earLeftSwing  = (phaseSin < 0.0f) ? -phaseSin * earSwingAmount : 0.0f;

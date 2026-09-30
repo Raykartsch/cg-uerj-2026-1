@@ -6,7 +6,7 @@
 //   g++ -o main main.cpp -lglut -lGLU -lGL -lm
 //   ./main
 //
-// Windows (terminal MSYS2 UCRT64):
+// Windows:
 //   g++ main.cpp -o main -lfreeglut -lglu32 -lopengl32
 //   .\main.exe
 //
@@ -146,6 +146,7 @@ void arrowKeysUp(int key, int x, int y) {
     if (key == GLUT_KEY_DOWN) {
         downArrowPressed = false;
     }
+}
 
 // Teclas normais
 void keyboard_callback(unsigned char key, int x, int y) {
