@@ -340,8 +340,8 @@ void display() {
         // Posicionada em orbita circular ao redor do eixo Y, com altura constante Y = 10.0
         // e raio R = 10.0 no plano XZ (partindo exatamente de (0, 10, 10) para angulo = 0 graus).
         // Conforme a tecla 'r' e pressionada, a camera rotaciona em torno de Y:
-        //   X = R * sin(angulo)
-        //   Z = R * cos(angulo)
+        //   X = R * sin(angulo) 
+        //   Z = R * cos(angulo) // O COSSENO responde: "Qual o alcance horizontal que sobrou no chão?" (evita distorções ao inclinar a cabeça)
         // O ponto de mira e sempre o centro do campo (0, 0, 0) com vetor para cima (0, 1, 0).
         float radGeral = anguloCameraGeral * PI_F / 180.0f;
         float camGeralX = RAIO_CAMERA_GERAL * std::sin(radGeral);
@@ -370,9 +370,10 @@ void display() {
         //   dZ = cos(pitch) * (-sin(yaw))
         // Possui norma 1.0 para qualquer combinacao de yaw e pitch:
         //   ||d||^2 = cos^2(pitch)*cos^2(yaw) + sin^2(pitch) + cos^2(pitch)*sin^2(yaw) = 1.0
-        float cosPitch  = std::cos(pitchRad);
+
+        float cosPitch  = std::cos(pitchRad); //O COSSENO responde: Qual o alcance horizontal que sobrou no chão? (evita distorções ao inclinar a cabeça).
         float dirOlharX = cosPitch * std::cos(yawRad);
-        float dirOlharY = std::sin(pitchRad);
+        float dirOlharY = std::sin(pitchRad);  // O SENO responde: Qual a altura que a mira deve ter?(faz a câmera subir e descer).
         float dirOlharZ = cosPitch * (-std::sin(yawRad));
 
         // Posicao dos olhos do coelho no mundo (Eye Position):
