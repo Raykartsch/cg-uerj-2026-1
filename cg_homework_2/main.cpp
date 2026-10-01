@@ -356,7 +356,12 @@ void display() {
         // Posicionada na altura dos olhos do coelho e orientada no espaco 3D.
         // O angulo horizontal (yaw) e dado por anguloCoelho (0 graus = olhando para +X).
         // A inclinacao vertical (pitch) e dada por pitchOlharPrimeiraPessoa (Item 8: olhar para cima/baixo).
+
+        // LINHA 1: Converte o giro horizontal do coelho de graus para radianos.
+        // (O C++ exige radianos para fazer cálculos com seno e cosseno: rad = graus * PI / 180)
         float yawRad   = anguloCoelho * PI_F / 180.0f;
+
+        // Converte a inclinação vertical (pitch) de graus para radianos.
         float pitchRad = pitchOlharPrimeiraPessoa * PI_F / 180.0f;
 
         // Vetor unitario tridimensional de visada (gaze direction vector):
